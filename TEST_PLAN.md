@@ -38,7 +38,8 @@ IDs are stable; files are created by the milestone that owns them (`EXECUTION_PL
 | T-006 | L1 | Engine step order 1–11 table-driven; hard prohibitions beat rules and approvals |
 | T-007 | L1 | UNAVAILABLE and stale evidence ⇒ HOLD whatever the rules say |
 | T-008 | L1 | CAP: amount ≤ cap eligible; amount > cap `signerEligible=false` with `CAP_BELOW_QUOTE` |
-| T-009 | L1 | ASK_HUMAN pending not eligible; valid approval ⇒ PAY; wrong hash/version/expired/over-max ⇒ not eligible |
+| T-009 | L1 | ASK_HUMAN pending not eligible; valid approval ⇒ PAY; wrong hash/version/expired/over-max ⇒ not eligible; evaluated only on a re-screen result |
+| T-009a | L1 | `evaluateLocal` (stage A) returns DENY/HOLD for scheme, network, asset, cap, service and quote validity without evidence; `evaluate` runs stage A first; stage B with `evidence = null` fails closed |
 | T-010 | L1 | Candidate validation rejects: default PAY/CAP, missing hard prohibition, missing `capAtomic`, changed network/asset, duplicate rule ids |
 | T-011 | L0 | Static: `packages/core/src/{policy,regression}` reference no `Date`, `Math.random`, `fetch`, `process`, fs, db, or `apps/` import |
 | T-012 | L1 | Regression: hand-computed dataset yields exact numerator/denominator for every metric in SPEC §13 |
@@ -50,8 +51,8 @@ IDs are stable; files are created by the milestone that owns them (`EXECUTION_PL
 | T-021 | L2 | Reservation concurrency: parallel reservations from two DB connections never exceed the period cap |
 | T-022 | L2 | Reservation lifecycle; ambiguous ⇒ `reconciling`, released only on confirmed non-settlement |
 | T-023 | L2 | Signer: valid decision ⇒ exactly one signature, counter = 1, decision `consumed` |
-| T-024 | L2 | Signer zero-call matrix (see §5) |
-| T-025 | L0 | Static key isolation: `PAYER_PRIVATE_KEY` only in `apps/gate/src/signer/**`; agent/core/regression cannot import `signer` |
+| T-024 | L2 | Signer permit matrix, **one negative test per mismatch** (see §5): table A (primary type/types, `to`, `value`, `verifyingContract`, `chainId`, `from`, `validAfter`, `validBefore` too far / expired) and table B (no permit, unarmed, consumed, expired, another attempt's permit; decision missing/not open/not eligible/expired; evidence unusable or later than the decision; `decision.quoteHash != attempt.quoteHash`; `permit.quoteHash` mismatch; policy version changed; no reservation or amount mismatch; over authorised max / live limits; second use). Every case ends with `signerCalls = 0` and an untouched permit and decision |
+| T-025 | L0 | Static code-path isolation (not a security boundary): `PAYER_PRIVATE_KEY` only in `apps/gate/src/signer/**`; agent/core/regression cannot import `signer` |
 | T-026 | L2 | Redaction: logs never contain key, token, `X-API-KEY`, `Authorization`, full signature |
 | T-027 | L2 | Adapter with fixtures: timeout, 500, 429, malformed, empty ⇒ matching `UNAVAILABLE` code; exactly one call (no retry) |
 | T-028 | L2 | Raw response stored with timestamp, endpoint, address, provenance and **no headers** |
@@ -61,9 +62,14 @@ IDs are stable; files are created by the milestone that owns them (`EXECUTION_PL
 | T-032 | L2 | Audit events emitted for each step in §5 of SPEC, in order |
 | T-040 | L3 | Pass path: real local 402 → gate → PAY → one signature → stub facilitator settles; `interceptaReturnedAt < signerInvokedAt` |
 | T-041 | L3 | Block path: BLOCK fixture ⇒ DENY, `signerCalls=0`, no signer timestamp |
+| T-033 | L3 | `awaiting_approval` flow: ASK_HUMAN ⇒ attempt `awaiting_approval`, zero signer calls; a valid approval ⇒ current 402 with an identical quote ⇒ **fresh live screen** ⇒ re-evaluation under the current policy ⇒ sign only on `PAY`; a BLOCK on the re-screen is DENY despite the approval; a mutated resumed quote ⇒ `failed`; approval expiry, window expiry and a policy-version change ⇒ `expired` with zero signer calls; approval consumed on use |
+| T-034 | L3 | Local stage first: wrong scheme/network/asset, cap, service and quote validity produce a Decision without evidence and **zero Intercepta calls**; an eligible quote makes exactly one call |
+| T-035 | L2 | Spend ledger: `used` sums only `reserved`/`reconciling`/`committed` amounts; `released` frees budget; `committed` is not double counted; `remaining = cap − used` excludes the current attempt; the reservation transaction re-checks `used + amount ≤ cap` and a failure yields HOLD |
+| T-036 | L2 | Permit lifecycle: armed by the gate only after a reservation; single use; expires with the decision; revoked and unusable after a policy change |
+| T-037 | L3 | Permit-based signer with the installed x402 SDK: one valid signature settled by the (stub) facilitator; the same run live is the M-004b re-proof (AC-037) |
 | T-042 | L3 | Intercepta timeout/429/500/malformed through the gate ⇒ HOLD, `signerCalls=0` |
 | T-043 | L3 | Seller changes `payTo`/amount/asset/network between 402 and retry ⇒ zero signing |
-| T-044 | L3 | Wrong network / wrong asset quote ⇒ DENY, zero signing |
+| T-044 | L3 | Wrong network / wrong asset quote ⇒ DENY, zero signing, zero Intercepta calls (SDK controls on and off) |
 | T-045 | L3 | Over per-payment cap and over period cap ⇒ zero signing |
 | T-046 | L3 | Expired decision ⇒ zero signing |
 | T-047 | L3 | Policy activated while an attempt is pending ⇒ zero signing, `POLICY_CHANGED` |
@@ -107,7 +113,7 @@ IDs are stable; files are created by the milestone that owns them (`EXECUTION_PL
 | AC-019 | T-027, T-040 | T-060 |
 | AC-020 | T-051 | T-063 |
 | AC-021 | T-027, T-042 | T-062 (optional forced timeout) |
-| AC-022 | T-003, T-024, T-043 | — |
+| AC-022 | T-003, T-024, T-033, T-043 | — |
 | AC-023 | T-049, T-054 | T-061 |
 | AC-024 | none (human: repo visibility) | human check |
 | AC-025 | T-021, T-052 | — |
@@ -116,22 +122,27 @@ IDs are stable; files are created by the milestone that owns them (`EXECUTION_PL
 | AC-028 | T-030 | — |
 | AC-029 | T-028 | T-060 |
 | AC-030 | T-005 | — |
-| AC-031 | T-009, T-024, T-047 | — |
+| AC-031 | T-009, T-024, T-033, T-036, T-047 | — |
+| AC-033 | T-009, T-033 | — |
+| AC-034 | T-024, T-036 | — |
+| AC-035 | T-009a, T-034, T-044 | — |
+| AC-036 | T-021, T-035, T-052 | — |
+| AC-037 | T-037 | live re-run of a pass (tx hash, `signerCalls=1`) |
 | AC-032 | T-014, T-015 | — |
 
 ## 5. Traceability: INV → tests (each with a negative test)
 
 | INV | Positive | **Negative** (must fail closed) |
 | --- | --- | --- |
-| INV-001 | T-040 | Screen skipped or mocked out ⇒ gate refuses to proceed (T-042); signer ordering assertion in T-040 |
+| INV-001 | T-040 | Screen skipped or mocked out ⇒ gate refuses to proceed (T-042); signer ordering assertion in T-040; a Decision without evidence is never eligible (T-024, T-034) |
 | INV-002 | T-023 | T-024 matrix, T-041–T-047, T-008 |
 | INV-003 | T-040 | T-007, T-027, T-042; cached evidence from a previous attempt is rejected |
-| INV-004 | T-023 | T-024: no decision, wrong quote hash, expired, wrong version, no reservation, second use |
+| INV-004 | T-023 | T-024: no permit, no decision, `decision.quoteHash != attempt.quoteHash`, expired, wrong version, no reservation, second use |
 | INV-005 | T-003 | T-024 (each mutated field), T-043 |
 | INV-006 | T-023 | T-024 wrong chain, wrong asset; T-044 |
-| INV-007 | T-021 | T-024 over cap; T-045, T-052 |
-| INV-008 | T-025 | A fixture file that references the key outside `signer/` makes T-025 fail (self-test) |
-| INV-009 | T-009, T-040 | Decision without policy version/evidence id is rejected by schema |
+| INV-007 | T-021, T-035 | T-024 over cap; T-035 reservation re-check fails at the cap; T-045, T-052 |
+| INV-008 | T-025 | A fixture file that references the key outside `signer/` makes T-025 fail (self-test). Documented as code-path isolation, not a process boundary |
+| INV-009 | T-009, T-040 | Decision without policy version, quote hash, action or reasons is rejected by schema; a Decision without evidence is rejected if `signerEligible` (T-034) |
 | INV-010 | T-029 | Approve with a wrong report/candidate/dataset hash ⇒ 409, prior version stays; unauthenticated ⇒ 401 |
 | INV-011 | T-029 | Attempt to edit an approved version ⇒ rejected; rollback creates a new transition |
 | INV-012 | T-016, T-054 | Synthetic case rendered as `real_live` ⇒ schema/UI test fails |
@@ -139,7 +150,7 @@ IDs are stable; files are created by the milestone that owns them (`EXECUTION_PL
 | INV-014 | T-022, T-048, T-049 | Release on HTTP timeout alone is rejected |
 | INV-015 | T-006, T-009 | Approval on a DENY/hard-prohibition case still not eligible |
 | INV-016 | T-025, T-011 | Static: no LLM SDK import in gate/core; no route lets an unauthenticated caller approve |
-| INV-017 | T-009, T-029 | T-024 and T-047: decision from the previous version cannot sign |
+| INV-017 | T-009, T-029, T-033 | T-024, T-036 and T-047: decision, approval or permit from the previous version cannot sign; an `awaiting_approval` attempt becomes `expired` (T-033) |
 | INV-018 | T-026 | `guard-secrets.sh` blocks a staged secret value (manual check recorded in the milestone evidence) |
 | INV-019 | T-040, T-054 | Signer invoked before evidence returned ⇒ attempt state machine throws |
 | INV-020 | T-016, T-031 | Relabel/overwrite ⇒ rejected |
@@ -149,6 +160,9 @@ IDs are stable; files are created by the milestone that owns them (`EXECUTION_PL
 | INV-024 | T-023 | T-024: second signature for the same decision refused |
 | INV-025 | T-029 | Two active pointers cannot be created (unique constraint) |
 | INV-026 | T-030 | Every owner route without/with a wrong token ⇒ 401 |
+| INV-027 | T-024, T-036 | One negative test per table A/B mismatch; second use of a permit refused |
+| INV-028 | T-033 | Expired approval, wrong `attemptId`/`quoteHash`/`policyVersion`, mutated resumed quote, BLOCK on re-screen, non-`PAY` re-evaluation: none signs |
+| INV-029 | T-009a, T-034 | A locally rejected quote triggers zero Intercepta calls |
 
 ## 6. Mandatory tests (from the bootstrap contract)
 
@@ -166,6 +180,8 @@ A milestone or AC is `live-verified` only with **all** that apply, recorded in `
 Fixtures, stubs and synthetic data are labelled as such and never counted as live evidence.
 
 ## CURRENT COVERAGE GAPS
+
+**Conformance gap (human SPEC review 2026-09-26):** the code from M-000 to M-005 predates the corrected SPEC. Known contradictions: there is no signing permit object (the signer is bound by `authorise(decisionId)`; it does compare typed data with the attempt's stored quote, but permit arming, expiry, consumption and the permit-specific negative tests do not exist); every parseable quote is screened before local checks; `Decision.evidenceId` is required; there is no `awaiting_approval` or `expired` state and `ASK_HUMAN` ends the attempt as `failed`; the ledger sums `committedAtomic ?? amountAtomic` for committed rows where the SPEC says `amountAtomic`. Fix milestone: **M-004b**. T-033 to T-037 and T-009a are unimplemented until then.
 
 Status after M-005 (2026-09-26): T-001 to T-016 (core), T-020 (partly), T-023 to T-028, T-030 (not yet: owner API), T-040 to T-049, T-052, T-053, T-060 to T-062 have been implemented (350 offline tests; T-061/T-062 as live CLI runs recorded in `docs/evidence/`). Still unimplemented: T-021/T-022 full (two-connection reservation test, chain reconciliation, M-006), T-029 to T-032 (lifecycle, owner API, audit, M-006/M-008), T-012 to T-015 regression (M-007), T-050/T-051 loop (M-008/M-010), T-054 console (M-009), T-063, T-070, T-090. Additionally:
 

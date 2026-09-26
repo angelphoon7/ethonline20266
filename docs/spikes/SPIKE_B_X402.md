@@ -2,6 +2,8 @@
 
 Date: 2026-09-26. Governing: SPEC §5, §12, §16, Q-005, Q-006; 08 §11 P0 rows 2–3; ADR-003, ADR-015, ADR-018.
 
+> **Design note (human review 2026-09-26):** the signer described below is the pre-review implementation. SPEC §12 now requires a single-use signing permit and typed-data checks against a stored quote (ADR-019); fix milestone M-004b re-proves it. The live evidence below stays valid for the pre-review implementation.
+
 ## Goal
 
 Prove on a real x402 flow that (1) the Intercepta screen and the policy decision happen **before** anything is signed, (2) an approved PAY signs exactly once and settles on Base Sepolia, and (3) deny, Intercepta failure, quote mutation, expiry and policy change all sign **zero** times, with the agent unable to reach the key.

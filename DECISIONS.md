@@ -60,7 +60,7 @@ Status vocabulary: Accepted | Accepted (agent default) | Open. New ADRs append a
 ## ADR-007 — Fail closed on missing evidence; the tier mapping is Risksir policy over observed fields
 - **Status:** Accepted (agent default for the mapping). **Date:** 2026-09-26.
 - **Context:** 08 §9 says the quick-scan is a toxic score, **not** a guaranteed `CLEAR/WARN/BLOCK` schema; 07 uses those names only as examples.
-- **Decision:** Any error, timeout, 429, malformed, empty or stale evidence is tier `UNAVAILABLE` ⇒ HOLD. Until Spike A records real responses the mapper returns `UNAVAILABLE(MALFORMED)` for every real response and accepts only files under `fixtures/intercepta/synthetic/`. Tiers `CLEAR|WARN|BLOCK` are a Risksir mapping, never presented as an Intercepta claim. `CLEAR` means "no disqualifying observed signal", not "safe".
+- **Decision:** Any error, timeout, 429, malformed, empty or stale evidence is tier `UNAVAILABLE` ⇒ HOLD. Until Spike A records real responses the mapper returns `UNAVAILABLE(MALFORMED)` for every real response and accepts only files under `fixtures/intercepta/synthetic/` (superseded in part by ADR-017 and ADR-023 once responses were recorded). Tiers `CLEAR|WARN|BLOCK` are a Risksir mapping, never presented as an Intercepta claim. `CLEAR` means "no disqualifying observed signal", not "safe".
 - **Rationale:** *Evidence:* 08 §9, 07 §8, 07 §19. *Preference:* the most conservative option consistent with the freeze.
 - **Alternatives:** guess field names; treat unknown as CLEAR. **Why not chosen:** guessing violates `CLAUDE.md` §4; unknown-as-pass violates INV-003.
 - **Consequences:** an ADR after Spike A records observed fields and thresholds.
@@ -132,6 +132,7 @@ Status vocabulary: Accepted | Accepted (agent default) | Open. New ADRs append a
 - **Alternatives:** hook only. **Why not chosen:** a hook bypass would break the product (07 §9).
 - **Consequences:** typed-data field checks depend on the observed EIP-3009 typed data shape (Spike B).
 - **Reversibility:** human-only (weakens INV-002/004). **Source:** `CLAUDE.md` §7, 07 §9, 08 §11.
+- **Amended by ADR-019 and ADR-024 (human review 2026-09-26):** the guard is now a single-use signing permit checked against a stored quote, and its isolation is described as code-path isolation, not a security boundary.
 
 ## ADR-016 — TypeScript is pinned to ~6.0.3
 - **Status:** Accepted (agent default). **Date:** 2026-09-26.
@@ -150,6 +151,7 @@ Status vocabulary: Accepted | Accepted (agent default) | Open. New ADRs append a
 - **Alternatives:** BLOCK only at exactly 100; use trait names as hard-block list. **Why not chosen:** 100 alone is too permissive for an unobserved band; a name list would rely on undocumented semantics.
 - **Consequences:** The WARN band is unobserved, so demo Scene 5 relies on the observed CLEAR tier plus context predicates (SPEC §22). If a later live response falls in the mid band, add it to `fixtures/intercepta/recorded/` and revisit the threshold with a new ADR.
 - **Reversibility:** easy: new ADR and a new `mappingVersion`. **Source:** SPIKE_A_INTERCEPTA.md, 08 §9, `CLAUDE.md` §5.
+- **Amended by ADR-023 (human review 2026-09-26):** only the response shape at scores 0 and 100 is evidence. The 80 threshold and the WARN band are a Risksir policy default, not an Intercepta verdict, and the mid-band meaning is OPEN.
 
 ## ADR-018 — x402 stack, hook usage and settlement ordering (resolves Q-005, Q-006)
 - **Status:** Accepted (agent default, resolves the spike-evidence OPEN items of ADR-003 and ADR-015). **Date:** 2026-09-26.
@@ -159,3 +161,55 @@ Status vocabulary: Accepted | Accepted (agent default) | Open. New ADRs append a
 - **Alternatives:** `upfront` settlement; passing a viem `LocalAccount`; disabling SDK spend controls. **Why not chosen:** upfront settles before delivery is known; a raw account bypasses the guard; disabled controls remove a free layer.
 - **Consequences:** Typed-data checks in the signer depend on the EIP-3009 shape observed in 2.27.0; a package upgrade must re-run the signer matrix.
 - **Reversibility:** package or ordering change needs a new ADR and a re-run of the Spike B tests. **Source:** SPIKE_B_X402.md, `CLAUDE.md` section 4.
+
+## ADR-019 — Single-use signing permit; typed data is checked against a stored quote (human review 2026-09-26)
+- **Status:** Accepted (explicit human instruction). **Date:** 2026-09-26.
+- **Context:** The EIP-3009 typed data contains only `from, to, value, validAfter, validBefore, nonce` and the domain `{ name, version, chainId, verifyingContract }` (observed, `@x402/evm` 2.27.0). It has no scheme, resource URL or attemptId, so a quote hash cannot be recomputed from it. The earlier SPEC wording said it could.
+- **Decision:** The gate arms one single-use `SigningPermit` per attempt (`attemptId`, `decisionId`, stored `CanonicalQuote`, `quoteHash`, `policyVersion`, expiry). The signer (a) compares the typed data with that stored quote (`to == payTo`, `value == amount`, `verifyingContract == asset`, `chainId == 84532`, `from == payer`, `validBefore` within the quote validity and unexpired); (b) separately checks `decision.quoteHash == attempt.quoteHash`, the current active policy version, decision expiry and the held reservation; (c) consumes the permit atomically on use. Any mismatch refuses with `signerCalls` unchanged. One negative test per mismatch.
+- **Rationale:** *Evidence:* installed SDK source (SPIKE_B_X402.md). *Preference:* bind the attempt/resource/scheme through data Risksir controls, not through fields the SDK never signs.
+- **Alternatives:** keep the decision-id binding only; hash the typed data. **Why not chosen:** the former has no explicit single-use object and no stored quote to compare; the latter is impossible (fields are missing).
+- **Consequences:** the current implementation (M-004) contradicts this wording in structure (no permit table, `authorise(decisionId)` binding) and gets fix milestone M-004b; Q-012 stays OPEN for the permit design until re-proven.
+- **Reversibility:** human-only (INV-004/INV-027). **Source:** human review, SPEC §12, INV-027.
+
+## ADR-020 — `awaiting_approval` and `expired` attempt states; approval resume (human review 2026-09-26)
+- **Status:** Accepted (explicit human instruction). **Date:** 2026-09-26.
+- **Context:** `ASK_HUMAN` was modelled as a HOLD-like `failed` end state, which loses the pending approval and makes the approval flow unimplementable.
+- **Decision:** Add non-terminal `awaiting_approval` and terminal `expired`. An approval binds `attemptId`, `quoteHash`, `policyVersion` and an expiry. On approval: the approval must be active and unexpired; the gate obtains a current 402 for the same attempt whose quote must hash to the approved quote; a **fresh live Intercepta screen** is made; the decision is **re-evaluated under the current active policy**; only a `PAY` result reserves, arms a permit and signs, any other result is recorded as the new action. Approval or window expiry, or a policy-version change, makes the attempt `expired`. Hard prohibitions are never overridable. INV-017 is extended and INV-028 added.
+- **Rationale:** *Evidence:* 08 §2 (approval "applies to this exact attempt and expires"; recheck live evidence before a delayed signature). *Preference:* the smallest state additions that keep the flow explicit.
+- **Alternatives:** keep ASK_HUMAN as `failed` and require a brand-new attempt. **Why not chosen:** loses approval binding to the attempt and quote.
+- **Consequences:** state tables, schema, store, gate and tests change (M-004b and M-008); the resumed request obtains a new 402, and the attemptId inside the quote hash keeps the approval bound to the same attempt.
+- **Reversibility:** human-only (semantics of the five actions). **Source:** human review, SPEC §9, §11, INV-017, INV-028.
+
+## ADR-021 — Spend ledger: reservation rows only (human review 2026-09-26)
+- **Status:** Accepted (explicit human instruction). **Date:** 2026-09-26.
+- **Decision:** `SpendReservation` rows are the only ledger. `used(period) = Σ amountAtomic where status ∈ {reserved, reconciling, committed}`; `committed` means settled and settled payments are never summed separately. Policy evaluation receives `remaining = cap − used`, which excludes the current attempt (no reservation yet). The reservation is created in one serialised transaction that re-checks `used + amount ≤ cap`; failure means HOLD. `released` rows are excluded.
+- **Rationale:** *Evidence:* 08 §8, 08 §11 P1 (concurrent attempts). *Preference:* one ledger cannot drift or double count.
+- **Alternatives:** separate settled-spend table plus reservations. **Why not chosen:** double counting risk (the previous SPEC text summed settled plus committed).
+- **Consequences:** the store sums `amountAtomic` (not `committedAtomic`) and requires `committedAtomic == amountAtomic` for `exact`; tests for release, commit, remaining and the re-check (T-035).
+- **Reversibility:** with an ADR; INV-007 stays. **Source:** human review, SPEC §12, INV-007.
+
+## ADR-022 — Local checks run before the Intercepta call (human review 2026-09-26)
+- **Status:** Accepted (explicit human instruction). **Date:** 2026-09-26.
+- **Context:** The earlier SPEC screened every parseable quote so that every Decision carried an evidence id. That spends the 40-call live budget on quotes that are rejected locally anyway.
+- **Decision:** Stage A runs first and needs no evidence: scheme, network and asset allowlist, per-payment cap, service scope and quote validity (`QUOTE_MAX_VALIDITY_S = 600`). A rejected quote gets `DENY` or `HOLD` with **no Intercepta call**. INV-001 applies to attempts that can reach the signer. INV-009 is refined: a Decision records the evidence id whenever a screen was made, and a Decision without evidence is never signer-eligible. INV-029 added.
+- **Rationale:** *Evidence:* `[G §5]` call budget; SPEC review. *Preference:* do not spend a live call where the answer cannot change the outcome.
+- **Alternatives:** screen everything. **Why not chosen:** wastes budget; the human directed otherwise.
+- **Consequences:** `evaluateLocal` split, `Decision.evidenceId` nullable with an eligibility refine, gate order change (M-004b). The wrong-network/asset integration tests must assert zero Intercepta calls.
+- **Reversibility:** human-only (INV-001/INV-009 wording). **Source:** human review, SPEC §5, §9, INV-001, INV-009, INV-029.
+
+## ADR-023 — Evidence gate for Spike A claims (human review 2026-09-26)
+- **Status:** Accepted (explicit human instruction). **Date:** 2026-09-26.
+- **Context:** Each item marked resolved by Spike A was checked against `docs/spikes/SPIKE_A_INTERCEPTA.md` and the six raw files in `fixtures/intercepta/recorded/` (all `real_live`, HTTP 200).
+- **Decision:** *Real (kept resolved):* endpoint path and base origin `https://api.web3antivirus.io` (recorded `endpoint`, no query string); HTTP 200 with the `X-API-KEY` header; body shape `{ toxicScore, traits[{ risk, name, description }] }` at scores 0 and 100; reproducibility over 3 address pairs; latency 325–2814 ms. *Reverted to OPEN (not supported by the files):* meaning of scores between 0 and 100, the WARN band, where BLOCK should start (the value 80), `txsCount`, behaviour without the header, 401/429/5xx bodies, rate limits. Every score threshold is labelled "Risksir policy threshold (ADR-017), not an Intercepta verdict", including UI text.
+- **Rationale:** *Evidence:* the six recorded files contain only scores 0 and 100 and no non-200 status. *Preference:* claim only what the data shows.
+- **Alternatives:** keep Q-001 fully resolved. **Why not chosen:** the mapping's thresholds are not derived from observed data.
+- **Consequences:** SPEC §10 and §25 (Q-001 partly resolved, Q-011 OPEN for rate limits), SPIKE_A doc and EXECUTION_PLAN M-003 evidence corrected; UI text rule in SPEC §20.
+- **Reversibility:** an OPEN item closes with new recorded evidence plus an ADR. **Source:** human review, `fixtures/intercepta/recorded/*`.
+
+## ADR-024 — Key isolation is code-path isolation, not a security boundary (human review 2026-09-26)
+- **Status:** Accepted (explicit human instruction). **Date:** 2026-09-26.
+- **Decision:** Describe the signer's key isolation as code-path isolation inside one backend process, enforced by static tests (only the signer reads `PAYER_PRIVATE_KEY`; agent, core and regression code cannot import it). It is not a process or security boundary; a compromised backend defeats it (08 §7).
+- **Rationale:** *Evidence:* 08 §7 states the MVP is centrally trusted for correctness. *Preference:* do not overclaim.
+- **Alternatives:** a separate signer process. **Why not chosen:** out of MVP scope (08 §3), and it would not remove the trust in the backend that arms permits.
+- **Consequences:** wording changes in SPEC §6, §12, §18, INV-008, and README/claims later; no code change.
+- **Reversibility:** wording only. **Source:** human review, 08 §7.

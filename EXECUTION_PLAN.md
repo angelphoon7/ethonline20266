@@ -4,6 +4,8 @@ Status vocabulary: `TODO | IN_PROGRESS | BLOCKED | VERIFIED`. Evidence words: `i
 
 Local command note: plain `pnpm` is not on PATH on this machine, so commands are written `pnpm …` and run as `corepack pnpm …` (ADR-014).
 
+**Human SPEC review applied 2026-09-26 (ADR-019 to ADR-024).** The code from M-000 to M-005 predates the corrected SPEC, so fix milestone **M-004b** is added and M-006 onward depend on it. M-004 and M-005 stay `VERIFIED`: their live evidence is real for the pre-review implementation, and M-004b re-proves the corrected signer.
+
 Refinements to the bootstrap skeleton (dependency order kept, prize path first):
 - **M-004** introduces a minimal SQLite `store` (attempts, evidence, decisions, reservations behind interfaces) because the signer must check a *stored* decision and reservation (INV-004). **M-006** extends the same store (cases, policies, audit, concurrency proof, reconciliation).
 - **M-007** is a hard dependency of **M-008** (a candidate approval needs a report) and **M-009** is a dependency of **M-010/M-011** (the demo needs the console); both are added to the critical path below.
@@ -109,7 +111,7 @@ AC-019 (address screened), AC-021 (adapter part), AC-029; INV-003, INV-021.
 Level: live-verified for the address screen (adapter path only; not yet in a payment flow). 2026-09-26, 4 of 40 live calls.
 - Raw responses (`real_live`, no headers): `fixtures/intercepta/recorded/2026-09-26T13-33-52-198Z_0x87cff22e…cb1a.json` (SAFE: HTTP 200, 1336 ms, `toxicScore 0`, `traits []`), `…13-33-55-020Z_0x39308ae4…2fed.json` (RISKY: HTTP 200, 2814 ms, `toxicScore 100`, `known_scammer` 100, `attack_money_target` 85), plus a second identical pair from T-060 at `13-35-25-957Z` / `13-35-26-286Z`.
 - `LIVE=1 corepack pnpm test:live` passed (T-060: SAFE ⇒ CLEAR, RISKY ⇒ BLOCK through the production adapter and mapper). `corepack pnpm verify` green: 11 files, 265 tests (T-027, T-028, mapper tests on the recorded files).
-- Mapping `quickscan-v1` (ADR-017). `docs/spikes/SPIKE_A_INTERCEPTA.md` written; SPEC §10/§25 updated (Q-001, Q-002 resolved). Kill-condition check: none observed; placement before the signer is untested until M-004; Q-003 (sponsor confirmation that RISKY may be a testnet `payTo`) remains a human action. Mid band, 401/429/5xx and rate limits were not observed live.
+- Mapping `quickscan-v1` (ADR-017; thresholds are Risksir policy thresholds, not Intercepta verdicts). `docs/spikes/SPIKE_A_INTERCEPTA.md` written; SPEC §10/§25 updated. **After the 2026-09-26 evidence gate (ADR-023): Q-002 resolved; Q-001 only partly resolved (shape at scores 0 and 100); mid band, WARN, the 80 threshold, `txsCount`, error codes and rate limits are OPEN.** Kill-condition check: none observed; placement before the signer is untested until M-004; Q-003 (sponsor confirmation that RISKY may be a testnet `payTo`) remains a human action. Mid band, 401/429/5xx and rate limits were not observed live.
 
 # M-004 — SPIKE B (P0): x402 seller, buyer gate, protected signer
 Status: VERIFIED
@@ -117,7 +119,7 @@ Needs credentials: `PAYER_PRIVATE_KEY` (funded), `BASE_SEPOLIA_RPC_URL`, `X402_F
 ## Objective
 Local x402 seller (Base Sepolia `exact` USDC), buyer gate with a pre-sign hook, protected signer with a call counter and guarded viem account. A pass signs once and settles; deny, timeout and mutation sign zero times.
 ## Why (SPEC / AC / INV references)
-SPEC §5, §12, §16; 08 §11 P0 rows 2–3, Step 9 item 2; ADR-003, ADR-015; AC-001–AC-006, AC-022, AC-026; INV-001, INV-002, INV-004, INV-005, INV-006, INV-008, INV-019, INV-024.
+SPEC §5, §12, §16; 08 §11 P0 rows 2–3, Step 9 item 2; ADR-003, ADR-015 (amended by ADR-019/024); AC-001–AC-006, AC-022, AC-026; INV-001, INV-002, INV-004, INV-005, INV-006, INV-008, INV-019, INV-024.
 ## Dependencies
 M-001, M-002, M-003
 ## Scope
@@ -166,15 +168,39 @@ Level: live-verified. 2026-09-26: `LIVE=1 corepack pnpm demo:block` then `LIVE=1
 - Persisted traces `docs/evidence/M-005_prize_checkpoint_traces.json`; on-chain receipt check `docs/evidence/M-005_tx_receipt_check.json`; summary `docs/evidence/M-005_prize_checkpoint.md`. Limits respected: 0.05 USDC per payment, session 1/20 settlements and 0.05/1.00 USDC.
 - Caveat: Q-003 (sponsor confirmation that the RISKY address may be a merchant payTo) is still a human action, so the block is labelled as the live screen of the configured merchant address, not a sponsor-confirmed qualification claim.
 
-# M-006 — Case store, reservations, reconciliation
+# M-004b — SPEC conformance fix (human review 2026-09-26)
 Status: TODO
+Needs credentials: all live variables (for the live re-proof); offline work needs none
+## Objective
+Bring the code into line with the corrected SPEC: signing permit, local-checks-first, `awaiting_approval`/`expired`, single spend ledger, and re-prove the guarded signer with the installed x402 SDK.
+## Why (SPEC / AC / INV references)
+Human review 2026-09-26; ADR-019 to ADR-022, ADR-024; SPEC §5, §9, §11, §12; AC-033 to AC-037; INV-001, INV-002, INV-004, INV-007, INV-009, INV-017, INV-027, INV-028, INV-029; Q-012.
+## Dependencies
+M-005
+## Scope
+(1) `SigningPermit` type, table and lifecycle; the gate arms it after decision and reservation; the signer checks tables A and B, consumes it atomically; remove `authorise(decisionId)` binding; one negative test per mismatch (T-024, T-036). (2) `evaluateLocal` stage A split from `evaluate`; `Decision.evidenceId` nullable with the eligibility refine; the gate runs stage A before any Intercepta call; tests T-009a, T-034, update T-044. (3) Attempt states `awaiting_approval` and `expired`, `awaitingApprovalUntil`, approval `status`, transition tables (finish `packages/core/src/state.ts` from the M-006 WIP), gate `ASK_HUMAN` path and a `resumeWithApproval` that re-requests the resource, re-screens live, re-evaluates and only signs on `PAY` (T-033). (4) Ledger: sum `amountAtomic` only, `committedAtomic` must equal it, tests T-035. (5) New audit types `PermitArmed`, `ApprovalRecorded`, `AttemptExpired`. (6) Re-proof: T-037 offline, then `LIVE=1 pnpm demo:pass` with the new signer within `[G §4]`. (7) Update `AGENTS.md`, SPIKE_B note.
+## Out of scope
+Owner approval HTTP route and console (M-008, M-009); regression engine.
+## Likely components
+`packages/core/src/{types,state,policy}`, `apps/gate/src/{signer,store,x402}`.
+## Acceptance (AC-xxx, INV-xxx)
+AC-033, AC-034, AC-035, AC-036, AC-037; INV-001, INV-002, INV-004, INV-007, INV-009, INV-017, INV-027, INV-028, INV-029.
+## Validation (exact commands and evidence required)
+`corepack pnpm verify` green; `LIVE=1 corepack pnpm demo:pass` once (0.05 USDC, session limits respected). Evidence: tx hash with an RPC receipt check, `signerCalls=1`, and a block run with `signerCalls=0`; raw Intercepta paths.
+## Commit boundary
+`fix(gate): add signing permit, local-first checks, awaiting_approval and single spend ledger per SPEC review`.
+## Evidence (filled in when VERIFIED)
+—
+
+# M-006 — Case store, reservations, reconciliation
+Status: BLOCKED (waits for M-004b; uncommitted WIP exists, see HANDOFF)
 Needs credentials: none (live check optional)
 ## Objective
 Extend the M-004 store: cases with label revisions, serialised spend reservations with a concurrency proof, ambiguous-settlement reconciliation, separate settlement and delivery status, audit events.
 ## Why (SPEC / AC / INV references)
 SPEC §7, §11, §12, §16; 08 §8, §11 P1 rows; AC-009, AC-025, AC-027; INV-007, INV-014, INV-020.
 ## Dependencies
-M-004
+M-004b
 ## Scope
 Migrations, `BEGIN IMMEDIATE` reservations, reconciliation module (facilitator status + viem receipt/nonce read), tests T-020, T-021, T-022, T-031, T-032, T-048, T-049, T-052.
 ## Out of scope
@@ -224,7 +250,7 @@ SPEC §9, §11, §19; AC-012, AC-014, AC-028, AC-031; INV-010, INV-011, INV-017,
 ## Dependencies
 M-006, M-007
 ## Scope
-Store transitions, owner API routes, T-029, T-030.
+Store transitions, owner API routes (including `POST /api/approvals`, which calls the M-004b approval-resume path: fresh live screen, re-evaluation, `expired` on approval or policy change), T-029, T-030.
 ## Out of scope
 UI.
 ## Likely components
@@ -338,7 +364,7 @@ AC-016, AC-017, AC-018.
 
 ## CRITICAL PATH
 
-M-000 → M-001 → M-002 → M-003 → M-004 → M-005 → M-006 → M-007 → M-008 → M-009 → M-010 → M-011 → M-012.
+M-000 → M-001 → M-002 → M-003 → M-004 → M-005 → **M-004b** → M-006 → M-007 → M-008 → M-009 → M-010 → M-011 → M-012.
 (The bootstrap skeleton lists M-005 → M-006 → M-008 → M-010; M-007 and M-009 are added because M-008 needs a regression report and M-010/M-011 need the console.) The **prize path** is M-000…M-005 and comes first. Never mark M-005 or M-010 `VERIFIED` without live evidence. A 07 §22 kill condition stops the build (`CLAUDE.md` §6); do not redesign around it.
 
 ## WORK THAT CAN PROCEED WHILE BLOCKED ON CREDENTIALS
@@ -350,7 +376,7 @@ Credential names are all SET at bootstrap (`env-status`), so nothing is blocked 
 | Risk | Pri | Retired by |
 | --- | --- | --- |
 | Live Intercepta signal on the exact selected `payTo` is decisive and reproducible | P0 | M-003, confirmed M-005 |
-| Protected x402 signing boundary is interceptable and non-bypassable | P0 | M-004 |
+| Protected x402 signing boundary is interceptable and non-bypassable | P0 | M-004 (pre-review implementation), re-proved by M-004b (permit design) |
 | Exact EVM USDC path settles on the chosen facilitator | P0 | M-004, confirmed M-005 |
 | Sponsor known-risk mainnet address can be truthfully tied to a runnable testnet merchant quote | P0 | M-003 (Q-003, human sponsor confirmation) |
 | Signed-but-unconfirmed payment reconciles before reservation release or retry | P1 | M-006 |

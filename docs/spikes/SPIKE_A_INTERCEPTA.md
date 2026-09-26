@@ -35,7 +35,21 @@ Calls used: **4 of 40** (`data/intercepta-calls.json`, local and gitignored). Ke
 - The docs give **no** error-code or rate-limit information, and no 401/429/5xx was observed. Those paths are covered by stubbed-fetch tests only (labelled `synthetic`), not by live observation.
 - The mid band (0 < score < 100) was **not observed**. The WARN tier is exercised only by a labelled synthetic fixture (`fixtures/intercepta/synthetic/quick-scan-warn-midband.json`). Scene 5 therefore uses the observed tiers (CLEAR) plus context predicates (SPEC §22).
 
-## Evidence mapping (ADR-017, `mappingVersion = quickscan-v1`)
+## Evidence gate (human review 2026-09-26, ADR-023)
+
+Checked against the six raw files in `fixtures/intercepta/recorded/` (all `real_live`, HTTP 200, scores 0 and 100 only, no non-200 status):
+
+| Claim | Verdict |
+| --- | --- |
+| Endpoint path, base origin `https://api.web3antivirus.io`, no query string | **Real** (recorded `endpoint` field) |
+| HTTP 200 with the `X-API-KEY` header | **Real** (behaviour without the header was not tested) |
+| Body shape `{ toxicScore, traits[{ risk, name, description }] }` | **Real at two points** (0 with no traits; 100 with two traits) |
+| Reproducible across repeated calls | **Real** (3 address pairs identical) |
+| Latency 325–2814 ms | **Real** (6 calls) |
+| Scores between 0 and 100, the WARN band, BLOCK starting at 80 | **Not supported:** OPEN. The 80 threshold is a Risksir policy threshold (ADR-017), not an Intercepta verdict |
+| `txsCount` on traits, 401/429/5xx bodies, rate limits | **Not observed:** OPEN |
+
+## Evidence mapping (ADR-017, `mappingVersion = quickscan-v1`; the thresholds are Risksir policy thresholds, not Intercepta verdicts)
 
 | Condition | Tier |
 | --- | --- |
@@ -65,7 +79,7 @@ No kill condition observed.
 
 | Item | Resolution |
 | --- | --- |
-| Q-001 fields/tiers | Resolved for `toxicScore`/`traits` with ADR-017 (mid band unobserved) |
+| Q-001 fields/tiers | **Partly resolved:** shape observed at scores 0 and 100; score semantics between 0 and 100, WARN band and the BLOCK start are OPEN (ADR-023) |
 | Q-002 endpoint/base URL | Resolved: quick-scan path and `https://api.web3antivirus.io` observed working |
-| Q-011 timeout | 8000 ms retained; latency 325–2814 ms; rate limits still unobserved |
+| Q-011 timeout | 8000 ms is our choice; latency 325–2814 ms; rate limits and error codes OPEN |
 | Q-003 sponsor address as `payTo` | Still open (human) |
