@@ -1,5 +1,5 @@
 AGENT_STATUS: CONTINUE
-HUMAN_ACTIONS: 1. (Optional) Run `corepack enable` once in an admin shell so plain `pnpm` works; until then everything runs as `corepack pnpm`. 2. Keep the payer wallet `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD` at or below 20 test USDC (19.89 now). 3. Confirm with the sponsor that `SELLER_PAY_TO_RISKY` (the known-risk mainnet address) may be used as a testnet merchant `payTo`, and that `SELLER_PAY_TO_ALT` is an acceptable comparator (Q-003). 4. Ask Intercepta the overlap question from 07 §20 (Spike E) and paste the verbatim answer into `docs/spikes/SPIKE_E_OVERLAP.md`. 5. Make the GitHub repo public before submission. 6. Check the GitHub Actions run of the latest push (a concurrent session reported run 36247203846 green on Ubuntu for `f5a956a`; later pushes are unconfirmed).
+HUMAN_ACTIONS: 1. Keep the payer wallet `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD` at or below 20 test USDC (19.89 now). 2. Confirm with the sponsor that `SELLER_PAY_TO_RISKY` (the known-risk mainnet address) may be used as a testnet merchant `payTo`, and that `SELLER_PAY_TO_ALT` is an acceptable comparator (Q-003). 3. Ask Intercepta the overlap question from 07 §20 (Spike E) and paste the verbatim answer into `docs/spikes/SPIKE_E_OVERLAP.md`. 4. Make the GitHub repo public before submission. 5. Check the GitHub Actions run of the latest push (a concurrent session reported run 36247203846 green on Ubuntu for `f5a956a`; later pushes are unconfirmed).
 
 # HANDOFF — Risksir
 
@@ -19,7 +19,7 @@ M-004b, M-006 and M-007 (regression engine and labelled dataset) are done. Next:
 - **Prize path, live-verified twice** (real 402, live Intercepta on the exact `payTo`, one settled Base Sepolia payment, one Intercepta-driven DENY with `signerCalls=0`): pre-review signer tx `0x1cf9ae6f…8e6b` (M-005) and **permit-based signer tx `0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a`** (M-004b, Base Sepolia block 47332599, RPC receipt `success`, USDC Transfer 50000 payer to SAFE, `signerCalls=1`, permit consumed; block attempt `2f05c880-…` DENY `signerCalls=0`). Evidence: `docs/evidence/M-005_*`, `docs/evidence/M-004b_*`, `docs/spikes/SPIKE_B_X402.md`.
 - SPEC v1.1 implemented and tested: signing permit with tables A/B (51 signer tests, one negative per mismatch), local checks before any Intercepta call, `awaiting_approval`/`expired` with approval resume (fresh screen, re-evaluation, PAY only), single spend ledger, state-machine enforcement in the store. `corepack pnpm verify` green: **734 tests** (offline).
 - Intercepta quick-scan shape observed live (Spike A). Spike A evidence gate (ADR-023): endpoint, base origin, HTTP 200, body shape at scores 0 and 100, reproducibility and latency are real; the 80 threshold, WARN band, `txsCount`, error codes and rate limits are OPEN. Tier thresholds are Risksir policy thresholds, not Intercepta verdicts.
-- Tools: Node v24.18.0, pnpm 12.6.0 via `corepack pnpm`, TypeScript ~6.0.3.
+- Tools: Node v24.18.0, pnpm 12.6.0 (plain `pnpm` and `corepack pnpm` both work), TypeScript ~6.0.3.
 
 ## 4. Implemented, Not Verified
 
@@ -45,7 +45,7 @@ M-004b, M-006 and M-007 (regression engine and labelled dataset) are done. Next:
 
 ## 7. Known Issues
 
-- Plain `pnpm` is not on PATH (`corepack enable` gives EPERM); use `corepack pnpm` (ADR-014). `gh` CLI is not installed.
+- Plain `pnpm` works (corepack shims installed into `%APPDATA%\npm`, ADR-014 amendment); `corepack enable` itself still needs an admin shell and is no longer needed. `gh` CLI is not installed.
 - A concurrent "CI repair" session also edits `HANDOFF.md`, `EXECUTION_PLAN.md` and `pnpm-workspace.yaml`; expect merge noise and check `git status` before staging.
 - `data/risksir.db` (gitignored) holds the live demo attempts; SAFE is no longer a first-time counterparty there.
 - Only scores 0 and 100 were observed, so the WARN tier rests on a labelled synthetic fixture.
@@ -69,7 +69,7 @@ ADR-019 signing permit; ADR-020 `awaiting_approval`/`expired`; ADR-021 single sp
 
 ## 11. Do Not Repeat
 
-- Do not open `.env`; use `bash scripts/env-status.sh`. Do not run `corepack enable` (EPERM).
+- Do not open `.env`; use `bash scripts/env-status.sh`. Do not run plain `corepack enable` (EPERM); the shims are already installed.
 - Do not claim a tier threshold as an Intercepta verdict; do not treat scores 1 to 99 as understood.
 - Do not describe the signer as a security or process boundary (code-path isolation only).
 - Do not recompute a quote hash from EIP-3009 typed data (it lacks scheme, resource and attemptId).

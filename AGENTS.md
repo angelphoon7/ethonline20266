@@ -8,7 +8,7 @@ Node v24.18.0 (>= 20 required) · pnpm 12.6.0 (workspaces, pinned in `packageMan
 
 ## Package manager rule
 
-**pnpm only.** On this Windows machine plain `pnpm` is not on PATH (`corepack enable` gives EPERM), so run `corepack pnpm <cmd>` (ADR-014). Never use npm or yarn to install. pnpm auto-edits `pnpm-workspace.yaml` (`minimumReleaseAgeExclude`); keep that.
+**pnpm only.** Plain `pnpm <cmd>` works on this machine (corepack shims live in `%APPDATA%\npm`, ADR-014 amendment); `corepack pnpm <cmd>` also works and is the fallback if a shell does not see the shims. Never use npm or yarn to install. pnpm auto-edits `pnpm-workspace.yaml` (`minimumReleaseAgeExclude`); keep that.
 
 ## Repo map
 

@@ -124,6 +124,7 @@ Status vocabulary: Accepted | Accepted (agent default) | Open. New ADRs append a
 - **Alternatives:** run an elevated shell; `npm i -g pnpm`. **Why not chosen:** needs elevation / violates `[G §8]`.
 - **Consequences:** a human may run `corepack enable` once in an admin shell (HUMAN_ACTIONS, optional).
 - **Reversibility:** trivial. **Source:** REPO_AUDIT, `[G §8]`.
+- **Amended 2026-09-26 (human request):** plain `pnpm` now works. `corepack enable` still fails with EPERM for `C:\Program Files\nodejs`, so the shims were installed into the user-writable directory already on PATH with `corepack enable --install-directory "%APPDATA%\npm"` (no elevation, no global package install; `pnpm --version` prints 12.6.0 and `pnpm verify` is green). `corepack pnpm ...` keeps working.
 
 ## ADR-015 — Defence in depth: the viem account itself refuses to sign without a bound decision
 - **Status:** Accepted. **Date:** 2026-09-26.
