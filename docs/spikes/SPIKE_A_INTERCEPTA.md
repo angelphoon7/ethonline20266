@@ -83,3 +83,7 @@ No kill condition observed.
 | Q-002 endpoint/base URL | Resolved: quick-scan path and `https://api.web3antivirus.io` observed working |
 | Q-011 timeout | 8000 ms is our choice; latency 325–2814 ms; rate limits and error codes OPEN |
 | Q-003 sponsor address as `payTo` | Still open (human) |
+
+## Addendum 2026-09-26 (M-010): a live timeout was observed
+
+One live quick-scan call from the owner API process timed out after 8021 ms (`TIMEOUT`, no HTTP status), recorded raw in `fixtures/intercepta/recorded/2026-09-26T15-45-44-474Z_0x39308ae4...json`. The gate failed closed (`HOLD`, `EVIDENCE_UNAVAILABLE`, `signerCalls=0`). A retry moments later succeeded in the other calls of the day (13 further calls, none failed). This is one observation, not a rate-limit finding; error codes and rate limits remain OPEN (ADR-023).

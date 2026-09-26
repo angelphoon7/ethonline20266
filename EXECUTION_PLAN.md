@@ -314,7 +314,7 @@ Level: unit-tested (jsdom component and App tests with a fake API) plus a local 
 - Smoke: `pnpm owner-api` + `pnpm dev:console` started locally; `GET /` returned 200 and `GET /api/state` through the proxy returned 401 without a token; both stopped. Not yet viewed in a browser with real data (M-010/M-011 demo run).
 
 # M-010 — Layer 4 proof
-Status: TODO
+Status: VERIFIED
 Needs credentials: all live variables
 ## Objective
 An approved v2 changes a **new** x402 decision that has a fresh live Intercepta screen; rollback from v2 to v1 demonstrated.
@@ -335,7 +335,16 @@ AC-012, AC-013, AC-014, AC-020; INV-010, INV-011.
 ## Commit boundary
 `test(live): record policy v2 changing a freshly screened x402 decision`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: live-verified. 2026-09-26, Base Sepolia only, `LIVE=1 pnpm demo:v2` (script `apps/gate/src/cli/demo-v2.ts`; every step asserted, an unexpected decision stops the run).
+- Loop, in order: owner labels incident `cv-01-incident-80000` as bad -> candidates A, B, C created and replayed over the labelled dataset (4 real_live / 0 sponsor_fixture / 11 controlled_variant / 4 synthetic cases; metrics with numerator/denominator, e.g. B: bad_cases_prevented 4/4, good_cases_changed 2/9, hold_rate 2/19; A: good_cases_changed 4/9, hold_rate 12/19; C: human_reviews_added 7/19) -> owner approves B bound to report `0xcb20df25...f1b9c` -> active policy v2 (`0xafc21f50...11a51`).
+- **v2 changed a decision on a NEW attempt with a fresh live screen:** ALT (first-time counterparty, 0.05 USDC) attempt `3faa35f6-d6fc-485b-9c74-c6ca6080acb9`: live Intercepta CLEAR (score 0, `real_live`, raw response `fixtures/intercepta/recorded/2026-09-26T15-43-30-255Z_0x351e5b8b...174d8.json`) -> v2 `CAP` 0.02 below the 0.05 quote (`CAP_BELOW_QUOTE`), `signerCalls=0`, no settlement. Under v1 the same quote would be `PAY` (proved live below).
+- Layer 2: SAFE (known counterparty), same CLEAR tier, under v2 -> `PAY`, `signerCalls=1`, settled, tx `0x9225d604...1b97` (block 47334563).
+- Rollback: `PolicyRolledBack` v2 -> v1 (v2 kept in history); a NEW ALT attempt `26540d40-70e0-4bd1-88e1-686214e8ab76` with a fresh live screen -> v1 `PAY`, `signerCalls=1`, settled, tx `0xe06c8201...70fa` (block 47334563).
+- Both txs re-checked read-only with `pnpm verify:tx` (RPC receipt `success`, USDC Transfer 50000 payer to SAFE and to ALT respectively). Session after the run: 5/20 settlements, 0.25/1.00 USDC; Intercepta 13 of 40 calls.
+- Evidence file `docs/evidence/M-010_v2_run.json` (candidate report hashes and metrics, decisions per attempt, `signerCalls` log, policy versions with approved report hash, audit events, raw response paths); three raw Intercepta responses under `fixtures/intercepta/recorded/`.
+- Live wiring of the owner API: `pnpm owner-api:live` (LIVE=1) starts the local seller and wires `POST /api/agent/run` and `POST /api/approvals` resume to the live gate. Smoke via the authenticated API: `scenario=block` returned 200; **Intercepta timed out after 8021 ms (real, recorded `2026-09-26T15-45-44-474Z_0x39308ae4...`), and the gate failed closed: `HOLD` / `EVIDENCE_UNAVAILABLE`, `signerCalls=0`**. This is the first live observation of an Intercepta timeout (Spike A open item), not a Risksir defect; retry succeeds normally.
+- `pnpm verify` green: 31 files, 798 tests (the demo scripts and live wiring are covered by the live run, not by unit tests).
+- Not shown: an `ASK_HUMAN` live approval resume (covered offline in M-004b/M-008).
 
 # M-011 — Demo hardening
 Status: TODO

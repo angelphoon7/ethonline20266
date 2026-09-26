@@ -57,7 +57,7 @@ export function safeEqual(a: string, b: string): boolean {
 
 const MIN_TOKEN_LENGTH = 16;
 
-class HttpError extends Error {
+export class HttpError extends Error {
   constructor(
     readonly status: number,
     message: string,

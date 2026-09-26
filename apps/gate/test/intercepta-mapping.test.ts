@@ -5,17 +5,27 @@ import { describe, expect, it } from 'vitest';
 import { QUICK_SCAN_MAPPING_VERSION, quickScanMapper } from '../src/intercepta/index.js';
 
 const fixtures = fileURLToPath(new URL('../../../fixtures/intercepta/', import.meta.url));
-const load = (dir: string, file: string) => JSON.parse(readFileSync(join(fixtures, dir, file), 'utf8')) as { provenance: string; body: unknown; address: string };
+const load = (dir: string, file: string) => JSON.parse(readFileSync(join(fixtures, dir, file), 'utf8')) as { provenance: string; body: unknown; address: string; error?: string };
 
 // Recorded fixtures are REAL live responses (Spike A). Provenance stays real_live; nothing here relabels them.
-const recorded = readdirSync(join(fixtures, 'recorded'))
+const allRecorded = readdirSync(join(fixtures, 'recorded'))
   .filter((f) => f.endsWith('.json'))
   .map((f) => load('recorded', f));
+// A live call can also be recorded as an error (for example a real 8 s TIMEOUT observed 2026-09-26): no body, nothing to map.
+const recorded = allRecorded.filter((r) => r.body !== null);
+const errorRecords = allRecorded.filter((r) => r.body === null);
 
 describe('quickScanMapper on recorded real_live responses (ADR-017)', () => {
   it('has recorded evidence from Spike A', () => {
     expect(recorded.length).toBeGreaterThanOrEqual(2);
-    expect(recorded.every((r) => r.provenance === 'real_live')).toBe(true);
+    expect(allRecorded.every((r) => r.provenance === 'real_live')).toBe(true);
+  });
+
+  it('a recorded live error (no body) is unusable evidence: the mapper returns null, so the gate holds', () => {
+    for (const r of errorRecords) {
+      expect(typeof r.error, r.address).toBe('string');
+      expect(quickScanMapper(r.body)).toBeNull();
+    }
   });
 
   it('maps every recorded body without returning null, and score 0 with no traits is CLEAR', () => {
