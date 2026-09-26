@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-09-26T17:48:39.302Z",
+  "endpoint": "https://api.web3antivirus.io/api/public/v2/extension/account/0x351e5b8b343dc0067338b7bcb34e685e87c174d8/quick-scan",
+  "address": "0x351e5b8b343dc0067338b7bcb34e685e87c174d8",
+  "httpStatus": 200,
+  "latencyMs": 815,
+  "error": null,
+  "provenance": "real_live",
+  "body": {
+    "toxicScore": 0,
+    "traits": []
+  }
+}
