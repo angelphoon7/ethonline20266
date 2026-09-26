@@ -1,5 +1,5 @@
 AGENT_STATUS: CONTINUE
-HUMAN_ACTIONS: 1. Keep the payer wallet `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD` at or below 20 test USDC (19.89 now). 2. Confirm with the sponsor that `SELLER_PAY_TO_RISKY` (the known-risk mainnet address) may be used as a testnet merchant `payTo`, and that `SELLER_PAY_TO_ALT` is an acceptable comparator (Q-003). 3. Ask Intercepta the overlap question from 07 §20 (Spike E) and paste the verbatim answer into `docs/spikes/SPIKE_E_OVERLAP.md`. 4. Make the GitHub repo public before submission. 5. Check the GitHub Actions run of the latest push (a concurrent session reported run 36247203846 green on Ubuntu for `f5a956a`; later pushes are unconfirmed).
+HUMAN_ACTIONS: 1. Keep the payer wallet `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD` at or below 20 test USDC (19.84 now). 2. Confirm with the sponsor that `SELLER_PAY_TO_RISKY` (the known-risk mainnet address) may be used as a testnet merchant `payTo`, and that `SELLER_PAY_TO_ALT` is an acceptable comparator (Q-003). 3. Ask Intercepta the overlap question from 07 §20 (Spike E) and paste the verbatim answer into `docs/spikes/SPIKE_E_OVERLAP.md`. 4. Make the GitHub repo public before submission. 5. Check the GitHub Actions run of the latest push (a concurrent session reported run 36247203846 green on Ubuntu for `f5a956a`; later pushes are unconfirmed).
 
 # HANDOFF — Risksir
 
@@ -38,10 +38,10 @@ M-004b, M-006 and M-007 (regression engine and labelled dataset) are done. Next:
 
 | System | Status |
 | --- | --- |
-| Intercepta | **live**, inside the payment flow (8 of 40 calls used: `data/intercepta-calls.json`) |
+| Intercepta | **live**, inside the payment flow (10 of 40 calls used: `data/intercepta-calls.json`) |
 | x402 seller | **live** local `@x402/express` seller on 127.0.0.1; stub facilitator in tests only |
-| Facilitator | **live** (the facilitator configured in `X402_FACILITATOR_URL`; two successful settles; failure modes only via the stub) |
-| Base Sepolia RPC + payer wallet | **live**, funded: 19.89 test USDC, 0.1 ETH; payer `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD`; live session 2/20 settlements, 0.10/1.00 USDC (`data/live-session.json`) |
+| Facilitator | **live** (the facilitator configured in `X402_FACILITATOR_URL`; three successful settles (the latest, tx `0xb38f786a…e866a`, block 47333318, was run by the human from PowerShell and checked read-only by `verify:tx`); failure modes only via the stub) |
+| Base Sepolia RPC + payer wallet | **live**, funded: 19.84 test USDC, 0.1 ETH; payer `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD`; live session 3/20 settlements, 0.15/1.00 USDC (`data/live-session.json`) |
 
 ## 7. Known Issues
 
