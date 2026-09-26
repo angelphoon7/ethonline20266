@@ -19,7 +19,8 @@
     "demo:block": "tsx --env-file=.env apps/gate/src/cli/demo.ts block",
     "demo:v2": "tsx --env-file=.env apps/gate/src/cli/demo.ts v2",
     "trace:export": "tsx apps/gate/src/cli/export-trace.ts",
-    "verify:tx": "tsx --env-file=.env apps/gate/src/cli/verify-tx.ts"
+    "verify:tx": "tsx --env-file=.env apps/gate/src/cli/verify-tx.ts",
+    "reconcile": "tsx --env-file=.env apps/gate/src/cli/reconcile.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

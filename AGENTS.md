@@ -28,7 +28,7 @@ Node v24.18.0 (>= 20 required) · pnpm 12.6.0 (workspaces, pinned in `packageMan
 ## Commands
 
 VERIFIED (run 2026-09-26): `corepack pnpm install`, `corepack pnpm verify` (tsc + eslint + vitest, offline, green), `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `LIVE=1 corepack pnpm test:live` (runs `*.live.test.ts`; refuses without `LIVE=1`), `LIVE=1 corepack pnpm --filter @risksir/gate spike:a` (observe-only Intercepta probe), `corepack pnpm demo:smoke` (placeholder, exits 1 until M-011), `bash scripts/env-status.sh`.
-Live/read-only tools (need `.env`, run through the root scripts): `corepack pnpm wallet:status` (public payer address and balances), `LIVE=1 corepack pnpm demo:pass|demo:block` (live Intercepta + real Base Sepolia payment within guardrails), `corepack pnpm verify:tx <hash>` (RPC receipt check), `corepack pnpm trace:export` (stored decision traces), `corepack pnpm --filter @risksir/seller start` (local seller). Not yet defined: console `dev`/`build`, `seed`, `reset`, `demo:v2`, `demo:smoke`.
+Live/read-only tools (need `.env`, run through the root scripts): `corepack pnpm wallet:status` (public payer address and balances), `LIVE=1 corepack pnpm demo:pass|demo:block` (live Intercepta + real Base Sepolia payment within guardrails), `corepack pnpm verify:tx <hash>` (RPC receipt check), `corepack pnpm trace:export` (stored decision traces), `corepack pnpm reconcile [--check <attemptId>]` (chain reconciliation; `--check` is read-only), `corepack pnpm --filter @risksir/seller start` (local seller). Not yet defined: console `dev`/`build`, `seed`, `reset`, `demo:v2`, `demo:smoke`.
 
 ## Framework-docs rule
 

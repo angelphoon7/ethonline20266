@@ -282,7 +282,7 @@ export function createGate(deps: GateDeps) {
         quote,
         quoteHash,
         policyVersion: policy.policyVersion,
-        armedAt: decidedAt.toISOString(),
+        armedAt: iso(), // the moment of arming, never earlier than the PolicyDecided event
         expiresAt: decision.expiresAt,
         status: 'armed',
       });

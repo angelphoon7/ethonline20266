@@ -199,7 +199,7 @@ Level: live-verified (pass and deny) plus integration-tested. 2026-09-26.
 
 
 # M-006 — Case store, reservations, reconciliation
-Status: IN_PROGRESS (state machines, cases, audit events and the reconciler landed with M-004b; two-connection reservation test and live reconciler check remain)
+Status: VERIFIED
 Needs credentials: none (live check optional)
 ## Objective
 Extend the M-004 store: cases with label revisions, serialised spend reservations with a concurrency proof, ambiguous-settlement reconciliation, separate settlement and delivery status, audit events.
@@ -220,7 +220,11 @@ AC-025, AC-027, AC-023; INV-007, INV-014, INV-020.
 ## Commit boundary
 `feat(store): add serialised reservations, reconciliation and append-only case labels`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: integration-tested plus a live read-only check of the chain reader. 2026-09-26.
+- `corepack pnpm verify` green. T-020 store-side transition enforcement and exhaustive tables (`state.test.ts`, `store.test.ts`); T-021 `reservation-concurrency.test.ts`: **real OS processes** (6 and 8) open one SQLite file and race for a 0.10 USDC cap: exactly 2 and exactly 4 win, total never above the cap (removing the cap re-check fails both tests); T-022 `store.test.ts` reconciliation (used and tx found, used but tx unfound, unused and valid, exactly at `validBefore`, unused after `validBefore`, chain time not local time, non-ambiguous skipped); T-031 cases and append-only label revisions with audit; T-032 `audit.integration.test.ts` (event order on pass, block, unavailable and refusal paths, strictly increasing `seq`, hashes only; this found and fixed a `PermitArmed` timestamp earlier than `PolicyDecided`); T-048/T-049 (M-004) unchanged.
+- **Live read-only reconciler check** (`docs/evidence/M-006_reconciler_live_check.json`): for attempt `7b94ea6c-…` the recorded authorisation (from, nonce, validBefore) gives `usedOnChain: true` and `txHash 0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a`, the M-004b settlement; a random nonce gives `used: false`. This exposed that the public RPC limits `eth_getLogs` to 1,000 blocks; the reader now searches in chunks and treats any RPC error as pending. No settlement was ambiguous live, so a live release or commit was not exercised (only the state logic and fake-chain tests).
+- Not covered: a real facilitator failure producing an ambiguous settlement.
+
 
 # M-007 — Regression engine and labelled dataset
 Status: TODO
