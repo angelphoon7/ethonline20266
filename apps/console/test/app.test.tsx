@@ -271,3 +271,23 @@ describe('clean tables', () => {
     expect(rows()).toHaveLength(6);
   });
 });
+
+describe('hosted preview (public page without a backend)', () => {
+  it('disables the token field and Connect, explains how to run the demo, and makes no API call', async () => {
+    const factory = vi.fn(() => fakeApi().api);
+    render(<App apiFactory={factory} hosted />);
+    expect(screen.getByTestId('hosted-notice').textContent).toMatch(/pnpm demo:up/);
+    const input = screen.getByLabelText('Owner token') as HTMLInputElement;
+    const connect = screen.getByRole('button', { name: 'Connect' }) as HTMLButtonElement;
+    expect(input.disabled).toBe(true);
+    expect(connect.disabled).toBe(true);
+    fireEvent.submit(connect.closest('form') as HTMLFormElement); // even a forced submit must not create the API client
+    await Promise.resolve();
+    expect(factory).not.toHaveBeenCalled();
+  });
+
+  it('is not hosted on localhost, where Connect works', () => {
+    render(<App apiFactory={() => fakeApi().api} />);
+    expect(screen.queryByTestId('hosted-notice')).toBeNull();
+  });
+});

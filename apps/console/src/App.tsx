@@ -19,7 +19,10 @@ const SCENARIO_BUTTONS = [
   ['v2', 'Run scene 5: new ALT payment'],
 ] as const;
 
-export function App({ apiFactory = createApi }: { apiFactory?: (token: string) => Api }) {
+/** True on any host other than this machine: the public preview has no backend, so it must never take a token. */
+const isHostedPreview = () => typeof location !== 'undefined' && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+
+export function App({ apiFactory = createApi, hosted = isHostedPreview() }: { apiFactory?: (token: string) => Api; hosted?: boolean }) {
   const [tokenInput, setTokenInput] = useState('');
   const [api, setApi] = useState<Api | null>(null);
   const [state, setState] = useState<ApiState | null>(null);
@@ -61,6 +64,7 @@ export function App({ apiFactory = createApi }: { apiFactory?: (token: string) =
 
   const connect = (e: FormEvent) => {
     e.preventDefault();
+    if (hosted) return; // the public preview never creates an API client or sends a token
     const a = apiFactory(tokenInput.trim());
     void run(async () => {
       await refresh(a);
@@ -83,13 +87,18 @@ export function App({ apiFactory = createApi }: { apiFactory?: (token: string) =
       {notice ? <div className="alert ok" role="status">{notice}</div> : null}
 
       {!api ? (
-        <Panel title="Connect" note="The owner token is sent only to the local API through the dev proxy and is kept in memory, never stored.">
+        <Panel title="Connect" {...(hosted ? {} : { note: 'The owner token is sent only to the local API through the dev proxy and is kept in memory, never stored.' })}>
+          {hosted ? (
+            <p className="alert" data-testid="hosted-notice">
+              Preview only. The owner console needs the local backend, so Connect is disabled on this page and no token is ever sent from here. To run the demo, start it on your own machine with <strong>pnpm demo:up</strong>.
+            </p>
+          ) : null}
           <form onSubmit={connect} className="row">
             <label>
               Owner token{' '}
-              <input type="password" value={tokenInput} onChange={(e) => setTokenInput(e.target.value)} autoComplete="off" aria-label="Owner token" />
+              <input type="password" value={tokenInput} onChange={(e) => setTokenInput(e.target.value)} autoComplete="off" aria-label="Owner token" disabled={hosted} />
             </label>
-            <button type="submit" disabled={tokenInput.trim().length === 0}>Connect</button>
+            <button type="submit" disabled={hosted || tokenInput.trim().length === 0}>Connect</button>
           </form>
         </Panel>
       ) : (

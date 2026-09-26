@@ -55,7 +55,7 @@ Every milestone M-000 to M-012 is VERIFIED. `FINAL_VALIDATION.md` has no FAIL; w
 
 ### Public showcase site (ADR-025, human-approved, static)
 
-`apps/site` (`@risksir/site`), built by Vercel through the GitHub integration (`vercel.json`). Data: `pnpm export:site` (reads `data/risksir.db`, writes redacted JSON to `apps/site/public/data/`); after any new live run, re-export and review the diff. `pnpm build:site` / `pnpm dev:site` locally. Placeholders for the human: `DEMO_VIDEO_URL` in `apps/site/src/config.ts` and the Live site URL in `README.md`. The agent runs no Vercel command.
+`apps/site` (`@risksir/site`), built by Vercel through the GitHub integration (`vercel.json`). Data: `pnpm export:site` (reads `data/risksir.db`, writes redacted JSON to `apps/site/public/data/`); after any new live run, re-export and review the diff. `pnpm build:site` / `pnpm dev:site` locally. The console login page is published on the same site at `/console/` as a disabled preview (Connect off on non-local hosts, ADR-025 addendum; the live demo stays local via `pnpm demo:up`). Placeholders for the human: `DEMO_VIDEO_URL` in `apps/site/src/config.ts` and the Live site URL in `README.md`. The agent runs no Vercel command.
 
 ## 8. Blockers
 

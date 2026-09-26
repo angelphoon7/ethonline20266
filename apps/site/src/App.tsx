@@ -89,6 +89,7 @@ export function App({ fetchImpl }: { fetchImpl?: typeof fetch }) {
           <a href="#evidence">Evidence</a>
           <a href="#regression">Regression</a>
           <a href="#claims">Claims</a>
+          <a href="/console/">Console</a>
         </span>
       </nav>
       <Hero />

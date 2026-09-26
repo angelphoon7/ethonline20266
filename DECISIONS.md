@@ -232,3 +232,6 @@ Status vocabulary: Accepted | Accepted (agent default) | Open. New ADRs append a
 - **Alternatives:** remove the ceiling. **Why not chosen:** a high ceiling keeps a hygiene check against accidentally funding the wallet heavily; the human can raise it again by editing the one constant.
 - **Consequences:** guardrail text, preflight, runbook and README updated; the preflight test now covers the new bounds.
 - **Reversibility:** edit the constant and the guardrail text. **Source:** human instruction.
+
+### Addendum to ADR-025 (human instruction 2026-09-26): console login page as a preview on the same site
+The owner console's login page is built into the same static site at `/console/` (`pnpm build:site` also runs the console's `build:hosted`). On any host other than localhost the console is a preview: the token field and Connect are disabled, no API client is created and no token is ever sent; it says to run `pnpm demo:up`. No backend, no keys, no new Vercel project or setting. The live demo runs only on the human's machine.

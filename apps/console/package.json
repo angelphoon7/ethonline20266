@@ -20,6 +20,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:hosted": "vite build --base=/console/ --outDir ../site/dist/console --emptyOutDir",
     "preview": "vite preview"
   }
 }

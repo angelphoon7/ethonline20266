@@ -19,7 +19,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && pnpm --filter @risksir/console build:hosted",
     "preview": "vite preview"
   }
 }
