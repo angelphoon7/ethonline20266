@@ -1,0 +1,31 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# deps and build
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# local state
+data/*.db
+data/*.db-*
+*.sqlite
+*.sqlite-*
+.agent/
+*.log
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# claude code personal settings
+.claude/settings.local.json
