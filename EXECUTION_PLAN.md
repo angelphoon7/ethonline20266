@@ -35,7 +35,7 @@ One commit: `feat(repo): scaffold pnpm workspace with green verify and CI`.
 Level: integration-tested (offline). 2026-09-26: `corepack pnpm install` ok (pnpm 12.6.0); `corepack pnpm verify` = `tsc --noEmit` + `eslint .` + `vitest run` green (2 files, 4 tests). `test:live` exits 1 without `LIVE=1` and exits 1 with `LIVE=1` (no live tests yet); `demo:smoke` exits 1 by design. `bash scripts/env-status.sh` shows all names SET. TypeScript pinned to ~6.0.3 (ADR-016). CI file `.github/workflows/ci.yml` added but not yet observed running on GitHub.
 
 # M-001 — Core domain
-Status: TODO
+Status: VERIFIED
 Needs credentials: none
 ## Objective
 zod types and inferred TS types for SPEC §7, money units, canonical JSON, the single fingerprint helper, provenance labels.
@@ -56,7 +56,7 @@ AC-015, AC-022 (hash part); INV-005, INV-020, INV-022.
 ## Commit boundary
 `feat(core): add domain types, money, canonical quote fingerprint and provenance labels`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: unit-tested. 2026-09-26: `corepack pnpm verify` green (tsc + eslint + vitest): 6 files, 102 tests. T-001 (money), T-002 (canonical JSON), T-003 (quote hash changes per field; golden vector `0xc2998300…fca9c` equals an independently built tag + canonical string), T-004 (policy/dataset/report hashes; report hash ignores `reportId`/`generatedAt`), T-016 (provenance survives parse/JSON round trip, relabel rejected, non-live evidence rejected in a `real_live` case, label revisions append-only). zod 4.6.5. Schema refinements also enforce INV-019 (signer timestamp after Intercepta return), INV-009 (decision completeness), INV-002 (HOLD/DENY/ASK_HUMAN never eligible), INV-015 (complete hard-prohibition set).
 
 # M-002 — Deterministic policy engine v1
 Status: TODO

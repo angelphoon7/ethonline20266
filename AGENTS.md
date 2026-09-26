@@ -4,7 +4,7 @@ Short on purpose; reread every session. Product behaviour is in `SPEC.md`, rules
 
 ## Stack (detected 2026-09-26)
 
-Node v24.18.0 (>= 20 required) · pnpm 12.6.0 (workspaces, pinned in `packageManager`) · TypeScript **~6.0.3** strict ESM (TS 7.0 breaks typescript-eslint, ADR-016) · vitest 5.0.2 · eslint 10.11 + typescript-eslint 8.70 · planned: zod, viem, better-sqlite3, `@x402/*`, Vite + React (versions are recorded here when each is first installed).
+Node v24.18.0 (>= 20 required) · pnpm 12.6.0 (workspaces, pinned in `packageManager`) · TypeScript **~6.0.3** strict ESM (TS 7.0 breaks typescript-eslint, ADR-016) · vitest 5.0.2 · eslint 10.11 + typescript-eslint 8.70 · zod 4.6.5 (in `@risksir/core`) · planned: viem, better-sqlite3, `@x402/*`, Vite + React (versions are recorded here when each is first installed).
 
 ## Package manager rule
 
@@ -38,9 +38,9 @@ Do not rely on remembered SDK behaviour. Before using x402, viem, better-sqlite3
 
 | Abstraction | Home | Milestone |
 | --- | --- | --- |
-| Money (`bigint` atomic units, decimal strings) | `packages/core/src/money` | M-001 |
-| The one quote/policy/dataset/report hash helper | `packages/core/src/fingerprint` | M-001 |
-| zod schemas for every type in SPEC §7 | `packages/core/src/types` | M-001 |
+| Money (`bigint` atomic units, decimal strings): `parseAtomic`, `formatAtomic`, `usdcStringToAtomic` | `packages/core/src/money.ts` | M-001 ✓ |
+| The one quote/policy/dataset/report hash helper: `hashQuote`, `sealPolicy`, `hashDataset`, `sealReport` (+ `canonicalJson`) | `packages/core/src/fingerprint.ts`, `canonical.ts` | M-001 ✓ |
+| zod schemas for every type in SPEC §7 (+ provenance helpers) | `packages/core/src/types.ts`, `provenance.ts` | M-001 ✓ |
 | `evaluate()` policy engine | `packages/core/src/policy` | M-002 |
 | Intercepta client | `apps/gate/src/intercepta` | M-003 |
 | Signer interface (`createGuardedAccount`, `runWithDecision`) | `apps/gate/src/signer/public.ts` | M-004 |

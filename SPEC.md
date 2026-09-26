@@ -69,8 +69,8 @@ Version 1.0 (2026-09-26). Status: binding for implementation. Source tags: `[07 
 | 2 | Agent | Allowed task + resource URL → request without payment credential → `402` | `PaymentAttempt created` | Resource not allowlisted: attempt `failed`, no quote |
 | 3 | Seller | Route returns `PaymentRequired` (`exact`, network, USDC, `payTo`) | — | Non-402 / invalid body: `QUOTE_INVALID`, HOLD |
 | 4 | Gate | Parse (zod) + select one requirement → `CanonicalQuote` + `quoteHash` | `quoted` | Unsupported scheme/network/asset: evaluated by policy → DENY (§9) |
-| 5 | Gate | Local checks (asset, ceiling, service, expiry) + serialised budget reservation | `SpendReservation reserved` | Cap exceeded: HOLD/DENY, no reservation kept |
-| 6 | Intercepta adapter | Live quick-scan of the selected `payTo` → raw snapshot + `NormalisedEvidence` | `screened`; `interceptaRequestedAt/ReturnedAt` | Error/timeout/429/malformed/stale ⇒ `UNAVAILABLE` ⇒ HOLD |
+| 5 | Gate | Local pre-checks (asset, ceiling, service, expiry); if they pass, serialised budget reservation | `SpendReservation reserved` | Pre-check fails or cap exceeded: no reservation kept; the failure is still turned into a Decision at step 7 |
+| 6 | Intercepta adapter | Live quick-scan of the selected `payTo` → raw snapshot + `RiskEvidence`. Runs for **every parseable quote**, even one a local pre-check will deny, so every Decision carries an evidence id (INV-009) | `screened`; `interceptaRequestedAt/ReturnedAt` | Error/timeout/429/malformed/stale ⇒ `UNAVAILABLE` evidence record ⇒ HOLD |
 | 7 | Policy engine | Active policy + evidence + quote + context → `Decision` (action, reasons) | `decided` | Engine exception ⇒ HOLD |
 | 8 | Protected signer | For eligible PAY/CAP: re-verify binding, then sign one EIP-3009 authorisation | `signed`; `signerCalls` = 1 | Any mismatch ⇒ refuse, `SIGNER_REFUSED`, count stays 0 |
 | 9 | Gate/seller/facilitator | Retry with payment payload; facilitator verifies+settles USDC | `submitted` → `settled`/`failed`/`ambiguous` | Ambiguous keeps reservation (INV-014) |
@@ -170,7 +170,7 @@ interface RiskEvidence {                                // normalised; evidenceI
 }
 interface Decision {
   decisionId: string; attemptId: string; quoteHash: Hex32; policyVersion: number; policyHash: Hex32;
-  evidenceId: string | null; action: Action; reasons: { code: ReasonCode; ruleId: string | null }[];
+  evidenceId: string; action: Action; reasons: { code: ReasonCode; ruleId: string | null }[];
   authorisedMaxAtomic: AtomicAmount | null; signerEligible: boolean;   // false for HOLD/DENY/ASK_HUMAN pending/CAP below quote
   approvalId: string | null; decidedAt: string; expiresAt: string;
   status: 'open' | 'consumed' | 'expired' | 'superseded';
@@ -339,7 +339,7 @@ Illegal transitions throw and are never persisted (tested exhaustively).
 
 | # | Check | Refusal reason |
 | --- | --- | --- |
-| 1 | A stored `Decision` for the ambient `decisionId` exists, `status = open`, `signerEligible = true`, `now < expiresAt`, and it references an `evidenceId` whose stored evidence has a usable tier and `capturedAt` ≤ `decidedAt` (a decision without evidence can never be eligible, INV-001) | `DECISION_EXPIRED` / `SIGNER_REFUSED` |
+| 1 | A stored `Decision` for the ambient `decisionId` exists, `status = open`, `signerEligible = true`, `now < expiresAt`, and its `evidenceId` resolves to stored evidence with a usable tier and `capturedAt` ≤ `decidedAt` (INV-001) | `DECISION_EXPIRED` / `SIGNER_REFUSED` |
 | 2 | Recomputed `quoteHash` from the typed data + attempt equals `decision.quoteHash` (recipient `to`, `value`, `verifyingContract`, `chainId`, `validBefore` vs `maxTimeoutSeconds`) | `QUOTE_MUTATED` |
 | 3 | `chainId = 84532` and `verifyingContract` = allowlisted USDC (`[G §2]`, confirm against x402 docs in Spike B), `from` = own address | `NETWORK_NOT_ALLOWED` / `ASSET_NOT_ALLOWED` |
 | 4 | `value ≤ decision.authorisedMaxAtomic` and `≤ [G §4]` limits (0.10 USDC per payment, 1.00 total, 20 settlements per session) | `OVER_PER_PAYMENT_CAP` |
