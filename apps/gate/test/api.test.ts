@@ -293,6 +293,10 @@ describe('approvals and attempt traces over HTTP (real local seller, stub facili
       expect(ok.json.result).toMatchObject({ status: 'settled', action: 'PAY', signerCalls: 1, settlement: 'settled' });
       expect(ok.json.result.txHash).toMatch(/^0x[0-9a-f]{64}$/);
 
+      // the attempt list carries the transaction hash of a settled attempt, and null while there is none
+      const listed = (await s.call('GET', '/api/attempts')).json.attempts as { attemptId: string; txHash: string | null }[];
+      expect(listed.find((a) => a.attemptId === id)?.txHash).toBe(ok.json.result.txHash);
+      expect(trace1.attempt.attemptId).toBe(id);
       const trace2 = (await s.call('GET', `/api/attempts/${id}`)).json;
       expect(trace2.signer.calls).toBe(1);
       expect(Date.parse(trace2.signer.invokedAt)).toBeGreaterThan(Date.parse(trace2.attempt.interceptaReturnedAt));

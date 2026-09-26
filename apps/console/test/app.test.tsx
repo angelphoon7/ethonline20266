@@ -6,7 +6,7 @@ import { ApiError } from '../src/api';
 import type { Api } from '../src/api';
 import { PRESETS } from '../src/presets';
 import type { CandidatePolicy, PolicyVersion } from '../src/types';
-import { awaitingTrace, blockedTrace, cases, report, settledTrace, state, summaries, versions } from './fixtures';
+import { TX, awaitingTrace, blockedTrace, cases, report, settledTrace, state, summaries, versions } from './fixtures';
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -231,5 +231,43 @@ describe('scenario buttons (live testnet run through the owner API)', () => {
     await connected({ runScenario: async () => { throw new ApiError(501, 'no scenario runner is wired in this process', 'NOT_IMPLEMENTED'); } });
     fireEvent.click(screen.getByRole('button', { name: 'Run scene 2: pay SAFE' }));
     expect((await screen.findByRole('alert')).textContent).toBe('NOT_IMPLEMENTED: no scenario runner is wired in this process');
+  });
+});
+
+describe('clean tables', () => {
+  it('has no explanatory notes, no revision counters, no USDC suffix in cells, and Amount (USDC) headers', async () => {
+    await connected();
+    const text = document.body.textContent ?? '';
+    for (const gone of ['Trigger C', 'The server builds each candidate', 'Every attempt with its decision', 'Read-only: this is what the agent', 'org-exampleco']) expect(text).not.toContain(gone);
+    expect(text).not.toMatch(/\(rev \d+\)/);
+    const headers = [...document.querySelectorAll('th')].map((h) => h.textContent);
+    expect(headers.filter((h) => h === 'Amount (USDC)')).toHaveLength(2);
+    const caseRow = screen.getByText('cv-01-incident-80000').closest('tr') as HTMLElement;
+    expect(caseRow.textContent).toContain('0.08');
+    expect(caseRow.textContent).not.toContain('USDC');
+    const attemptRow = screen.getByText('settled').closest('tr') as HTMLElement;
+    expect(attemptRow.textContent).not.toContain('USDC');
+  });
+
+  it('links a settled attempt to Basescan on Base Sepolia and shows - when there is no transaction', async () => {
+    await connected();
+    const settled = screen.getByText('settled').closest('tr') as HTMLElement;
+    expect(settled.querySelector('a')?.getAttribute('href')).toBe(`https://sepolia.basescan.org/tx/${TX}`);
+    const failed = screen.getAllByText('failed')[0]?.closest('tr') as HTMLElement;
+    expect(failed.querySelector('a')).toBeNull();
+    expect(failed.lastElementChild?.textContent).toBe('-');
+  });
+
+  it('shows a short selection of the cases (unlabelled first) with a Show all toggle; all cases still exist', async () => {
+    const label = (i: number) => (i < 2 ? 'unknown' : i < 5 ? 'bad' : 'good');
+    const many = Array.from({ length: 12 }, (_, i) => ({ ...cases[0], caseId: `case-${String(i).padStart(2, '0')}`, label: label(i) })) as unknown as typeof cases;
+    await connected({ cases: async () => ({ cases: many }) });
+    const rows = () => [...document.querySelectorAll('tr')].filter((r) => /^case-\d\d/.test(r.textContent ?? '')).map((r) => (r.firstElementChild as HTMLElement).textContent);
+    expect(rows()).toEqual(['case-00', 'case-01', 'case-02', 'case-03', 'case-05', 'case-06']); // 2 unlabelled, 2 bad, 2 good
+    expect(screen.getByText(/Showing 6 of 12 cases/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Show all' }));
+    expect(rows()).toHaveLength(12);
+    fireEvent.click(screen.getByRole('button', { name: 'Show fewer' }));
+    expect(rows()).toHaveLength(6);
   });
 });

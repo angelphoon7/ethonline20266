@@ -4,7 +4,7 @@ import { ApiError, createApi } from './api';
 import type { Api } from './api';
 import { Header, MetricsTable, Panel, ProvenanceBadge, SignerBadge, TraceView } from './components';
 import type { MetricColumn } from './components';
-import { formatUsdc, shortHash } from './format';
+import { basescanTx, compactCases, formatUsdc, shortHash, usdcNumber } from './format';
 import { PRESETS } from './presets';
 import type { ApiState, AttemptSummary, CandidatePolicy, PaymentCase, PolicyVersion, RegressionReport, Trace } from './types';
 
@@ -33,6 +33,7 @@ export function App({ apiFactory = createApi }: { apiFactory?: (token: string) =
   const [notice, setNotice] = useState<string | null>(null);
   const [labelCase, setLabelCase] = useState('');
   const [labelValue, setLabelValue] = useState('bad');
+  const [showAllCases, setShowAllCases] = useState(false);
   const [rationale, setRationale] = useState('');
 
   const refresh = useCallback(async (a: Api) => {
@@ -93,7 +94,7 @@ export function App({ apiFactory = createApi }: { apiFactory?: (token: string) =
         </Panel>
       ) : (
         <main className="grid">
-          <Panel title="Company risk profile" note="Read-only: this is what the agent is held to under the active version.">
+          <Panel title="Company risk profile">
             {profile ? (
               <dl data-testid="profile">
                 <div className="kv"><dt>Per payment limit</dt><dd>{formatUsdc(profile.maxPerPaymentAtomic)}</dd></div>
@@ -108,7 +109,7 @@ export function App({ apiFactory = createApi }: { apiFactory?: (token: string) =
             )}
           </Panel>
 
-          <Panel title="Live trace" note="Every attempt with its decision. Select one to see the quote, evidence, policy, signer and settlement.">
+          <Panel title="Live trace">
             <div className="scenario-buttons" aria-label="run a scenario">
               {SCENARIO_BUTTONS.map(([scenario, label]) => (
                 <button
@@ -125,7 +126,7 @@ export function App({ apiFactory = createApi }: { apiFactory?: (token: string) =
             </div>
             <div className="table-wrap">
               <table>
-                <thead><tr><th>Attempt</th><th>Status</th><th>v</th><th>Action</th><th>Amount</th><th>Signer</th></tr></thead>
+                <thead><tr><th>Attempt</th><th>Status</th><th>v</th><th>Action</th><th>Amount (USDC)</th><th>Signer</th><th>Tx (Base Sepolia)</th></tr></thead>
                 <tbody>
                   {attempts.map((a) => (
                     <tr key={a.attemptId} onClick={() => selectAttempt(a.attemptId)} className={trace?.attempt.attemptId === a.attemptId ? 'selected' : ''} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && selectAttempt(a.attemptId)}>
@@ -133,8 +134,9 @@ export function App({ apiFactory = createApi }: { apiFactory?: (token: string) =
                       <td>{a.status}</td>
                       <td>{a.policyVersion ?? 'n/a'}</td>
                       <td>{a.action ?? 'n/a'}</td>
-                      <td>{formatUsdc(a.amountAtomic)}</td>
+                      <td>{usdcNumber(a.amountAtomic)}</td>
                       <td><SignerBadge calls={a.signerCalls} /></td>
+                      <td>{a.txHash ? <a href={basescanTx(a.txHash)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>{shortHash(a.txHash, 4)}</a> : '-'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -160,23 +162,29 @@ export function App({ apiFactory = createApi }: { apiFactory?: (token: string) =
             ) : null}
           </Panel>
 
-          <Panel title="Incident labelling" note="Trigger C: an authenticated owner labels a case. Labels are appended, never overwritten.">
+          <Panel title="Incident labelling">
             <div className="table-wrap">
               <table>
-                <thead><tr><th>Case</th><th>Provenance</th><th>Label</th><th>Amount</th><th>First-time</th></tr></thead>
+                <thead><tr><th>Case</th><th>Provenance</th><th>Label</th><th>Amount (USDC)</th><th>First-time</th></tr></thead>
                 <tbody>
-                  {cases.map((c) => (
+                  {(showAllCases ? cases : compactCases(cases, labelCase)).map((c) => (
                     <tr key={c.caseId} onClick={() => setLabelCase(c.caseId)} className={labelCase === c.caseId ? 'selected' : ''}>
                       <td>{c.caseId}</td>
                       <td><ProvenanceBadge provenance={c.provenance} /></td>
-                      <td>{c.label} <span className="muted small">(rev {c.labelRevisions.length})</span></td>
-                      <td>{formatUsdc(c.quote.amountAtomic)}</td>
+                      <td>{c.label}</td>
+                      <td>{usdcNumber(c.quote.amountAtomic)}</td>
                       <td>{c.context.firstTimeCounterparty ? 'yes' : 'no'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            {cases.length > 6 ? (
+              <p className="muted small">
+                {showAllCases ? `All ${cases.length} cases` : `Showing ${compactCases(cases, labelCase).length} of ${cases.length} cases`} ·{' '}
+                <button type="button" className="link" onClick={() => setShowAllCases((v) => !v)}>{showAllCases ? 'Show fewer' : 'Show all'}</button>
+              </p>
+            ) : null}
             <form
               className="row"
               onSubmit={(e) => {
@@ -200,7 +208,7 @@ export function App({ apiFactory = createApi }: { apiFactory?: (token: string) =
             </form>
           </Panel>
 
-          <Panel title="Candidate policies" note="The server builds each candidate from the active version: only rules can change, never the limits, network or asset.">
+          <Panel title="Candidate policies">
             <div className="row">
               {PRESETS.map((p) => (
                 <button
@@ -240,11 +248,11 @@ export function App({ apiFactory = createApi }: { apiFactory?: (token: string) =
             </ul>
           </Panel>
 
-          <Panel title="Regression comparison" note="Metrics are computed from case records at run time, each with its numerator and denominator.">
+          <Panel title="Regression comparison">
             <MetricsTable columns={columns} />
           </Panel>
 
-          <Panel title="Policy versions" note="Rollback is a new logged transition to an earlier approved version.">
+          <Panel title="Policy versions">
             <ul className="list">
               {versions.map((v) => (
                 <li key={v.policyVersion}>

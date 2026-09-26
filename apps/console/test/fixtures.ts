@@ -87,8 +87,8 @@ export const awaitingTrace = (): Trace => {
 };
 
 export const summaries: AttemptSummary[] = [
-  { attemptId: 'att-settled-0001', status: 'settled', policyVersion: 1, action: 'PAY', signerCalls: 1, createdAt: '2026-09-26T10:00:00.000Z', payTo: PAY_TO, amountAtomic: '50000' },
-  { attemptId: 'att-blocked-0002', status: 'failed', policyVersion: 1, action: 'DENY', signerCalls: 0, createdAt: '2026-09-26T10:01:00.000Z', payTo: PAY_TO, amountAtomic: '10000' },
+  { attemptId: 'att-settled-0001', status: 'settled', policyVersion: 1, action: 'PAY', signerCalls: 1, createdAt: '2026-09-26T10:00:00.000Z', payTo: PAY_TO, amountAtomic: '50000', txHash: TX },
+  { attemptId: 'att-blocked-0002', status: 'failed', policyVersion: 1, action: 'DENY', signerCalls: 0, createdAt: '2026-09-26T10:01:00.000Z', payTo: PAY_TO, amountAtomic: '10000', txHash: null },
 ];
 
 const mkCase = (id: string, provenance: string, label: string, amount: string, firstTime: boolean) => ({

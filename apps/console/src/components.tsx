@@ -43,7 +43,7 @@ export function Header({ state, connected }: { state: ApiState | null; connected
     <header className="header">
       <div className="brand">Risksir <span className="muted">owner console</span></div>
       <div className="header-items">
-        <span>{state?.orgId ?? 'not connected'}</span>
+        {state ? null : <span>not connected</span>}
         <span data-testid="policy-version" className="badge version">{v !== undefined ? `Policy v${v}` : connected ? 'no active policy' : 'Policy: n/a'}</span>
         <span>Base Sepolia <span className="muted small">(eip155:84532, testnet only)</span></span>
         <span className="legend" aria-label="provenance legend">
@@ -125,7 +125,7 @@ export function TraceView({ trace }: { trace: Trace }) {
       {signer.calls > 0 ? (
         <p data-testid="signer-invoked">Signer invoked at {timeOf(signer.invokedAt)} (after the Intercepta call).</p>
       ) : (
-        <p className="muted" data-testid="signer-not-called">The signer was not called.</p>
+        <p className="muted" data-testid="signer-not-called">-</p>
       )}
 
       <h4>5. Settlement and delivery (separate)</h4>
@@ -134,7 +134,7 @@ export function TraceView({ trace }: { trace: Trace }) {
         <Row k="Delivery">{outcome?.deliveryStatus ?? 'n/a'}</Row>
         {outcome?.txHash ? (
           <Row k="Transaction">
-            <a href={basescanTx(outcome.txHash)} target="_blank" rel="noreferrer">{shortHash(outcome.txHash)} on Basescan</a>
+            <a href={basescanTx(outcome.txHash)} target="_blank" rel="noreferrer">{shortHash(outcome.txHash)} on Basescan (Base Sepolia)</a>
           </Row>
         ) : null}
       </dl>

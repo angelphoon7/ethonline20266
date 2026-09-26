@@ -32,3 +32,24 @@ export const METRIC_LABELS: Record<string, string> = {
 
 /** Metrics whose numerator and denominator are atomic USDC sums rather than counts. */
 export const VALUE_METRICS = new Set(['bad_value_prevented', 'bad_value_remaining', 'good_value_delayed_or_denied']);
+
+/** A USDC amount as a plain number for table cells (the column header says USDC). */
+export function usdcNumber(atomic: string | null): string {
+  if (atomic === null) return 'n/a';
+  if (!/^(0|[1-9][0-9]*)$/.test(atomic)) return atomic;
+  return formatUsdc(atomic).replace(' USDC', '');
+}
+
+/**
+ * The rows of the incident table. Short lists are shown whole. Longer ones show the cases still waiting for a label first
+ * (the incident to label), then a few bad and good ones; the rest stay available under "Show all", and every case takes
+ * part in a replay either way.
+ */
+export function compactCases<T extends { caseId: string; label: string }>(cases: T[], keep: string): T[] {
+  if (cases.length <= 6) return cases;
+  const sorted = [...cases].sort((a, b) => a.caseId.localeCompare(b.caseId));
+  const first = (label: string, n: number) => sorted.filter((c) => c.label === label).slice(0, n).map((c) => c.caseId);
+  const pick = new Set<string>([...first('unknown', 3), ...first('bad', 2), ...first('good', 2)]);
+  if (keep) pick.add(keep);
+  return sorted.filter((c) => pick.has(c.caseId));
+}

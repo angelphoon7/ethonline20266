@@ -149,7 +149,7 @@ export function createOwnerApi(deps: ApiDeps): Express {
 
   const summary = (a: PaymentAttempt) => {
     const decision = a.decisionId ? store.getDecision(a.decisionId) : null;
-    return { attemptId: a.attemptId, status: a.status, policyVersion: a.policyVersion, action: decision?.action ?? null, signerCalls: a.signerCalls, createdAt: a.createdAt, payTo: a.quote?.payTo ?? null, amountAtomic: a.quote?.amountAtomic ?? null };
+    return { attemptId: a.attemptId, status: a.status, policyVersion: a.policyVersion, action: decision?.action ?? null, signerCalls: a.signerCalls, createdAt: a.createdAt, payTo: a.quote?.payTo ?? null, amountAtomic: a.quote?.amountAtomic ?? null, txHash: store.getOutcomeForAttempt(a.attemptId)?.txHash ?? null };
   };
   api.get('/attempts', handler((_req, res) => void res.json({ attempts: store.listAttempts(orgId).map(summary) })));
 

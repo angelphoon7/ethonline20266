@@ -13,6 +13,7 @@ describe('header', () => {
     render(<Header state={state(2)} connected />);
     expect(screen.getByTestId('policy-version').textContent).toBe('Policy v2');
     expect(screen.getByText(/Base Sepolia/)).toBeTruthy();
+    expect(document.body.textContent).not.toContain('org-exampleco'); // no organisation id in the header
     expect(screen.getByLabelText('provenance legend').textContent).toMatch(/REAL LIVE.*CONTROLLED VARIANT.*SYNTHETIC/);
   });
 
@@ -54,7 +55,7 @@ describe('decision trace', () => {
     render(<TraceView trace={blockedTrace()} />);
     const trace = screen.getByTestId('trace');
     expect(within(trace).getByTestId('signer-badge').textContent).toBe('signer calls: 0');
-    expect(within(trace).getByTestId('signer-not-called').textContent).toBe('The signer was not called.');
+    expect(within(trace).getByTestId('signer-not-called').textContent).toBe('-');
     expect(within(trace).queryByTestId('signer-invoked')).toBeNull();
     expect(trace.textContent).not.toMatch(/Signer invoked at/);
     expect(trace.textContent).toMatch(/DENY/);

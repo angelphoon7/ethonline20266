@@ -47,6 +47,7 @@ export interface AttemptSummary {
   createdAt: string;
   payTo: string | null;
   amountAtomic: string | null;
+  txHash: string | null;
 }
 
 export type PresentedEvidence = (RiskEvidence & { tierLabel: string }) | null;
