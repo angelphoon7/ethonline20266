@@ -14,6 +14,7 @@
     "verify": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p apps/console/tsconfig.json && tsc --noEmit -p apps/site/tsconfig.json && eslint . && vitest run",
     "test:live": "node scripts/live-guard.mjs",
     "demo:smoke": "tsx --env-file=.env apps/gate/src/cli/smoke.ts",
+    "demo:up": "node scripts/demo-up.mjs",
     "demo:reset": "tsx apps/gate/src/cli/reset.ts",
     "demo:seed": "tsx apps/gate/src/cli/seed.ts",
     "demo:failure": "tsx --env-file=.env apps/gate/src/cli/demo-failure.ts",

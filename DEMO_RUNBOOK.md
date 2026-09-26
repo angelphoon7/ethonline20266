@@ -15,6 +15,10 @@ Opening line: "A $0.20 API call and a $5,000 payment should not react identicall
 - Live limits per agent session: 0.10 USDC per payment, 1.00 USDC in total, 20 settlements, 40 live Intercepta calls. A full scripted run uses 3 settlements and 5 Intercepta calls. Counters live in `data/live-session.json` and `data/intercepta-calls.json`.
 - Processes (all on 127.0.0.1): `pnpm owner-api:live` (owner API with the local x402 seller and the live gate) and `pnpm dev:console` (console at http://127.0.0.1:5173). The CLI demos start their own seller, so stop `owner-api:live` before running `demo:pass`, `demo:block` or `demo:v2`.
 
+## 2a. One command
+
+`pnpm demo:up` does sections 3, 4 and the process start in one go: it runs `pnpm demo:reset`, then `LIVE=1 pnpm demo:smoke` (it stops if a check FAILs), then starts the owner API (live) and the console and opens http://127.0.0.1:5173. Ctrl+C stops both servers. Flags: `--no-reset` (restart the servers mid-demo without wiping state), `--ignore-smoke` (start despite a failed preflight), `--skip-smoke`, `--no-open`. You still paste `OWNER_CONSOLE_TOKEN` in the console yourself.
+
 ## 3. Clean start
 
 Stop the owner API and any demo, then:

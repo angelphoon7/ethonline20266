@@ -104,6 +104,7 @@ LIVE=1 pnpm demo:pass             # real 402 -> live Intercepta -> PAY -> one si
 LIVE=1 pnpm demo:block            # known-risk payTo -> live Intercepta BLOCK -> DENY, signer calls: 0
 LIVE=1 pnpm demo:v2               # label incident, replay A/B/C, approve B, new payment under v2, rollback
 pnpm demo:failure                 # simulated Intercepta timeout -> HOLD, signer calls: 0
+pnpm demo:up                      # one command: reset, preflight, start the owner API and the console, open the browser
 pnpm owner-api:live               # owner API with the live gate (127.0.0.1:4100, bearer OWNER_CONSOLE_TOKEN)
 pnpm dev:console                  # owner console (127.0.0.1:5173) with Run scene buttons
 ```
