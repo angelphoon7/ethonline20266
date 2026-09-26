@@ -244,3 +244,12 @@ The owner console's login page is built into the same static site at `/console/`
 - **Alternatives:** reset the counter each time (`pnpm demo:reset --new-session`). **Why not chosen:** it lifts the spend limits too.
 - **Consequences:** guardrail, SPEC section 10 budget row, preflight (`limitsCheck` now measures against 100), runbook and README updated.
 - **Reversibility:** edit the constant and the guardrail text. **Source:** human instruction.
+
+## ADR-028 — Demo-ordered console layout; SPEC section 20 header amended (human approval 2026-09-26)
+- **Status:** Accepted (explicit human instruction). **Date:** 2026-09-26.
+- **Context:** The human asked for a cleaner console that reads in demo order and stated that any conflict with SPEC section 20 must be raised first. Two conflicts were raised and approved: (1) SPEC listed organisation and the provenance legend in the always-visible header; (2) the decision trace was specified as the per-attempt view, while the requested layout shows payment cards.
+- **Decision:** The header shows the brand, the `Policy vN` pill and `Base Sepolia · testnet`. The provenance legend sits beside the payments and the incident table; provenance chips remain on every case and every piece of evidence. Attempts are cards (action, amount, policy version, evidence with a "Risksir threshold" label whose tooltip carries the full ADR-017 wording, signer badge, settlement and delivery separate, Basescan link, quoted-to-settled timeline; "not called" and no signer time when the signer was not called). Selecting a card still opens the full decision trace in SPEC order. The comparison table shows v1 and each candidate side by side with numerators and denominators, the approved candidate highlighted and kept visible after approval; Replay, Approve and Roll back use the same handlers as before.
+- **Rationale:** *Preference:* a judge should understand each scene in three seconds. *Evidence:* no API call, handler or rule changed; the console reads each attempt through the existing trace route to fill the cards.
+- **Alternatives:** keep the SPEC header. **Why not chosen:** the human approved the new layout.
+- **Consequences:** SPEC section 20 amended; design tokens live in `apps/console/src/tokens.css`; the site shares them; console tests updated.
+- **Reversibility:** presentation only. **Source:** human instruction.

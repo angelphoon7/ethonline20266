@@ -15,6 +15,7 @@ beforeEach(() => {
 });
 
 const TOKEN = 'console-test-token-0123456789';
+const card = (status: string) => document.querySelector(`[data-testid="attempt-card"][data-status="${status}"]`) as HTMLElement;
 
 function fakeApi(over: Partial<Record<keyof Api, unknown>> = {}) {
   let version = 1;
@@ -110,7 +111,7 @@ describe('connecting', () => {
 describe('decision traces and approvals', () => {
   it('selecting an attempt loads and shows its trace', async () => {
     const { calls } = await connected();
-    fireEvent.click(screen.getByText('settled').closest('tr') as HTMLElement);
+    fireEvent.click(card('settled'));
     const trace = await screen.findByTestId('trace');
     expect(calls.trace?.[0]?.[0]).toBe('att-settled-0001');
     expect(within(trace).getByTestId('signer-badge').textContent).toBe('signer calls: 1');
@@ -119,8 +120,7 @@ describe('decision traces and approvals', () => {
 
   it('an attempt awaiting approval offers Approve, which sends exactly the shown quote hash', async () => {
     const { calls } = await connected();
-    const row = screen.getAllByText('awaiting_approval')[0]?.closest('tr') as HTMLElement;
-    fireEvent.click(row);
+    fireEvent.click(card('awaiting_approval'));
     await screen.findByTestId('trace');
     fireEvent.click(await screen.findByRole('button', { name: /Approve this quote/ }));
     await screen.findByText('Approval recorded for exactly this quote.');
@@ -129,7 +129,7 @@ describe('decision traces and approvals', () => {
 
   it('a settled or blocked attempt offers no approve button', async () => {
     await connected();
-    fireEvent.click(screen.getAllByText('failed')[0]?.closest('tr') as HTMLElement);
+    fireEvent.click(card('failed'));
     await screen.findByTestId('trace');
     expect(screen.queryByRole('button', { name: /Approve this quote/ })).toBeNull();
   });
@@ -140,7 +140,7 @@ describe('incident labelling', () => {
     const { calls } = await connected();
     const add = screen.getByRole('button', { name: 'Add label' }) as HTMLButtonElement;
     expect(add.disabled).toBe(true);
-    fireEvent.click(screen.getByText('cv-01-incident-80000').closest('tr') as HTMLElement);
+    fireEvent.click(screen.getByTitle('cv-01-incident-80000').closest('tr') as HTMLElement);
     fireEvent.change(screen.getByLabelText('Rationale'), { target: { value: 'merchant did not deliver' } });
     expect(add.disabled).toBe(false);
     fireEvent.click(add);
@@ -150,9 +150,9 @@ describe('incident labelling', () => {
 
   it('shows each case with its provenance badge and never labels a non-live case as live', async () => {
     await connected();
-    const row = screen.getByText('cv-01-incident-80000').closest('tr') as HTMLElement;
+    const row = screen.getByTitle('cv-01-incident-80000').closest('tr') as HTMLElement;
     expect(row.querySelector('[data-provenance="controlled_variant"]')?.textContent).toBe('CONTROLLED VARIANT');
-    expect(screen.getByText('real-02-pay-safe').closest('tr')?.querySelector('[data-provenance="real_live"]')?.textContent).toBe('REAL LIVE');
+    expect(screen.getByTitle('real-02-pay-safe').closest('tr')?.querySelector('[data-provenance="real_live"]')?.textContent).toBe('REAL LIVE');
   });
 });
 
@@ -196,8 +196,9 @@ describe('candidates, comparison, approval and rollback', () => {
     fireEvent.click(screen.getByRole('button', { name: /Approve \(bound/ }));
     await waitFor(() => expect(screen.getByTestId('policy-version').textContent).toBe('Policy v2'));
 
-    const rollback = await screen.findByRole('button', { name: 'Roll back to v1' });
+    const rollback = (await screen.findAllByRole('button', { name: 'Roll back to v1' }))[0] as HTMLElement; // one beside the comparison, one in the promotion step
     expect(screen.queryByRole('button', { name: 'Roll back to v2' })).toBeNull(); // the active version has no rollback button
+    expect(screen.getAllByRole('button', { name: 'Roll back to v1' })).toHaveLength(2);
     fireEvent.click(rollback);
     await screen.findByText('Rolled back to v1.');
     expect(calls.rollback?.[0]).toEqual([1]);
@@ -241,21 +242,17 @@ describe('clean tables', () => {
     for (const gone of ['Trigger C', 'The server builds each candidate', 'Every attempt with its decision', 'Read-only: this is what the agent', 'org-exampleco']) expect(text).not.toContain(gone);
     expect(text).not.toMatch(/\(rev \d+\)/);
     const headers = [...document.querySelectorAll('th')].map((h) => h.textContent);
-    expect(headers.filter((h) => h === 'Amount (USDC)')).toHaveLength(2);
-    const caseRow = screen.getByText('cv-01-incident-80000').closest('tr') as HTMLElement;
+    expect(headers.filter((h) => h === 'Amount (USDC)')).toHaveLength(1); // the incident table; payment cards show the unit once
+    const caseRow = screen.getByTitle('cv-01-incident-80000').closest('tr') as HTMLElement;
     expect(caseRow.textContent).toContain('0.08');
     expect(caseRow.textContent).not.toContain('USDC');
-    const attemptRow = screen.getByText('settled').closest('tr') as HTMLElement;
-    expect(attemptRow.textContent).not.toContain('USDC');
   });
 
   it('links a settled attempt to Basescan on Base Sepolia and shows - when there is no transaction', async () => {
     await connected();
-    const settled = screen.getByText('settled').closest('tr') as HTMLElement;
-    expect(settled.querySelector('a')?.getAttribute('href')).toBe(`https://sepolia.basescan.org/tx/${TX}`);
-    const failed = screen.getAllByText('failed')[0]?.closest('tr') as HTMLElement;
-    expect(failed.querySelector('a')).toBeNull();
-    expect(failed.lastElementChild?.textContent).toBe('-');
+    expect(card('settled').querySelector('a')?.getAttribute('href')).toBe(`https://sepolia.basescan.org/tx/${TX}`);
+    expect(card('failed').querySelector('a')).toBeNull();
+    expect(card('failed').textContent).toMatch(/Settlement-/);
   });
 
   it('shows a short selection of the cases (unlabelled first) with a Show all toggle; all cases still exist', async () => {
@@ -289,5 +286,52 @@ describe('hosted preview (public page without a backend)', () => {
   it('is not hosted on localhost, where Connect works', () => {
     render(<App apiFactory={() => fakeApi().api} />);
     expect(screen.queryByTestId('hosted-notice')).toBeNull();
+  });
+});
+
+describe('demo-ordered layout (presentation only)', () => {
+  it('reads top to bottom in demo order with step labels, newest payment first, and every card loaded through the existing trace route', async () => {
+    const { calls } = await connected();
+    const steps = [...document.querySelectorAll('.step')].map((e) => e.textContent);
+    expect(steps).toEqual(['Step 1', 'Steps 2–3', 'Step 4', 'Step 5']);
+    const cards = [...document.querySelectorAll('[data-testid="attempt-card"]')].map((c) => (c as HTMLElement).dataset.attempt);
+    expect(cards[0]).not.toBe('att-settled-0001'); // the settled attempt is the oldest
+    expect(cards.at(-1)).toBe('att-settled-0001');
+    expect(calls.trace?.length).toBeGreaterThanOrEqual(3); // one read per attempt, no other route
+  });
+
+  it('puts the provenance legend beside the tables, not in the header', async () => {
+    await connected();
+    expect(document.querySelector('header')?.textContent).not.toMatch(/REAL LIVE/);
+    expect(document.querySelectorAll('[aria-label="provenance legend"]').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('shows the profile as tiles and one-line rules, without a signer total', async () => {
+    await connected();
+    const profile = screen.getByTestId('profile');
+    expect(profile.querySelectorAll('.tile')).toHaveLength(4);
+    expect(profile.querySelector('.rules')?.textContent).toMatch(/R1/);
+    expect(document.body.textContent).not.toContain('Signer calls (all attempts)');
+  });
+
+  it('shows v1 → v2, who approved it and when, after an approval, and keeps the comparison visible with the approved candidate marked', async () => {
+    await connected();
+    fireEvent.click(screen.getByRole('button', { name: /Create candidate B/ }));
+    await screen.findByText('Candidate B created.');
+    fireEvent.click(screen.getByRole('button', { name: 'Replay' }));
+    await screen.findByText('Replayed.');
+    await waitFor(() => expect((screen.getByRole('button', { name: /Approve \(bound/ }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(screen.getByRole('button', { name: /Approve \(bound/ }));
+    await waitFor(() => expect(screen.getByTestId('policy-version').textContent).toBe('Policy v2'));
+    const promo = await screen.findByTestId('promotion');
+    expect(promo.textContent).toMatch(/v1→v2/);
+    expect(promo.textContent).toMatch(/approved by owner/);
+    expect(screen.getByTestId('metric-bad_cases_prevented-cand-1-xxxxxxxx').textContent).toBe('3/3'); // still visible after the approval
+    expect(screen.getByTestId('metrics-table').textContent).toMatch(/approved/);
+  });
+
+  it('shows a friendly empty state before the first payment', async () => {
+    await connected({ attempts: async () => ({ attempts: [] }) });
+    expect(screen.getByText(/No payments yet\. Run scene 2/)).toBeTruthy();
   });
 });

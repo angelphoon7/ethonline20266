@@ -53,3 +53,22 @@ export function compactCases<T extends { caseId: string; label: string }>(cases:
   if (keep) pick.add(keep);
   return sorted.filter((c) => pick.has(c.caseId));
 }
+
+/** A short case id for tables: the first two dash-separated parts (the full id is shown as a tooltip). */
+export const shortCaseId = (id: string): string => id.split('-').slice(0, 2).join('-');
+
+/** An address as 0x1234…abcd. */
+export const shortAddr = (a: string): string => (a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a);
+
+/** USDC with fixed decimals for right-aligned columns: two decimals when exact, otherwise as many as needed. */
+export function usdcFixed(atomic: string | null): string {
+  if (atomic === null) return 'n/a';
+  if (!/^(0|[1-9][0-9]*)$/.test(atomic)) return atomic;
+  const v = BigInt(atomic);
+  let frac = (v % 1_000_000n).toString().padStart(6, '0').replace(/0+$/, '');
+  if (frac.length < 2) frac = frac.padEnd(2, '0');
+  return `${v / 1_000_000n}.${frac}`;
+}
+
+/** HH:MM:SS (UTC) of an ISO timestamp, or null. */
+export const clock = (iso: string | null): string | null => (iso ? iso.slice(11, 19) : null);

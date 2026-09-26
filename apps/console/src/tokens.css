@@ -1,0 +1,72 @@
+/*
+ * Design tokens: the only place colours, spacing, radii and fonts are defined. Dark theme by default; a light theme is
+ * available with data-theme="light". The legacy names (--panel, --line, --accent, --ok, --bad, --warn, --live, --other)
+ * are aliases so apps/site keeps working.
+ */
+:root {
+  /* surfaces and text */
+  --bg: #0f1115;
+  --surface: #171a21;
+  --surface-2: #1f232c;
+  --border: #2b303b;
+  --text: #e9ebf0;
+  --muted: #9aa3b2;
+
+  /* accents: green (ok), amber (caution), red (blocked), blue (interactive) */
+  --green: #5fd68d;
+  --green-bg: #133121;
+  --amber: #f2c14e;
+  --amber-bg: #3a2d0c;
+  --red: #ff8a80;
+  --red-bg: #3c1815;
+  --blue: #7ea6ff;
+  --blue-bg: #1b2a4e;
+
+  /* spacing scale (8px) and radii */
+  --s1: 8px;
+  --s2: 16px;
+  --s3: 24px;
+  --s4: 32px;
+  --s5: 48px;
+  --radius: 10px;
+  --radius-sm: 8px;
+
+  /* type */
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+  --base: 14.5px;
+
+  /* legacy aliases */
+  --panel: var(--surface);
+  --line: var(--border);
+  --accent: var(--blue);
+  --ok: var(--green);
+  --ok-bg: var(--green-bg);
+  --bad: var(--red);
+  --bad-bg: var(--red-bg);
+  --warn: var(--amber);
+  --warn-bg: var(--amber-bg);
+  --live: var(--green);
+  --live-bg: var(--green-bg);
+  --other: #b9bfd4;
+  --other-bg: #262a36;
+}
+
+:root[data-theme='light'] {
+  --bg: #f4f5f8;
+  --surface: #ffffff;
+  --surface-2: #eef0f5;
+  --border: #dcdfe7;
+  --text: #16181d;
+  --muted: #5d6572;
+  --green: #157a3a;
+  --green-bg: #e3f5ea;
+  --amber: #8a5a00;
+  --amber-bg: #fff3d0;
+  --red: #b3261e;
+  --red-bg: #fdecec;
+  --blue: #1f4fd8;
+  --blue-bg: #e6edff;
+  --other: #454a5e;
+  --other-bg: #ececf3;
+}

@@ -14,7 +14,7 @@
 .lead { font-size: 20px; line-height: 1.5; max-width: 720px; margin: 0; color: var(--text); }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 14px; }
 .btn { display: inline-block; padding: 11px 20px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--text); text-decoration: none; font-weight: 600; }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #0b1020; }
 
 .section { padding: 48px 0 8px; border-top: 1px solid var(--line); margin-top: 24px; }
 .section h2 { font-size: 26px; margin: 0 0 16px; }
