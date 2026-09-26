@@ -1,0 +1,161 @@
+{
+  "scene": "regression",
+  "title": "Scene 4: regression over labelled cases",
+  "recordedAt": "2026-09-26T15:43:28.995Z",
+  "candidates": [
+    {
+      "key": "A",
+      "candidateId": "b888a902-9726-4144-92c6-a7898f962b76",
+      "rationale": "Blunt: stops the incident pattern but also disrupts every legitimate first payment.",
+      "rule": {
+        "ruleId": "A1",
+        "description": "First-time counterparty: hold",
+        "action": "HOLD"
+      },
+      "reportHash": "0xa3a07825a4c9ad3f0aaf69940427a45d00498d11d8c1f3d656431f1f861f4ca8",
+      "metrics": [
+        {
+          "name": "bad_cases_prevented",
+          "numerator": "4",
+          "denominator": "4"
+        },
+        {
+          "name": "bad_value_prevented",
+          "numerator": "270000",
+          "denominator": "270000"
+        },
+        {
+          "name": "bad_value_remaining",
+          "numerator": "0",
+          "denominator": "270000"
+        },
+        {
+          "name": "good_cases_changed",
+          "numerator": "4",
+          "denominator": "9"
+        },
+        {
+          "name": "good_value_delayed_or_denied",
+          "numerator": "110000",
+          "denominator": "340000"
+        },
+        {
+          "name": "human_reviews_added",
+          "numerator": "-1",
+          "denominator": "19"
+        },
+        {
+          "name": "auto_approval_rate",
+          "numerator": "4",
+          "denominator": "19"
+        },
+        {
+          "name": "hold_rate",
+          "numerator": "12",
+          "denominator": "19"
+        },
+        {
+          "name": "deny_rate",
+          "numerator": "3",
+          "denominator": "19"
+        },
+        {
+          "name": "bad_cases_weakened",
+          "numerator": "0",
+          "denominator": "7"
+        }
+      ],
+      "provenanceMix": {
+        "real_live": 4,
+        "sponsor_fixture": 0,
+        "controlled_variant": 11,
+        "synthetic": 4
+      },
+      "engineVersion": "regression/1.0.0",
+      "datasetHash": "0xfea659a2691e94da7691d7973d8989e867871251ef37a9e244e4e4b51f8798a4",
+      "generatedAt": "2026-09-26T15:43:28.948Z"
+    },
+    {
+      "key": "B",
+      "candidateId": "aeae4093-9abf-4dde-a4cc-73a0ef1d7020",
+      "rationale": "Balanced: first-time counterparty and amount of at least 0.03 USDC is capped at 0.02 USDC (a larger exact quote is not signed).",
+      "rule": {
+        "ruleId": "B1",
+        "description": "First-time counterparty and amount >= 0.03: cap at 0.02",
+        "action": "CAP"
+      },
+      "reportHash": "0xcb20df259e786c61645a4649d3b2e1cbb8e8fd43f2a70add6d1c0387f34f1b9c",
+      "metrics": [
+        {
+          "name": "bad_cases_prevented",
+          "numerator": "4",
+          "denominator": "4"
+        },
+        {
+          "name": "bad_value_prevented",
+          "numerator": "270000",
+          "denominator": "270000"
+        },
+        {
+          "name": "bad_value_remaining",
+          "numerator": "0",
+          "denominator": "270000"
+        },
+        {
+          "name": "good_cases_changed",
+          "numerator": "2",
+          "denominator": "9"
+        },
+        {
+          "name": "good_value_delayed_or_denied",
+          "numerator": "80000",
+          "denominator": "340000"
+        },
+        {
+          "name": "human_reviews_added",
+          "numerator": "-1",
+          "denominator": "19"
+        },
+        {
+          "name": "auto_approval_rate",
+          "numerator": "6",
+          "denominator": "19"
+        },
+        {
+          "name": "hold_rate",
+          "numerator": "2",
+          "denominator": "19"
+        },
+        {
+          "name": "deny_rate",
+          "numerator": "3",
+          "denominator": "19"
+        },
+        {
+          "name": "bad_cases_weakened",
+          "numerator": "0",
+          "denominator": "7"
+        }
+      ],
+      "provenanceMix": {
+        "real_live": 4,
+        "sponsor_fixture": 0,
+        "controlled_variant": 11,
+        "synthetic": 4
+      },
+      "engineVersion": "regression/1.0.0",
+      "datasetHash": "0xfea659a2691e94da7691d7973d8989e867871251ef37a9e244e4e4b51f8798a4",
+      "generatedAt": "2026-09-26T15:43:28.978Z"
+    }
+  ],
+  "approved": {
+    "candidate": "B",
+    "reportHash": "0xcb20df259e786c61645a4649d3b2e1cbb8e8fd43f2a70add6d1c0387f34f1b9c",
+    "policyVersion": 2,
+    "policyHash": "0xafc21f5019baff86cc7d646cad5d1d807dd57cce674159340586e0e376811a51",
+    "approvedBy": "owner",
+    "approvedAt": "2026-09-26T15:43:28.995Z"
+  },
+  "caveat": "Counterfactual replay of stored evidence on labelled cases. It is not a measure of real prevented loss.",
+  "source": "docs/evidence/M-010_v2_run.json"
+}

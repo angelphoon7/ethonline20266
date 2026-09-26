@@ -17,6 +17,7 @@
   },
   "include": [
     "packages/*/src",
+    "scripts/*.ts",
     "packages/*/test",
     "apps/gate/src",
     "apps/gate/test",

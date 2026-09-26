@@ -616,6 +616,11 @@ export class Store implements SignerStore {
     return row ? parseJson(row.json, regressionReportSchema) : null;
   }
 
+  listReports(orgId: string): RegressionReport[] {
+    const rows = this.db.prepare('SELECT json FROM reports WHERE org_id = ? ORDER BY rowid').all(orgId) as { json: string }[];
+    return rows.map((r) => parseJson(r.json, regressionReportSchema));
+  }
+
   totalSignerCalls(orgId: string): number {
     return this.listAttempts(orgId).reduce((n, a) => n + a.signerCalls, 0);
   }

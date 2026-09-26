@@ -9,6 +9,7 @@ export default defineConfig({
       'apps/gate/test/**/*.test.ts',
       'apps/seller/test/**/*.test.ts',
       'apps/console/test/**/*.test.{ts,tsx}',
+      'apps/site/test/**/*.test.{ts,tsx}',
       'test/**/*.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/*.live.test.ts'],

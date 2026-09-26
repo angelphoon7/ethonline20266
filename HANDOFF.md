@@ -1,5 +1,5 @@
 AGENT_STATUS: CONTINUE
-HUMAN_ACTIONS: 1. Keep the payer wallet `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD` at or below 20 test USDC (19.84 now). 2. Confirm with the sponsor that `SELLER_PAY_TO_RISKY` (the known-risk mainnet address) may be used as a testnet merchant `payTo`, and that `SELLER_PAY_TO_ALT` is an acceptable comparator (Q-003). 3. Ask Intercepta the overlap question from 07 §20 (Spike E) and paste the verbatim answer into `docs/spikes/SPIKE_E_OVERLAP.md`. 4. Make the GitHub repo public before submission. 5. Check the GitHub Actions run of the latest push (a concurrent session reported run 36247203846 green on Ubuntu for `f5a956a`; later pushes are unconfirmed).
+HUMAN_ACTIONS: 0. Vercel: import the repo, check the project settings listed in the final message of the site commit (root directory, Node version, pnpm), then fill in DEMO_VIDEO_URL (apps/site/src/config.ts) and the README Live site URL. 1. Keep the payer wallet `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD` at or below 20 test USDC (19.84 now). 2. Confirm with the sponsor that `SELLER_PAY_TO_RISKY` (the known-risk mainnet address) may be used as a testnet merchant `payTo`, and that `SELLER_PAY_TO_ALT` is an acceptable comparator (Q-003). 3. Ask Intercepta the overlap question from 07 §20 (Spike E) and paste the verbatim answer into `docs/spikes/SPIKE_E_OVERLAP.md`. 4. Make the GitHub repo public before submission. 5. Check the GitHub Actions run of the latest push (a concurrent session reported run 36247203846 green on Ubuntu for `f5a956a`; later pushes are unconfirmed).
 
 # HANDOFF — Risksir
 
@@ -52,6 +52,10 @@ M-004b, M-006, M-007, M-008 (policy lifecycle and owner API), M-009 (owner conso
 - git identity is `angelphoon7@gmail.com`; confirm it is linked to the GitHub account for attribution.
 - The owner API: `pnpm owner-api` (policies, cases, traces only; run/resume answer 501 / `resumed: false`) or `pnpm owner-api:live` (LIVE=1: local seller plus the live gate; run scenarios and approval resume work). 127.0.0.1:4100, bearer `OWNER_CONSOLE_TOKEN`, no CORS (the console uses the Vite `/api` proxy). The console was smoke-started but not yet viewed in a browser with real data.
 - **The live data/risksir.db is now in a used state:** ALT and SAFE are known counterparties, policy history is v1 -> v2 (rolled back) -> v1. `demo:v2` needs a fresh first-time ALT, so it can only be re-run after the M-011 reset script (or with a fresh db).
+
+### Public showcase site (ADR-025, human-approved, static)
+
+`apps/site` (`@risksir/site`), built by Vercel through the GitHub integration (`vercel.json`). Data: `pnpm export:site` (reads `data/risksir.db`, writes redacted JSON to `apps/site/public/data/`); after any new live run, re-export and review the diff. `pnpm build:site` / `pnpm dev:site` locally. Placeholders for the human: `DEMO_VIDEO_URL` in `apps/site/src/config.ts` and the Live site URL in `README.md`. The agent runs no Vercel command.
 
 ## 8. Blockers
 

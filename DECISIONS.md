@@ -214,3 +214,12 @@ Status vocabulary: Accepted | Accepted (agent default) | Open. New ADRs append a
 - **Alternatives:** a separate signer process. **Why not chosen:** out of MVP scope (08 §3), and it would not remove the trust in the backend that arms permits.
 - **Consequences:** wording changes in SPEC §6, §12, §18, INV-008, and README/claims later; no code change.
 - **Reversibility:** wording only. **Source:** human review, 08 §7.
+
+## ADR-025 — One static public showcase site on Vercel (explicit human approval 2026-09-26)
+- **Status:** Accepted (explicit human instruction). **Date:** 2026-09-26.
+- **Context:** CLAUDE.md section 6 makes a public deployment a stop condition. The human approved ONE public deployment for the hackathon submission link: a static, read-only site (`apps/site`) deployed through Vercel's GitHub integration.
+- **Decision:** `apps/site` is a Vite + React static build with no backend, no API route, no serverless function and no environment variable. It shows only redacted evidence already recorded (`scripts/export-site-data.ts` writes `apps/site/public/data/*.json` from the local case store). It never signs, pays or calls Intercepta, and every trace says "Recorded from a live run on <timestamp>". No Vercel CLI is run by the agent. The approval covers this site only and relaxes no other guardrail (the owner console and owner API stay localhost-only).
+- **Rationale:** *Preference:* judges need a link; evidence must not be presented as live.
+- **Alternatives:** no public page. **Why not chosen:** the human asked for it.
+- **Consequences:** `vercel.json` at the repo root, `pnpm export:site`, site tests that scan the data and the build output for secret-like names, keys and signature-shaped values. Re-run `pnpm export:site` after new live runs and review the diff before committing.
+- **Reversibility:** delete the Vercel project. **Source:** human instruction, CLAUDE.md section 6.

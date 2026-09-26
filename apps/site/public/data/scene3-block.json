@@ -1,0 +1,66 @@
+{
+  "scene": "block",
+  "title": "Scene 3: Intercepta-driven deny",
+  "recordedAt": "2026-09-26T14:37:52.892Z",
+  "attemptId": "2f05c880-d864-469b-be30-198b35d6fc3f",
+  "status": "failed",
+  "quote": {
+    "amountAtomic": "10000",
+    "network": "eip155:84532",
+    "asset": "0x036cbd53842c5426634e7929541ec2318f3dcf7e",
+    "payTo": "0x39308ae43e5dda98db5fb17d005c5c764e5a2fed",
+    "resourcePath": "/paid/report/risky"
+  },
+  "quoteHash": "0xaf3670cc4dc3ee0a194219a3a52d97713b0178d40ba0fdf4d8f8292b7cf0a9a6",
+  "evidence": {
+    "provenance": "real_live",
+    "screenedAddress": "0x39308ae43e5dda98db5fb17d005c5c764e5a2fed",
+    "capturedAt": "2026-09-26T14:37:52.883Z",
+    "endpoint": "https://api.web3antivirus.io/api/public/v2/extension/account/{address}/quick-scan",
+    "httpStatus": 200,
+    "latencyMs": 661,
+    "returned": {
+      "toxicScore": 100,
+      "traits": [
+        {
+          "name": "known_scammer",
+          "risk": 100,
+          "description": "The address has a confirmed history of malicious activity, including scams, phishing, or other harmful behavior."
+        },
+        {
+          "name": "attack_money_target",
+          "risk": 85,
+          "description": "The address has received funds tied to exploits, wallet drainers, or other forms of attack‑related activity."
+        }
+      ],
+      "fieldNames": [
+        "toxicScore",
+        "traits"
+      ]
+    },
+    "tier": "BLOCK",
+    "providerScore": 100,
+    "mappingVersion": "quickscan-v1"
+  },
+  "decision": {
+    "policyVersion": 1,
+    "policyHash": "0x95aca69fed8b0ec507375862f0e3c3c6010796e4984524dc72411d5ebd4b22bc",
+    "action": "DENY",
+    "reasons": [
+      "EVIDENCE_BLOCK"
+    ],
+    "authorisedMaxAtomic": null,
+    "signerEligible": false
+  },
+  "signer": {
+    "calls": 0,
+    "invokedAt": null
+  },
+  "settlement": {
+    "status": "none",
+    "delivery": null,
+    "txHash": null,
+    "basescan": null
+  },
+  "source": "docs/evidence/M-004b_traces.json"
+}

@@ -4,6 +4,8 @@ A closed-loop risk-policy engine for autonomous x402 buyer agents. Live Intercep
 
 Target: ETHGlobal Tokyo 2026, Intercepta prize *Safe Agent-to-Agent Payments with x402*.
 
+**Live site:** https://REPLACE-WITH-VERCEL-URL.vercel.app (static showcase of recorded evidence from Base Sepolia test runs; it never signs, pays or calls Intercepta).
+
 > **Status: under construction.** Nothing here is live-verified yet. See [`HANDOFF.md`](HANDOFF.md) for the current state and [`EXECUTION_PLAN.md`](EXECUTION_PLAN.md) for milestones. This README is completed in M-012 (Intercepta file map, claim boundaries, API feedback).
 
 ## Setup

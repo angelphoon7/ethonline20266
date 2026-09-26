@@ -1,0 +1,55 @@
+{
+  "scene": "pass",
+  "title": "Scene 2: successful payment",
+  "recordedAt": "2026-09-26T14:38:03.600Z",
+  "attemptId": "7b94ea6c-bcf3-43a4-9f59-251f544719d3",
+  "status": "settled",
+  "quote": {
+    "amountAtomic": "50000",
+    "network": "eip155:84532",
+    "asset": "0x036cbd53842c5426634e7929541ec2318f3dcf7e",
+    "payTo": "0x87cff22e916a4d70675e5b3056c1df6bd401cb1a",
+    "resourcePath": "/paid/report/safe"
+  },
+  "quoteHash": "0x95d37e80eed1a41bacdb5e568c405d02c703020d1cc295a7c9b267b7c5a35c67",
+  "evidence": {
+    "provenance": "real_live",
+    "screenedAddress": "0x87cff22e916a4d70675e5b3056c1df6bd401cb1a",
+    "capturedAt": "2026-09-26T14:38:03.592Z",
+    "endpoint": "https://api.web3antivirus.io/api/public/v2/extension/account/{address}/quick-scan",
+    "httpStatus": 200,
+    "latencyMs": 980,
+    "returned": {
+      "toxicScore": 0,
+      "traits": [],
+      "fieldNames": [
+        "toxicScore",
+        "traits"
+      ]
+    },
+    "tier": "CLEAR",
+    "providerScore": 0,
+    "mappingVersion": "quickscan-v1"
+  },
+  "decision": {
+    "policyVersion": 1,
+    "policyHash": "0x95aca69fed8b0ec507375862f0e3c3c6010796e4984524dc72411d5ebd4b22bc",
+    "action": "PAY",
+    "reasons": [
+      "RULE_MATCHED"
+    ],
+    "authorisedMaxAtomic": "50000",
+    "signerEligible": true
+  },
+  "signer": {
+    "calls": 1,
+    "invokedAt": "2026-09-26T14:38:03.619Z"
+  },
+  "settlement": {
+    "status": "settled",
+    "delivery": "received",
+    "txHash": "0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a",
+    "basescan": "https://sepolia.basescan.org/tx/0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a"
+  },
+  "source": "docs/evidence/M-004b_traces.json"
+}
