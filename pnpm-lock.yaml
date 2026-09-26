@@ -210,6 +210,9 @@ importers:
       better-sqlite3:
         specifier: ^13.0.3
         version: 13.0.3
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
       viem:
         specifier: ^2.56.9
         version: 2.56.9(typescript@6.0.3)(zod@4.6.5)
@@ -226,9 +229,6 @@ importers:
       '@x402/express':
         specifier: ^2.27.0
         version: 2.27.0(express@5.2.1)(typescript@6.0.3)
-      express:
-        specifier: ^5.2.1
-        version: 5.2.1
       tsx:
         specifier: ^4.23.15
         version: 4.23.15

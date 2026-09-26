@@ -11,13 +11,13 @@
     "better-sqlite3": "^13.0.3",
     "viem": "^2.56.9",
     "zod": "^4.6.5",
-    "@risksir/seller": "workspace:*"
+    "@risksir/seller": "workspace:*",
+    "express": "^5.2.1"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
     "@types/express": "^5.0.6",
     "@x402/express": "^2.27.0",
-    "express": "^5.2.1",
     "tsx": "^4.23.15"
   },
   "scripts": {

@@ -39,6 +39,8 @@ Do not rely on remembered SDK behaviour. Before using x402, viem, better-sqlite3
 | Abstraction | Home | Milestone |
 | --- | --- | --- |
 | `runRegression()` / `replayCase()` / `computeMetrics()` pure regression engine; `buildDataset()` / `loadDataset()` labelled dataset; `corepack pnpm seed` | `packages/core/src/regression`, `apps/gate/src/dataset` | M-007 ✓ |
+| Policy lifecycle `createCandidate` / `replayCandidate` / `approveCandidate` / `rollbackPolicy` / `installInitialPolicy` (all transactional) | `apps/gate/src/policy/lifecycle.ts` | M-008 ✓ |
+| Owner HTTP API `createOwnerApi(deps)`, `ROUTES`, `safeEqual` (bearer auth on the whole `/api` router); `pnpm owner-api` | `apps/gate/src/api/server.ts` | M-008 ✓ |
 | Attempt/permit/approval/reservation/decision/policy state machines (`assertTransition`) | `packages/core/src/state.ts` | M-004b ✓ |
 | Money (`bigint` atomic units, decimal strings): `parseAtomic`, `formatAtomic`, `usdcStringToAtomic` | `packages/core/src/money.ts` | M-001 ✓ |
 | The one quote/policy/dataset/report hash helper: `hashQuote`, `sealPolicy`, `hashDataset`, `sealReport` (+ `canonicalJson`) | `packages/core/src/fingerprint.ts`, `canonical.ts` | M-001 ✓ |

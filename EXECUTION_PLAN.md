@@ -255,7 +255,7 @@ Level: unit-tested and integration-tested (offline, from stored evidence only). 
 
 
 # M-008 — Policy lifecycle
-Status: TODO
+Status: VERIFIED
 Needs credentials: none
 ## Objective
 Candidates, report binding, authenticated owner approval, atomic activation, rollback, stale-approval invalidation, audit events, owner API for all of it.
@@ -276,7 +276,14 @@ AC-012, AC-014, AC-028, AC-031; INV-010, INV-011, INV-017, INV-025, INV-026.
 ## Commit boundary
 `feat(policy): add candidate approval, atomic activation and rollback with report binding`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: integration-tested (offline; real local x402 seller, stub facilitator, fixture evidence labelled synthetic). 2026-09-26.
+- `pnpm verify` green: 28 files, **771 tests**. Lifecycle `apps/gate/src/policy/lifecycle.ts` (`installInitialPolicy`, `createCandidate`, `replayCandidate`, `approveCandidate`, `rollbackPolicy`, `ensureVersionRecords`), store tables `policy_versions`, `candidates`, `reports`, owner API `apps/gate/src/api/server.ts` (Express 5, all 15 routes of SPEC section 19), `pnpm owner-api` (127.0.0.1 only).
+- T-029 `lifecycle.test.ts` (22): the server builds candidates (next version, parent = active, profile copied; a body cannot change limits, network or asset); replay seals a report bound to candidate, baseline and dataset hashes (same inputs, same hash); approval refused for an unreplayed candidate, missing/other candidate's/tampered/stale-dataset/foreign-baseline report and a blank approver; success is one transaction (policy, records, pointer, sibling candidates rejected, `PolicyApproved` + `PolicyActivated`); **atomicity proved by injecting a failure in the pointer move** (v1 stays active, no v2 policy, records and audit unchanged, the candidate can still be approved afterwards); approved versions are immutable (`putPolicy` insert-only, record edits and illegal transitions throw); rollback is a new logged transition (v2 `rolled_back`, history kept, a rolled-back number is never reused: the next candidate is v3); an attempt awaiting approval under v1 becomes `expired` when v2 activates (AC-031, INV-017).
+- T-030 `api.test.ts` (14): every route x 5 bad-auth variants (75 requests) is 401 with `WWW-Authenticate` and never echoes the token; unauthenticated callers cannot tell routes apart; short tokens refused at start; constant-time compare over hashes; static check that agent and signer code never reference the owner token or import the API; body validation (unknown keys, bad values, invalid JSON, 413); the approver identity is always the authenticated owner; the owner loop over HTTP (label incident as owner, two candidates replayed, approval bound to the exact report, 409 for another candidate's report and for a stale sibling, rollback); `POST /api/approvals` binds the shown quote hash, resumes the attempt through the M-004b path and returns the settled result; an approval after a policy change expires the attempt; attempt traces show the signer section only with real calls and label the tier "Risksir tier (policy threshold ADR-017), not an Intercepta verdict".
+- T-050 `lifecycle.integration.test.ts`: v1 pays a first-time counterparty; after the owner labels the incident and approves candidate B (bound to its report) a NEW first-time attempt gets a fresh screen and v2 caps it below the quote (`CAP_BELOW_QUOTE`, `signerCalls=0`, no settlement); a known counterparty with the same evidence still pays (Layer 2); rollback restores v1 for the next new attempt. Offline only: the live proof is M-010.
+- Mutation checks (7 of 8 killed at first, the survivor closed with a new test; the eighth is unreachable because the strict body schema rejects an `approvedBy` key first): dataset-staleness, candidate binding, baseline binding, rollback target validation, replay requirement, token comparison, approval quote binding.
+- Smoke: `pnpm owner-api` started, unauthenticated and wrong-token requests returned 401, then stopped. `POST /api/agent/run` returns 501 and `POST /api/approvals` returns `resumed: false` until the live gate is wired in M-010.
+
 
 # M-009 — Owner console
 Status: TODO

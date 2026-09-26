@@ -5,10 +5,12 @@ import {
   ATTEMPT_TRANSITIONS,
   DECISION_TRANSITIONS,
   PERMIT_TRANSITIONS,
+  POLICY_VERSION_TRANSITIONS,
   RESERVATION_TRANSITIONS,
   assertSameProvenance,
   approvalSchema,
   assertTransition,
+  candidatePolicySchema,
   auditEventSchema,
   decisionSchema,
   formatAtomic,
@@ -19,7 +21,9 @@ import {
   paymentCaseSchema,
   paymentOutcomeSchema,
   paymentPolicySchema,
+  policyVersionSchema,
   rawInterceptaSchema,
+  regressionReportSchema,
   riskEvidenceSchema,
   signingPermitSchema,
   spendReservationSchema,
@@ -27,6 +31,7 @@ import {
 import type {
   Approval,
   AuditEvent,
+  CandidatePolicy,
   AuditType,
   CaseLabel,
   Decision,
@@ -35,7 +40,9 @@ import type {
   PaymentCase,
   PaymentOutcome,
   PaymentPolicy,
+  PolicyVersion,
   RawIntercepta,
+  RegressionReport,
   RiskEvidence,
   SigningPermit,
   SpendReservation,
@@ -69,6 +76,9 @@ CREATE TABLE IF NOT EXISTS active_pointer (
 CREATE TABLE IF NOT EXISTS permits (permit_id TEXT PRIMARY KEY, attempt_id TEXT NOT NULL, json TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS approvals (approval_id TEXT PRIMARY KEY, attempt_id TEXT NOT NULL, json TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS cases (case_id TEXT PRIMARY KEY, org_id TEXT NOT NULL, json TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS policy_versions (org_id TEXT NOT NULL, policy_version INTEGER NOT NULL, json TEXT NOT NULL, PRIMARY KEY (org_id, policy_version));
+CREATE TABLE IF NOT EXISTS candidates (candidate_id TEXT PRIMARY KEY, org_id TEXT NOT NULL, json TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS reports (report_hash TEXT PRIMARY KEY, org_id TEXT NOT NULL, json TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS audit_events (seq INTEGER PRIMARY KEY AUTOINCREMENT, json TEXT NOT NULL);
 `;
 
@@ -542,6 +552,72 @@ export class Store implements SignerStore {
       return next;
     });
     return run.immediate();
+  }
+
+  // ---- policy lifecycle records (SPEC section 11, INV-010, INV-011) ----
+  getPolicyVersion(orgId: string, version: number): PolicyVersion | null {
+    const row = this.db.prepare('SELECT json FROM policy_versions WHERE org_id = ? AND policy_version = ?').get(orgId, version) as { json: string } | undefined;
+    return row ? parseJson(row.json, policyVersionSchema) : null;
+  }
+
+  listPolicyVersions(orgId: string): PolicyVersion[] {
+    const rows = this.db.prepare('SELECT json FROM policy_versions WHERE org_id = ? ORDER BY policy_version').all(orgId) as { json: string }[];
+    return rows.map((r) => parseJson(r.json, policyVersionSchema));
+  }
+
+  /** Inserts a version record, or moves an existing one along the legal transitions only. */
+  savePolicyVersion(orgId: string, record: PolicyVersion): void {
+    const r = policyVersionSchema.parse(record);
+    const existing = this.getPolicyVersion(orgId, r.policyVersion);
+    if (existing) {
+      assertTransition('policy version', POLICY_VERSION_TRANSITIONS, existing.status, r.status);
+      // an approved version is immutable: only its status may move (INV-011)
+      const { status: _a, ...before } = existing;
+      const { status: _b, ...after } = r;
+      if (JSON.stringify(before) !== JSON.stringify(after)) throw new Error('an approved policy version is immutable apart from its status');
+    }
+    this.db
+      .prepare('INSERT INTO policy_versions (org_id, policy_version, json) VALUES (?, ?, ?) ON CONFLICT(org_id, policy_version) DO UPDATE SET json = excluded.json')
+      .run(orgId, r.policyVersion, JSON.stringify(r));
+  }
+
+  /** The next free version number: monotonic, so a rolled-back number is never reused. */
+  nextPolicyVersion(orgId: string): number {
+    const row = this.db.prepare('SELECT COALESCE(MAX(policy_version), 0) AS m FROM policies WHERE org_id = ?').get(orgId) as { m: number };
+    return row.m + 1;
+  }
+
+  // ---- candidates and regression reports ----
+  saveCandidate(orgId: string, candidate: CandidatePolicy): void {
+    const c = candidatePolicySchema.parse(candidate);
+    this.db
+      .prepare('INSERT INTO candidates (candidate_id, org_id, json) VALUES (?, ?, ?) ON CONFLICT(candidate_id) DO UPDATE SET json = excluded.json')
+      .run(c.candidateId, orgId, JSON.stringify(c));
+  }
+
+  getCandidate(candidateId: string): CandidatePolicy | null {
+    const row = this.db.prepare('SELECT json FROM candidates WHERE candidate_id = ?').get(candidateId) as { json: string } | undefined;
+    return row ? parseJson(row.json, candidatePolicySchema) : null;
+  }
+
+  listCandidates(orgId: string): CandidatePolicy[] {
+    const rows = this.db.prepare('SELECT json FROM candidates WHERE org_id = ? ORDER BY rowid').all(orgId) as { json: string }[];
+    return rows.map((r) => parseJson(r.json, candidatePolicySchema));
+  }
+
+  /** Reports are immutable and content-addressed: the same inputs give the same hash and the same row. */
+  saveReport(orgId: string, report: RegressionReport): void {
+    const r = regressionReportSchema.parse(report);
+    this.db.prepare('INSERT OR IGNORE INTO reports (report_hash, org_id, json) VALUES (?, ?, ?)').run(r.reportHash, orgId, JSON.stringify(r));
+  }
+
+  getReport(reportHash: string): RegressionReport | null {
+    const row = this.db.prepare('SELECT json FROM reports WHERE report_hash = ?').get(reportHash) as { json: string } | undefined;
+    return row ? parseJson(row.json, regressionReportSchema) : null;
+  }
+
+  totalSignerCalls(orgId: string): number {
+    return this.listAttempts(orgId).reduce((n, a) => n + a.signerCalls, 0);
   }
 
   // ---- policies ----

@@ -21,7 +21,8 @@
     "trace:export": "tsx apps/gate/src/cli/export-trace.ts",
     "verify:tx": "tsx --env-file=.env apps/gate/src/cli/verify-tx.ts",
     "reconcile": "tsx --env-file=.env apps/gate/src/cli/reconcile.ts",
-    "seed": "tsx apps/gate/src/cli/seed.ts"
+    "seed": "tsx apps/gate/src/cli/seed.ts",
+    "owner-api": "tsx --env-file=.env apps/gate/src/cli/owner-api.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
