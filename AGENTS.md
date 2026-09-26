@@ -38,14 +38,15 @@ Do not rely on remembered SDK behaviour. Before using x402, viem, better-sqlite3
 
 | Abstraction | Home | Milestone |
 | --- | --- | --- |
+| Attempt/permit/approval/reservation/decision/policy state machines (`assertTransition`) | `packages/core/src/state.ts` | M-004b ✓ |
 | Money (`bigint` atomic units, decimal strings): `parseAtomic`, `formatAtomic`, `usdcStringToAtomic` | `packages/core/src/money.ts` | M-001 ✓ |
 | The one quote/policy/dataset/report hash helper: `hashQuote`, `sealPolicy`, `hashDataset`, `sealReport` (+ `canonicalJson`) | `packages/core/src/fingerprint.ts`, `canonical.ts` | M-001 ✓ |
 | zod schemas for every type in SPEC §7 (+ provenance helpers) | `packages/core/src/types.ts`, `provenance.ts` | M-001 ✓ |
-| `evaluate()` / `evaluateFailClosed()` policy engine, `validateCandidate()`, demo policy v1 and candidates A/B/C | `packages/core/src/policy` | M-002 ✓ |
+| `evaluateLocal()` (stage A) / `evaluate()` / `evaluateFailClosed()` policy engine, `validateCandidate()`, demo policy v1 and candidates A/B/C | `packages/core/src/policy` | M-002 ✓ |
 | Intercepta client `screenAddress()`, `quickScanMapper`, `FileBudget`, `writeRecordedResponse()` | `apps/gate/src/intercepta` | M-003 ✓ |
-| Signer interface: `createProtectedSigner(deps).forAttempt(attemptId)` returns `{ address, authorise, signTypedData }`; `SignerRefusedError`; `payerPublicAddress`; `readWalletStatus` | `apps/gate/src/signer/public.ts` (only entry point; `key.ts` and `guard.ts` are internal) | M-004 ✓ |
-| SQLite `Store` (attempts, evidence, decisions, reservations, signer ledger, policies, active pointer) and its `SignerStore` view | `apps/gate/src/store/store.ts` | M-004 ✓ (extended in M-006) |
-| `createGate(deps).run(task)` buyer gate; `runBuyerTask`, `scenarioTask` | `apps/gate/src/x402/gate.ts`, `apps/gate/src/agent/runner.ts` | M-004 ✓ |
+| Signer interface: `createProtectedSigner(deps).forAttempt(attemptId)` returns `{ address, signTypedData }` only (the gate arms a `SigningPermit` in the store; the signer checks it, tables A/B of SPEC §12); `SignerRefusedError`; `payerPublicAddress`; `readWalletStatus` | `apps/gate/src/signer/public.ts` (only entry point; `key.ts` and `guard.ts` are internal) | M-004 ✓ |
+| SQLite `Store` (attempts with enforced state machines, evidence, decisions, reservations = the only spend ledger, signing permits, approvals, signer ledger, cases with label revisions, audit events, policies, active pointer) and its `SignerStore` view | `apps/gate/src/store/store.ts` | M-004 ✓, M-004b ✓ (M-006 extends) |
+| `createGate(deps)` buyer gate: `run(task)`, `resumeWithApproval(attemptId, approvalId, task)`, `expireOverdue()`; local stage (`evaluateLocalFailClosed`) runs before any Intercepta call; `runBuyerTask`, `scenarioTask` | `apps/gate/src/x402/gate.ts`, `apps/gate/src/agent/runner.ts` | M-004 ✓ |
 | `LiveSession` limits and `formatBanner` | `apps/gate/src/live/session.ts` | M-004 ✓ |
 
 Search before creating; never add a second hash or money helper.

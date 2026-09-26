@@ -2,7 +2,7 @@
 
 Date: 2026-09-26. Governing: SPEC §5, §12, §16, Q-005, Q-006; 08 §11 P0 rows 2–3; ADR-003, ADR-015, ADR-018.
 
-> **Design note (human review 2026-09-26):** the signer described below is the pre-review implementation. SPEC §12 now requires a single-use signing permit and typed-data checks against a stored quote (ADR-019); fix milestone M-004b re-proves it. The live evidence below stays valid for the pre-review implementation.
+> **Design note (human review 2026-09-26):** the signer described below is the pre-review implementation. SPEC §12 now requires a single-use signing permit and typed-data checks against a stored quote (ADR-019). M-004b implemented it and re-proved it live (tx `0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a`, `docs/evidence/M-004b_*`). The evidence below stays valid for the pre-review implementation.
 
 ## Goal
 

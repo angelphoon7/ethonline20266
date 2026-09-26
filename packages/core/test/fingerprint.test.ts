@@ -104,6 +104,6 @@ describe('policy, dataset and report hashes', () => {
   });
 
   it('uses distinct domain tags so hashes of different objects never collide by construction', () => {
-    expect(new Set(Object.values(DOMAIN_TAGS)).size).toBe(4);
+    expect(new Set(Object.values(DOMAIN_TAGS)).size).toBe(5);
   });
 });

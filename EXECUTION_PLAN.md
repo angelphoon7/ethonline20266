@@ -36,7 +36,7 @@ One commit: `feat(repo): scaffold pnpm workspace with green verify and CI`.
 ## Evidence (filled in when VERIFIED)
 Level: integration-tested (offline). 2026-09-26: `corepack pnpm install` ok (pnpm 12.6.0); `corepack pnpm verify` = `tsc --noEmit` + `eslint .` + `vitest run` green (2 files, 4 tests). `test:live` exits 1 without `LIVE=1` and exits 1 with `LIVE=1` (no live tests yet); `demo:smoke` exits 1 by design. `bash scripts/env-status.sh` shows all names SET. TypeScript pinned to ~6.0.3 (ADR-016). CI file `.github/workflows/ci.yml` added.
 
-CI follow-up (2026-09-26, AC-016 / INV-018): [run 36245757448](https://github.com/angelphoon7/ethonline20266/actions/runs/36245757448) for `a97e48b` failed at `pnpm install --frozen-lockfile`, before verification. An isolated export reproduced `ERR_PNPM_IGNORED_BUILDS` for `esbuild@0.28.2`; replacing the unresolved `allowBuilds.esbuild` placeholder with `true` fixes installation. Continuing verification exposed `no-undef` for `URL` in `scripts/live-guard.mjs`, fixed with an explicit `node:url` import. The snapshot plus both fixes passes `CI=true corepack pnpm install --frozen-lockfile --offline` and `corepack pnpm verify` (11 files, 265 tests); the lockfile is unchanged. Concurrent M-004 changes were excluded. Remote Linux confirmation is pending push.
+CI follow-up (2026-09-26, AC-016 / INV-018): [run 36245757448](https://github.com/angelphoon7/ethonline20266/actions/runs/36245757448) for `a97e48b` failed at `pnpm install --frozen-lockfile`, before verification. An isolated export reproduced `ERR_PNPM_IGNORED_BUILDS` for `esbuild@0.28.2`; replacing the unresolved `allowBuilds.esbuild` placeholder with `true` fixes installation. Continuing verification exposed `no-undef` for `URL` in `scripts/live-guard.mjs`, fixed with an explicit `node:url` import. The snapshot plus both fixes passes `CI=true corepack pnpm install --frozen-lockfile --offline` and `corepack pnpm verify` (11 files, 265 tests); the lockfile is unchanged. Concurrent M-004 changes were excluded from this local verification. Both fixes were subsequently included in the concurrent task's pushed commit `f5a956a`. GitHub [run 36247203846](https://github.com/angelphoon7/ethonline20266/actions/runs/36247203846) completed successfully: frozen installation and `pnpm verify` both passed on Ubuntu.
 
 # M-001 — Core domain
 Status: VERIFIED
@@ -169,7 +169,7 @@ Level: live-verified. 2026-09-26: `LIVE=1 corepack pnpm demo:block` then `LIVE=1
 - Caveat: Q-003 (sponsor confirmation that the RISKY address may be a merchant payTo) is still a human action, so the block is labelled as the live screen of the configured merchant address, not a sponsor-confirmed qualification claim.
 
 # M-004b — SPEC conformance fix (human review 2026-09-26)
-Status: TODO
+Status: VERIFIED
 Needs credentials: all live variables (for the live re-proof); offline work needs none
 ## Objective
 Bring the code into line with the corrected SPEC: signing permit, local-checks-first, `awaiting_approval`/`expired`, single spend ledger, and re-prove the guarded signer with the installed x402 SDK.
@@ -190,10 +190,16 @@ AC-033, AC-034, AC-035, AC-036, AC-037; INV-001, INV-002, INV-004, INV-007, INV-
 ## Commit boundary
 `fix(gate): add signing permit, local-first checks, awaiting_approval and single spend ledger per SPEC review`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: live-verified (pass and deny) plus integration-tested. 2026-09-26.
+- `corepack pnpm verify` green: 21 files, 636 tests (core 460, gate 176). New: T-009a `policy-local.test.ts`; T-024 `signer.test.ts` (51 tests, one negative per table A/B mismatch); T-033 `approval.integration.test.ts` (11); T-034 `local-first.integration.test.ts` (6); T-035/T-036 `ledger-permit.test.ts` (13); T-020 exhaustive attempt/permit/approval/reservation/decision/policy transitions.
+- Mutation checks (each fails tests, then restored): recipient check removed, policy-version check removed, stage A skipped, UNAVAILABLE check removed, permit-consumption requirement removed.
+- **Live re-proof (AC-037, Q-012):** `LIVE=1 corepack pnpm demo:pass`: attempt `7b94ea6c-bcf3-43a4-9f59-251f544719d3` settled, `signerCalls=1`, permit `consumed`, tx `0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a` (Base Sepolia block 47332599, RPC receipt `status: success`, USDC Transfer 50000 payer to SAFE), Intercepta returned `14:38:03.600Z` before the signer `14:38:03.619Z`, raw file `fixtures/intercepta/recorded/2026-09-26T14-38-03-592Z_0x87cff22e…json`. `LIVE=1 corepack pnpm demo:block`: attempt `2f05c880-d864-469b-be30-198b35d6fc3f` DENY (`EVIDENCE_BLOCK`), `signerCalls=0`, no permit. Files: `docs/evidence/M-004b_tx_receipt_check.json`, `docs/evidence/M-004b_traces.json`. Limits: 0.05 USDC per payment; session now 2/20 settlements, 0.10/1.00 USDC; Intercepta 8/40 calls; wallet 19.89 test USDC.
+- Delivered with it (from the M-006 WIP, now tested): state-machine enforcement in the store, audit events, cases with append-only label revisions, signer authorisation recording and the chain reconciler. M-006 remains open for the two-connection reservation test, the reconciler's live check and the audit-order tests.
+- SPEC: Q-012 resolved; INV-027/028/029 and AC-033 to AC-037 have tests.
+
 
 # M-006 — Case store, reservations, reconciliation
-Status: BLOCKED (waits for M-004b; uncommitted WIP exists, see HANDOFF)
+Status: IN_PROGRESS (state machines, cases, audit events and the reconciler landed with M-004b; two-connection reservation test and live reconciler check remain)
 Needs credentials: none (live check optional)
 ## Objective
 Extend the M-004 store: cases with label revisions, serialised spend reservations with a concurrency proof, ambiguous-settlement reconciliation, separate settlement and delivery status, audit events.

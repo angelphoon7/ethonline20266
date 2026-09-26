@@ -2,18 +2,37 @@ import { randomUUID } from 'node:crypto';
 import { x402Client, x402HTTPClient } from '@x402/core/client';
 import { ExactEvmScheme } from '@x402/evm/exact/client';
 import { wrapFetchWithPayment } from '@x402/fetch';
-import { DECISION_TTL_S, decisionSchema, evaluateFailClosed, formatAtomic, hashQuote } from '@risksir/core';
-import type { Decision, PaymentAttempt, PaymentOutcome, ReasonCode, RiskEvidence } from '@risksir/core';
+import {
+  APPROVAL_TTL_S,
+  DECISION_TTL_S,
+  decisionSchema,
+  evaluateFailClosed,
+  evaluateLocalFailClosed,
+  formatAtomic,
+  hashQuote,
+} from '@risksir/core';
+import type {
+  Approval,
+  AuditEvent,
+  AuditType,
+  Decision,
+  EvaluateResult,
+  PaymentAttempt,
+  PaymentOutcome,
+  ReasonCode,
+  RiskEvidence,
+} from '@risksir/core';
 import type { ScreenResult } from '../intercepta/client.js';
 import type { ProtectedSigner } from '../signer/public.js';
 import type { Store } from '../store/store.js';
 import { canonicalQuoteFrom } from './quote.js';
 
 /**
- * The buyer gate: real 402 -> canonical quote -> LIVE Intercepta screen of the exact payTo -> policy decision ->
- * atomic budget reservation -> protected signer -> settlement record. It runs inside the SDK's
- * onBeforePaymentCreation hook, which fires after requirement selection and BEFORE any signing (verified in the
- * installed @x402/core 2.27.0 source); the protected signer independently refuses without a bound decision (ADR-015).
+ * The buyer gate: real 402 -> canonical quote -> LOCAL checks (no Intercepta call) -> LIVE Intercepta screen of the
+ * exact payTo -> policy decision -> atomic budget reservation -> signing permit -> protected signer -> settlement record.
+ * It runs inside the SDK's onBeforePaymentCreation hook, which fires after requirement selection and BEFORE any signing
+ * (verified in the installed @x402/core 2.27.0 source); the protected signer independently refuses without an armed
+ * permit (ADR-015, ADR-019). An `ASK_HUMAN` result parks the attempt in `awaiting_approval` (ADR-020).
  */
 export interface BuyerTask {
   agentId: string;
@@ -45,6 +64,8 @@ export interface AttemptResult {
   response: { status: number; body: unknown } | null;
   /** True when Risksir refused to sign (HOLD/DENY/pending/CAP-below/expired/etc.). */
   blocked: boolean;
+  /** True when the attempt is parked in `awaiting_approval` (ASK_HUMAN pending). */
+  awaitingApproval: boolean;
 }
 
 type ResponseInfo = AttemptResult['response'];
@@ -58,33 +79,10 @@ export function createGate(deps: GateDeps) {
   const { store } = deps;
   const iso = () => now().toISOString();
 
-  async function run(task: BuyerTask): Promise<AttemptResult> {
-    const attemptId = newId();
+  /** Shared by a first attempt and an approval resume (`approval` set, attempt already `awaiting_approval`). */
+  async function execute(attemptId: string, task: BuyerTask, approval: Approval | null): Promise<AttemptResult> {
+    const resuming = approval !== null;
     const state: { decision: Decision | null; evidence: RiskEvidence | null } = { decision: null, evidence: null };
-
-    store.saveAttempt({
-      attemptId,
-      orgId: deps.orgId,
-      agentId: task.agentId,
-      taskId: task.taskId,
-      resourceUrl: task.url,
-      status: 'created',
-      quote: null,
-      quoteHash: null,
-      policyVersion: null,
-      evidenceId: null,
-      decisionId: null,
-      signerCalls: 0,
-      createdAt: iso(),
-      quotedAt: null,
-      interceptaRequestedAt: null,
-      interceptaReturnedAt: null,
-      decidedAt: null,
-      signerInvokedAt: null,
-      submittedAt: null,
-      settledAt: null,
-      failure: null,
-    });
 
     /** Always re-reads the stored attempt: the signer path owns signerCalls, signerInvokedAt and status `signed`. */
     const save = (patch: Partial<PaymentAttempt>): PaymentAttempt => {
@@ -93,6 +91,8 @@ export function createGate(deps: GateDeps) {
       return next;
     };
     const fail = (code: ReasonCode, message: string) => save({ status: 'failed', failure: { code, message } });
+    const audit = (type: AuditType, refs: AuditEvent['refs'], payload: unknown) =>
+      store.appendAudit({ at: iso(), actor: 'system', type, refs, payload });
 
     const finish = (blocked: boolean, resp: ResponseInfo = null): AttemptResult => {
       const attempt = store.getAttempt(attemptId) as PaymentAttempt;
@@ -104,6 +104,7 @@ export function createGate(deps: GateDeps) {
         outcome,
         response: resp,
         blocked,
+        awaitingApproval: attempt.status === 'awaiting_approval',
       };
       log(
         `attempt=${attemptId} status=${attempt.status} action=${result.decision?.action ?? '-'} ` +
@@ -127,6 +128,7 @@ export function createGate(deps: GateDeps) {
       });
       if (store.getReservationForAttempt(attemptId)?.status === 'reserved') store.markReconciling(attemptId);
       save({ status: 'submitted', submittedAt: at });
+      audit('PaymentSubmitted', { attemptId }, { attemptId, ambiguous: true });
       save({ status: 'ambiguous', failure: { code: 'SIGNER_REFUSED', message } });
       return finish(false, resp);
     };
@@ -146,6 +148,55 @@ export function createGate(deps: GateDeps) {
     client.register('eip155:*', new ExactEvmScheme(attemptSigner));
     client.setSpendControls({ maxAmountPerPayment: '$0.10' });
 
+    /** Records a Decision (superseding a previous open one on a resume) and moves the attempt to `decided`. */
+    const recordDecision = (
+      quoteHash: `0x${string}`,
+      evidenceId: string | null,
+      result: Pick<EvaluateResult, 'action' | 'reasons' | 'authorisedMaxAtomic' | 'signerEligible' | 'approvalId'>,
+      decidedAt: Date,
+    ): Decision => {
+      const prior = store.getAttempt(attemptId)?.decisionId;
+      const priorDecision = prior ? store.getDecision(prior) : null;
+      if (priorDecision && priorDecision.status === 'open') store.saveDecision({ ...priorDecision, status: 'superseded' });
+      const decision = decisionSchema.parse({
+        decisionId: newId(),
+        attemptId,
+        quoteHash,
+        policyVersion: policy.policyVersion,
+        policyHash: policy.policyHash,
+        evidenceId,
+        action: result.action,
+        reasons: result.reasons,
+        authorisedMaxAtomic: result.authorisedMaxAtomic,
+        signerEligible: result.signerEligible,
+        approvalId: result.approvalId,
+        decidedAt: decidedAt.toISOString(),
+        expiresAt: new Date(decidedAt.getTime() + DECISION_TTL_S * 1000).toISOString(),
+        status: 'open',
+      });
+      store.saveDecision(decision);
+      state.decision = decision;
+      save({ status: 'decided', decisionId: decision.decisionId, policyVersion: policy.policyVersion, decidedAt: decidedAt.toISOString() });
+      audit(
+        'PolicyDecided',
+        { attemptId, decisionId: decision.decisionId, ...(evidenceId ? { evidenceId } : {}), policyVersion: policy.policyVersion },
+        { attemptId, action: decision.action, reasons: decision.reasons, signerEligible: decision.signerEligible },
+      );
+      return decision;
+    };
+
+    /** A non-eligible decision either parks the attempt (ASK_HUMAN) or ends it. */
+    const conclude = (decision: Decision, decidedAt: Date) => {
+      if (decision.action === 'ASK_HUMAN') {
+        const current = store.getAttempt(attemptId);
+        const until = resuming && current?.awaitingApprovalUntil ? current.awaitingApprovalUntil : new Date(decidedAt.getTime() + APPROVAL_TTL_S * 1000).toISOString();
+        save({ status: 'awaiting_approval', awaitingApprovalUntil: until });
+      } else {
+        fail(decision.reasons[0]?.code ?? 'ENGINE_ERROR', reasonText(decision));
+      }
+      return { abort: true as const, reason: reasonText(decision) };
+    };
+
     client.onBeforePaymentCreation(async ({ selectedRequirements }) => {
       const quote = canonicalQuoteFrom(selectedRequirements, { requestedUrl: task.url, attemptId });
       if (!quote) {
@@ -153,15 +204,34 @@ export function createGate(deps: GateDeps) {
         return { abort: true as const, reason: 'QUOTE_INVALID' };
       }
       const quoteHash = hashQuote(quote);
-      save({ status: 'quoted', quote, quoteHash, quotedAt: iso() });
+      if (approval && approval.quoteHash !== quoteHash) {
+        // The resumed 402 differs from the quote the owner approved (INV-005, INV-028).
+        save({ quote, quoteHash });
+        fail('QUOTE_MUTATED', 'the resumed quote differs from the approved quote');
+        return { abort: true as const, reason: 'QUOTE_MUTATED' };
+      }
+      save({ ...(resuming ? {} : { status: 'quoted' as const }), quote, quoteHash, quotedAt: iso() });
+      audit('QuoteSelected', { attemptId }, { attemptId, quoteHash });
 
-      // Every parseable quote is screened live, even one a local check will deny, so every Decision carries evidence (INV-009).
+      // Stage A (ADR-022): local checks run BEFORE any Intercepta call. A rejected quote costs no live call.
+      const localResult = evaluateLocalFailClosed(policy, quote);
+      if (localResult) {
+        const decidedAt = now();
+        return conclude(recordDecision(quoteHash, null, localResult, decidedAt), decidedAt);
+      }
+
       save({ interceptaRequestedAt: iso() });
+      audit('RiskScreenRequested', { attemptId }, { attemptId, address: quote.payTo });
       const screened = await deps.screen(quote.payTo);
       if (screened.raw) store.saveRaw(screened.raw);
       store.saveEvidence(screened.evidence);
       state.evidence = screened.evidence;
-      save({ status: 'screened', evidenceId: screened.evidence.evidenceId, interceptaReturnedAt: iso() });
+      save({ ...(resuming ? {} : { status: 'screened' as const }), evidenceId: screened.evidence.evidenceId, interceptaReturnedAt: iso() });
+      audit(
+        screened.evidence.tier === 'UNAVAILABLE' ? 'RiskScreenUnavailable' : 'RiskScreenReturned',
+        { attemptId, evidenceId: screened.evidence.evidenceId },
+        { attemptId, tier: screened.evidence.tier, unavailable: screened.evidence.unavailable },
+      );
 
       const decidedAt = now();
       const budget = store.periodBudgetRemaining({
@@ -180,12 +250,12 @@ export function createGate(deps: GateDeps) {
           service: task.service,
           periodBudgetRemainingAtomic: formatAtomic(budget),
         },
-        approval: null,
+        approval,
         now: decidedAt.toISOString(),
       });
 
       if (result.signerEligible) {
-        // Reserve atomically (serialised) before any signer call (INV-007). A failed reservation downgrades the decision to HOLD.
+        // One serialised transaction re-checks used + amount <= cap (INV-007). A failed reservation downgrades the decision to HOLD.
         const reserved = store.reserve({
           reservationId: newId(),
           orgId: deps.orgId,
@@ -201,31 +271,22 @@ export function createGate(deps: GateDeps) {
         }
       }
 
-      const decision = decisionSchema.parse({
-        decisionId: newId(),
+      const decision = recordDecision(quoteHash, screened.evidence.evidenceId, result, decidedAt);
+      if (!decision.signerEligible) return conclude(decision, decidedAt);
+
+      // Arm the single-use signing permit (ADR-019); an approval is consumed when it leads to a permit.
+      store.armPermit({
+        permitId: newId(),
         attemptId,
+        decisionId: decision.decisionId,
+        quote,
         quoteHash,
         policyVersion: policy.policyVersion,
-        policyHash: policy.policyHash,
-        evidenceId: screened.evidence.evidenceId,
-        action: result.action,
-        reasons: result.reasons,
-        authorisedMaxAtomic: result.authorisedMaxAtomic,
-        signerEligible: result.signerEligible,
-        approvalId: result.approvalId,
-        decidedAt: decidedAt.toISOString(),
-        expiresAt: new Date(decidedAt.getTime() + DECISION_TTL_S * 1000).toISOString(),
-        status: 'open',
+        armedAt: decidedAt.toISOString(),
+        expiresAt: decision.expiresAt,
+        status: 'armed',
       });
-      store.saveDecision(decision);
-      state.decision = decision;
-      save({ status: 'decided', decisionId: decision.decisionId, policyVersion: policy.policyVersion, decidedAt: decidedAt.toISOString() });
-
-      if (!decision.signerEligible) {
-        fail(decision.reasons[0]?.code ?? 'ENGINE_ERROR', reasonText(decision));
-        return { abort: true as const, reason: reasonText(decision) };
-      }
-      attemptSigner.authorise(decision.decisionId);
+      if (decision.approvalId) store.consumeApproval(decision.approvalId);
       return undefined;
     });
 
@@ -245,8 +306,9 @@ export function createGate(deps: GateDeps) {
     const signed = (store.getAttempt(attemptId)?.signerCalls ?? 0) > 0;
 
     if (thrown !== null && !signed) {
-      // No signature was produced: a hold/deny/refusal/parse failure. Nothing was paid; free any reservation.
-      if (store.getAttempt(attemptId)?.status !== 'failed') {
+      // No signature was produced: a hold/deny/pending/refusal/parse failure. Nothing was paid; free any reservation.
+      const status = store.getAttempt(attemptId)?.status;
+      if (status !== 'failed' && status !== 'awaiting_approval') {
         fail(state.decision ? 'SIGNER_REFUSED' : 'QUOTE_INVALID', (thrown as Error).message);
       }
       if (store.getReservationForAttempt(attemptId)?.status === 'reserved') store.releaseReservation(attemptId);
@@ -288,9 +350,12 @@ export function createGate(deps: GateDeps) {
         httpStatus: res.status,
         observedAt,
       });
-      store.commitReservation(attemptId, (store.getAttempt(attemptId)?.quote?.amountAtomic ?? '0'));
+      store.commitReservation(attemptId, store.getReservationForAttempt(attemptId)?.amountAtomic ?? '0');
       save({ status: 'submitted', submittedAt: observedAt });
+      audit('PaymentSubmitted', { attemptId }, { attemptId });
       save({ status: 'settled', settledAt: observedAt });
+      audit('SettlementObserved', { attemptId, txHash: header.transaction as `0x${string}` }, { attemptId, kind: 'settled' });
+      audit('ResourceReturned', { attemptId }, { attemptId, delivery: received ? 'received' : 'not_received', status: res.status });
       return finish(false, resp);
     }
 
@@ -299,6 +364,7 @@ export function createGate(deps: GateDeps) {
       store.saveOutcome({ outcomeId: newId(), attemptId, settlementStatus: 'failed', txHash: null, facilitatorRef: null, deliveryStatus: 'not_received', httpStatus: res.status, observedAt });
       store.releaseReservation(attemptId);
       save({ status: 'submitted', submittedAt: observedAt });
+      audit('PaymentSubmitted', { attemptId }, { attemptId });
       fail('SIGNER_REFUSED', 'payment rejected by the resource server');
       return finish(false, resp);
     }
@@ -307,7 +373,94 @@ export function createGate(deps: GateDeps) {
     return recordAmbiguous(`payment status ${parsed.paymentStatus}`, resp);
   }
 
-  return { run };
+  async function run(task: BuyerTask): Promise<AttemptResult> {
+    const attemptId = newId();
+    store.saveAttempt({
+      attemptId,
+      orgId: deps.orgId,
+      agentId: task.agentId,
+      taskId: task.taskId,
+      resourceUrl: task.url,
+      status: 'created',
+      quote: null,
+      quoteHash: null,
+      policyVersion: null,
+      evidenceId: null,
+      decisionId: null,
+      signerCalls: 0,
+      createdAt: iso(),
+      quotedAt: null,
+      interceptaRequestedAt: null,
+      interceptaReturnedAt: null,
+      decidedAt: null,
+      awaitingApprovalUntil: null,
+      signerInvokedAt: null,
+      submittedAt: null,
+      settledAt: null,
+      failure: null,
+    });
+    return execute(attemptId, task, null);
+  }
+
+  /**
+   * Resumes an attempt parked in `awaiting_approval` with an owner approval (SPEC section 9, ADR-020, INV-028):
+   * the approval must bind this attempt and the current policy version and be unexpired, the resumed 402 must hash to the
+   * approved quote, a fresh live screen is made and the decision is re-evaluated under the current active policy.
+   * Only a PAY result reserves, arms a permit and signs. Expiry or a policy change makes the attempt `expired`.
+   */
+  async function resumeWithApproval(attemptId: string, approvalId: string, task: BuyerTask): Promise<AttemptResult> {
+    const attempt = store.getAttempt(attemptId);
+    if (!attempt || attempt.status !== 'awaiting_approval') throw new Error('attempt is not awaiting approval');
+    if (task.url !== attempt.resourceUrl) throw new Error('resume task does not match the attempt resource');
+    const approval = store.getApproval(approvalId);
+    if (!approval || approval.attemptId !== attemptId) throw new Error('approval does not bind this attempt');
+    if (approval.status !== 'active') throw new Error(`approval is ${approval.status}`);
+
+    const at = iso();
+    const activeVersion = store.getActivePolicyVersion(deps.orgId);
+    const expired =
+      Date.parse(at) >= Date.parse(approval.expiresAt) || (attempt.awaitingApprovalUntil !== null && Date.parse(at) >= Date.parse(attempt.awaitingApprovalUntil));
+    if (activeVersion !== approval.policyVersion || activeVersion !== attempt.policyVersion) {
+      store.expireApproval(approvalId);
+      store.expireAttempt(attemptId, 'POLICY_CHANGED', at);
+      return finishExpired(attemptId);
+    }
+    if (expired) {
+      store.expireApproval(approvalId);
+      store.expireAttempt(attemptId, 'APPROVAL_EXPIRED', at);
+      return finishExpired(attemptId);
+    }
+    return execute(attemptId, task, approval);
+  }
+
+  function finishExpired(attemptId: string): AttemptResult {
+    const attempt = store.getAttempt(attemptId) as PaymentAttempt;
+    log(`attempt=${attemptId} status=${attempt.status} signerCalls=${attempt.signerCalls} reason=${attempt.failure?.code ?? '-'}`);
+    return {
+      attempt,
+      decision: attempt.decisionId ? store.getDecision(attempt.decisionId) : null,
+      evidence: attempt.evidenceId ? store.getEvidence(attempt.evidenceId) : null,
+      outcome: store.getOutcomeForAttempt(attemptId),
+      response: null,
+      blocked: true,
+      awaitingApproval: false,
+    };
+  }
+
+  /** Expires attempts whose approval window has elapsed without an approval. Returns the expired attempt ids. */
+  function expireOverdue(): string[] {
+    const at = iso();
+    const expired: string[] = [];
+    for (const a of store.listAttempts(deps.orgId)) {
+      if (a.status === 'awaiting_approval' && a.awaitingApprovalUntil !== null && Date.parse(at) >= Date.parse(a.awaitingApprovalUntil)) {
+        store.expireAttempt(a.attemptId, 'APPROVAL_EXPIRED', at);
+        expired.push(a.attemptId);
+      }
+    }
+    return expired;
+  }
+
+  return { run, resumeWithApproval, expireOverdue };
 }
 
 export type Gate = ReturnType<typeof createGate>;

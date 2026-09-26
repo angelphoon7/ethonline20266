@@ -56,6 +56,7 @@ describe('pass path (real local x402 seller, stub facilitator, fixture evidence)
     expect(facilitator.calls.settle - before.settle).toBe(1);
     expect(facilitator.settled.at(-1)).toMatchObject({ to: getAddress(SAFE), value: '50000' });
     expect(w.store.getReservationForAttempt(result.attempt.attemptId)?.status).toBe('committed');
+    expect(w.store.getLatestPermit(result.attempt.attemptId)).toMatchObject({ status: 'consumed', decisionId: result.decision?.decisionId, quoteHash: result.attempt.quoteHash });
     expect(w.store.isFirstTimeCounterparty('org-exampleco', SAFE)).toBe(false);
     expect(w.logs.at(-1)).toMatch(/signerCalls=1 settlement=settled delivery=received tx=0x/);
   });
@@ -79,6 +80,7 @@ describe('block path (Intercepta-driven)', () => {
     expect(facilitator.calls.verify - before.verify).toBe(0);
     expect(facilitator.calls.settle - before.settle).toBe(0);
     expect(w.store.getReservationForAttempt(result.attempt.attemptId)).toBeNull();
+    expect(w.store.getLatestPermit(result.attempt.attemptId)).toBeNull(); // no permit is ever armed for a non-eligible decision
     expect(w.logs.at(-1)).toMatch(/action=DENY signerCalls=0 settlement=none/);
   });
 });
@@ -175,15 +177,18 @@ describe('policy hard prohibitions and caps through the whole gate', () => {
     const raw = await startRawSeller([usdcRequirement({ payTo: SAFE, ...patch })]);
     try {
       const clock = makeClock();
+      const screen = fixtureScreen('CLEAR', clock);
       const w = makeGateWorld({
         serviceBase: `${raw.url}/`,
-        screen: fixtureScreen('CLEAR', clock).screen,
+        screen: screen.screen,
         clock,
         configureClient: (client) => void client.setSpendControls(false),
       });
       const result = await w.gate.run(w.task('anything'));
       expect(result.decision?.action).toBe('DENY');
       expect(result.decision?.reasons[0]?.code).toBe(code);
+      expect(result.decision?.evidenceId).toBeNull(); // stage A: decided without evidence
+      expect(screen.calls).toHaveLength(0); // and without spending an Intercepta call (T-034, INV-029)
       expect(result.attempt.signerCalls).toBe(0);
       expect(raw.paymentHeaders()).toBe(0);
     } finally {

@@ -392,7 +392,7 @@ Illegal transitions throw and are never persisted (tested exhaustively).
 - **Ambiguous settlement:** attempt `ambiguous`, reservation `reconciling`; reconcile from Base Sepolia receipt/nonce state through viem before releasing, committing or retrying.
 - **Retry rules:** no automatic Intercepta retry (§10); no signing retry for the same decision; a fresh attempt repeats §5 steps 2–10 with fresh evidence; the HTTP retry after a valid signature is the single SDK payment retry only.
 - **Settlement ordering:** the SDK default **authorization** flow (verify, resource handler, settle), ADR-018. Delivery is never inferred from settlement.
-- **SDK compatibility (Q-012).** That the guarded signer works with the installed x402 SDK is proven for the pre-review implementation (M-004, live tx in `docs/evidence/`). The permit design in this section is **OPEN until M-004b re-proves it** against the installed SDK.
+- **SDK compatibility (Q-012).** That the guarded signer works with the installed x402 SDK was proven for the pre-review implementation (M-004) and **re-proven for this permit design by M-004b**: a live Base Sepolia settlement signed under an armed, single-use permit (tx `0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a`, `docs/evidence/M-004b_*`).
 
 ## 13. Regression semantics
 
@@ -618,7 +618,7 @@ New threat-detection model or scam database; wallet blacklist as the product; cr
 | Q-009 | Is the payer wallet funded (Base Sepolia ETH + test USDC ≤ 20)? | Live payments | **Human** | **RESOLVED 2026-09-26**: 0.1 ETH and 19.99 test USDC observed by `wallet:status`; keep ≤ 20 |
 | Q-010 | Reselect a cheaper advertised requirement after CAP-below-quote? | CAP completeness | Agent, if the 402 ever advertises more than one option | Do not reselect; CAP below quote = no signing |
 | Q-011 | Intercepta timeout and rate limits | Adapter timeout, session budget | Agent, Spike A | `INTERCEPTA_TIMEOUT_MS = 8000` (our choice), no retry. Latency 325–2814 ms over 6 calls. **OPEN — resolve with Spike A evidence:** rate limits and 401/429/5xx bodies (unobserved, not in the docs) |
-| Q-012 | Does the guarded signer work with the installed x402 SDK? | The whole signing boundary | Agent, M-004b evidence | **PROVEN for the pre-review implementation** (M-004, live tx `0x1cf9ae6f…8e6b`). The permit design in §12 is **OPEN** until M-004b re-proves it (AC-037) |
+| Q-012 | Does the guarded signer work with the installed x402 SDK? | The whole signing boundary | Agent, M-004b evidence | **RESOLVED 2026-09-26.** Proven for the pre-review implementation (M-004, live tx `0x1cf9ae6f…8e6b`) and re-proven for the permit design (M-004b, live tx `0xda62fcb7…a97a`, AC-037) |
 
 ---
 

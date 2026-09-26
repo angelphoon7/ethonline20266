@@ -6,10 +6,17 @@ import type { KeyProvider } from './key.js';
 import type { SignerStore } from '../store/store.js';
 
 /**
- * The protected signer (SPEC section 12, INV-002/004/005/006/008/024). The x402 EVM client is handed an object with
- * exactly `address` and `signTypedData`; every signature request is checked against a STORED decision immediately
- * before signing. This is defence in depth on top of the SDK `onBeforePaymentCreation` hook (ADR-015): even if a hook
- * misbehaves, nothing is signed without a stored, open, eligible decision that binds this exact quote.
+ * The protected signer (SPEC section 12, ADR-019, INV-002/004/005/006/007/024/027). The x402 EVM client is handed an
+ * object with exactly `address` and `signTypedData`. Every signature request is checked against a single-use SIGNING
+ * PERMIT that the gate armed for this attempt, plus the stored decision, immediately before signing (defence in depth on
+ * top of the SDK `onBeforePaymentCreation` hook, ADR-015).
+ *
+ * Isolation wording (ADR-024): the signer is the only CODE PATH that reads PAYER_PRIVATE_KEY. That is code-path
+ * isolation inside one process, enforced by static tests; it is not a process or security boundary.
+ *
+ * The EIP-3009 typed data has only from/to/value/validAfter/validBefore/nonce and the domain, so the quote hash is
+ * never recomputed from it: the typed data is compared with the quote stored in the permit (table A) and the decision
+ * level conditions are checked separately (table B).
  */
 export class SignerRefusedError extends Error {
   constructor(
@@ -39,10 +46,9 @@ export interface SignerDeps {
   onSigned?: (info: { attemptId: string; decisionId: string; signerCalls: number }) => void;
 }
 
+/** What the SDK sees. There is deliberately no way to bind or authorise anything here: the gate arms the permit in the store. */
 export interface AttemptSigner {
   readonly address: `0x${string}`;
-  /** Binds the decision this attempt may sign under. Grants nothing by itself: every signature is still fully checked. */
-  authorise(decisionId: string): void;
   signTypedData(request: TypedDataRequest): Promise<`0x${string}`>;
 }
 
@@ -51,7 +57,7 @@ export interface ProtectedSigner {
   forAttempt(attemptId: string): AttemptSigner;
 }
 
-/** The EIP-3009 typed data the exact EVM scheme signs; anything else (Permit2, permits, arbitrary messages) is refused. */
+/** The EIP-3009 typed data the exact scheme signs; anything else (Permit2, permits, arbitrary messages) is refused. */
 const EXPECTED_TYPES = {
   TransferWithAuthorization: [
     { name: 'from', type: 'address' },
@@ -83,6 +89,17 @@ export function createProtectedSigner(deps: SignerDeps): ProtectedSigner {
   const address = account.address;
 
   function refuse(attemptId: string, decisionId: string | null, code: ReasonCode, detail: string): never {
+    try {
+      deps.store.appendAudit({
+        at: deps.now().toISOString(),
+        actor: 'system',
+        type: 'SignerRefused',
+        refs: { attemptId, ...(decisionId ? { decisionId } : {}) },
+        payload: { attemptId, decisionId, code, detail },
+      });
+    } catch {
+      // an audit failure must never mask the refusal
+    }
     deps.onRefusal?.({ attemptId, decisionId, code, detail });
     throw new SignerRefusedError(code, detail);
   }
@@ -90,86 +107,105 @@ export function createProtectedSigner(deps: SignerDeps): ProtectedSigner {
   return {
     address,
     forAttempt(attemptId: string): AttemptSigner {
-      let boundDecisionId: string | null = null;
       return {
         address,
-        authorise(decisionId: string) {
-          boundDecisionId = decisionId;
-        },
         async signTypedData(req: TypedDataRequest): Promise<`0x${string}`> {
-          const decisionId = boundDecisionId;
+          let decisionId: string | null = null;
           const fail: (code: ReasonCode, detail: string) => never = (code, detail) => refuse(attemptId, decisionId, code, detail);
           const nowMs = deps.now().getTime();
           const nowS = Math.floor(nowMs / 1000);
 
-          // 0. Only EIP-3009 TransferWithAuthorization on the allowlisted chain and asset (INV-006).
+          // A1: only EIP-3009 TransferWithAuthorization.
           if (req.primaryType !== 'TransferWithAuthorization' || JSON.stringify(req.types) !== JSON.stringify(EXPECTED_TYPES)) {
             fail('SIGNER_REFUSED', `unsupported typed data ${String(req.primaryType)}`);
           }
-          if (Number(req.domain.chainId) !== CHAIN.chainId) fail('NETWORK_NOT_ALLOWED', 'domain.chainId is not 84532');
-          if (lower(req.domain.verifyingContract) !== CHAIN.usdc) fail('ASSET_NOT_ALLOWED', 'verifyingContract is not the allowlisted USDC');
+
+          // B1: an armed, unexpired permit for THIS attempt.
+          const permit = deps.store.getLatestPermit(attemptId);
+          if (!permit) fail('SIGNER_REFUSED', 'no signing permit was armed for this attempt');
+          const pm = permit as NonNullable<typeof permit>;
+          decisionId = pm.decisionId;
+          if (pm.status !== 'armed') {
+            const orgId = deps.store.getAttempt(attemptId)?.orgId;
+            const version = orgId ? deps.store.getActivePolicyVersion(orgId) : null;
+            if (pm.status === 'revoked' && version !== null && version !== pm.policyVersion) fail('POLICY_CHANGED', 'the permit was revoked because the active policy version changed');
+            fail('SIGNER_REFUSED', `signing permit is ${pm.status}`);
+          }
+          if (nowMs >= Date.parse(pm.expiresAt)) fail('DECISION_EXPIRED', 'signing permit expired');
+          const quote = pm.quote;
+
+          // A2, A3: recipient and amount equal the stored quote.
+          if (lower(req.message.to) !== quote.payTo) fail('QUOTE_MUTATED', 'message.to differs from the quote payTo');
+          const value = toBigInt(req.message.value);
+          if (value === null) fail('QUOTE_MUTATED', 'message.value is not an integer');
+          const v = value as bigint;
+          if (v !== parseAtomic(quote.amountAtomic)) fail('QUOTE_MUTATED', 'message.value differs from the quote amount');
+
+          // A4, A5: allowlisted chain and asset, and equal to the quote's (INV-006).
+          if (lower(req.domain.verifyingContract) !== CHAIN.usdc || quote.asset !== CHAIN.usdc) fail('ASSET_NOT_ALLOWED', 'verifyingContract or quote asset is not the allowlisted USDC');
+          if (Number(req.domain.chainId) !== CHAIN.chainId || quote.network !== CHAIN.network) fail('NETWORK_NOT_ALLOWED', 'chainId or quote network is not eip155:84532');
+
+          // A6: the payer is this signer.
           if (lower(req.message.from) !== address.toLowerCase()) fail('SIGNER_REFUSED', 'message.from is not the payer address');
 
-          // 1. A stored, open, eligible, unexpired decision, bound to this attempt, with usable evidence.
-          if (!decisionId) fail('SIGNER_REFUSED', 'no decision is bound to this attempt');
-          const decision = deps.store.getDecision(decisionId as string);
+          // A7: validity within the quote window and not expired.
+          const validAfter = toBigInt(req.message.validAfter);
+          const validBefore = toBigInt(req.message.validBefore);
+          if (validAfter === null || validBefore === null) fail('QUOTE_MUTATED', 'validity window is not an integer');
+          if ((validAfter as bigint) > BigInt(nowS)) fail('QUOTE_MUTATED', 'validAfter is in the future');
+          const vb = validBefore as bigint;
+          if (vb <= BigInt(nowS) || vb > BigInt(nowS + quote.maxTimeoutSeconds + CLOCK_SKEW_S)) fail('QUOTE_MUTATED', 'validBefore is outside the quoted validity window');
+
+          // B2: the stored decision is open, eligible, unexpired and has usable evidence (INV-001).
+          const decision = deps.store.getDecision(pm.decisionId);
           if (!decision) fail('SIGNER_REFUSED', 'decision not found');
           const d = decision as NonNullable<typeof decision>;
           if (d.attemptId !== attemptId) fail('SIGNER_REFUSED', 'decision belongs to another attempt');
           if (d.status !== 'open') fail(d.status === 'expired' ? 'DECISION_EXPIRED' : 'SIGNER_REFUSED', `decision is ${d.status}`);
           if (!d.signerEligible) fail('SIGNER_REFUSED', `decision action ${d.action} is not signer-eligible`);
           if (nowMs >= Date.parse(d.expiresAt)) fail('DECISION_EXPIRED', 'decision expired');
-          const evidence = deps.store.getEvidence(d.evidenceId);
+          if (d.evidenceId === null) fail('SIGNER_REFUSED', 'decision has no evidence');
+          const evidence = deps.store.getEvidence(d.evidenceId as string);
           if (!evidence || evidence.tier === 'UNAVAILABLE' || evidence.tier === 'BLOCK') fail('SIGNER_REFUSED', 'decision has no usable evidence');
           const ev = evidence as NonNullable<typeof evidence>;
           if (Date.parse(ev.capturedAt) > Date.parse(d.decidedAt)) fail('SIGNER_REFUSED', 'evidence was captured after the decision');
-
-          // 2. The typed data must match the quote that the stored decision binds (INV-004, INV-005).
-          const attempt = deps.store.getAttempt(attemptId);
-          if (!attempt || !attempt.quote) fail('SIGNER_REFUSED', 'attempt has no stored quote');
-          const quote = (attempt as NonNullable<typeof attempt>).quote as NonNullable<NonNullable<typeof attempt>['quote']>;
-          if (hashQuote(quote) !== d.quoteHash || (attempt as NonNullable<typeof attempt>).quoteHash !== d.quoteHash) {
-            fail('QUOTE_MUTATED', 'stored quote does not hash to the decision quote hash');
-          }
           if (ev.address !== quote.payTo) fail('SIGNER_REFUSED', 'evidence is for a different address than the quote payTo');
-          if (lower(req.message.to) !== quote.payTo) fail('QUOTE_MUTATED', 'message.to differs from the quote payTo');
-          const value = toBigInt(req.message.value);
-          if (value === null) fail('QUOTE_MUTATED', 'message.value is not an integer');
-          if (value !== parseAtomic(quote.amountAtomic)) fail('QUOTE_MUTATED', 'message.value differs from the quote amount');
-          if (quote.network !== CHAIN.network) fail('NETWORK_NOT_ALLOWED', 'quote network is not eip155:84532');
-          if (quote.asset !== CHAIN.usdc) fail('ASSET_NOT_ALLOWED', 'quote asset is not the allowlisted USDC');
-          if (lower(req.domain.verifyingContract) !== quote.asset) fail('ASSET_NOT_ALLOWED', 'verifyingContract differs from the quote asset');
-          const validAfter = toBigInt(req.message.validAfter);
-          const validBefore = toBigInt(req.message.validBefore);
-          if (validAfter === null || validBefore === null) fail('QUOTE_MUTATED', 'validity window is not an integer');
-          if (validAfter > BigInt(nowS)) fail('QUOTE_MUTATED', 'validAfter is in the future');
-          if (validBefore <= BigInt(nowS) || validBefore > BigInt(nowS + quote.maxTimeoutSeconds + CLOCK_SKEW_S)) {
-            fail('QUOTE_MUTATED', 'validBefore is outside the quoted validity window');
+
+          // B3: the quote hash is consistent across decision, attempt and permit, and the stored quote hashes to it.
+          const attempt = deps.store.getAttempt(attemptId);
+          if (!attempt) fail('SIGNER_REFUSED', 'attempt not found');
+          const at = attempt as NonNullable<typeof attempt>;
+          if (d.quoteHash !== at.quoteHash || d.quoteHash !== pm.quoteHash || hashQuote(quote) !== d.quoteHash) {
+            fail('QUOTE_MUTATED', 'decision, attempt and permit do not bind the same quote hash');
           }
 
-          // 3. Amount limits (INV-007).
-          if (d.authorisedMaxAtomic === null || value > parseAtomic(d.authorisedMaxAtomic)) fail('OVER_PER_PAYMENT_CAP', 'value exceeds the authorised maximum');
-          if (value > LIVE_LIMITS.maxPerPaymentAtomic) fail('OVER_PER_PAYMENT_CAP', 'value exceeds the live per-payment limit');
-          const extra = deps.extraCheck?.({ attemptId, amountAtomic: value });
+          // B4: the active policy is still the one that decided (INV-017).
+          if (d.policyVersion !== pm.policyVersion || deps.store.getActivePolicyVersion(at.orgId) !== d.policyVersion) fail('POLICY_CHANGED', 'active policy version changed since the decision');
+
+          // B5: a matching reservation is held (INV-007).
+          const reservation = deps.store.getReservationForAttempt(attemptId);
+          if (!reservation || reservation.status !== 'reserved' || parseAtomic(reservation.amountAtomic) !== v) fail('RESERVATION_FAILED', 'no matching reserved budget for this attempt');
+
+          // B6: amount limits.
+          if (d.authorisedMaxAtomic === null || v > parseAtomic(d.authorisedMaxAtomic)) fail('OVER_PER_PAYMENT_CAP', 'value exceeds the authorised maximum');
+          if (v > LIVE_LIMITS.maxPerPaymentAtomic) fail('OVER_PER_PAYMENT_CAP', 'value exceeds the live per-payment limit');
+          const extra = deps.extraCheck?.({ attemptId, amountAtomic: v });
           if (extra) fail('OVER_PER_PAYMENT_CAP', extra);
 
-          // 4. The active policy must still be the one that decided (INV-017).
-          if (deps.store.getActivePolicyVersion(attempt!.orgId) !== d.policyVersion) fail('POLICY_CHANGED', 'active policy version changed since the decision');
-
-          // 5. A matching reservation (INV-007).
-          const reservation = deps.store.getReservationForAttempt(attemptId);
-          if (!reservation || reservation.status !== 'reserved' || parseAtomic(reservation.amountAtomic) !== value) {
-            fail('RESERVATION_FAILED', 'no matching reserved budget for this attempt');
-          }
-
-          // 6. Count the call and consume the decision atomically; a decision signs at most once (INV-024).
+          // B7 + consume: count the call and consume permit and decision atomically; a decision signs at most once (INV-024).
           let recorded = false;
           try {
-            recorded = deps.store.recordSignerCall({ attemptId, decisionId: d.decisionId, at: deps.now().toISOString() });
+            recorded = deps.store.recordSignerCall({
+              attemptId,
+              decisionId: d.decisionId,
+              permitId: pm.permitId,
+              at: deps.now().toISOString(),
+              authorization: { from: address, nonce: String(req.message.nonce), validBefore: vb },
+            });
           } catch (err) {
             fail('SIGNER_REFUSED', `could not record the signer call: ${(err as Error).message}`);
           }
-          if (!recorded) fail('SIGNER_REFUSED', 'decision was already used');
+          if (!recorded) fail('SIGNER_REFUSED', 'permit or decision was already used');
 
           const signature = await account.signTypedData({
             domain: req.domain,

@@ -1,4 +1,4 @@
-import { EVIDENCE_FRESHNESS_S } from '../constants.js';
+import { EVIDENCE_FRESHNESS_S, QUOTE_MAX_VALIDITY_S } from '../constants.js';
 import { formatAtomic, parseAtomic } from '../money.js';
 import type { AtomicAmount } from '../money.js';
 import type { Action, Approval, CanonicalQuote, Hex32, PaymentPolicy, Predicate, ReasonCode, RiskEvidence, Rule } from '../types.js';
@@ -11,7 +11,8 @@ export interface EvaluateInput {
   policy: PaymentPolicy;
   quote: CanonicalQuote;
   quoteHash: Hex32;
-  evidence: RiskEvidence;
+  /** Null only at the local stage; a null at the evidence stage fails closed (HOLD). */
+  evidence: RiskEvidence | null;
   context: {
     firstTimeCounterparty: boolean;
     /** Task/service id chosen by the gate from server-side typed scope, never by the agent. */
@@ -66,9 +67,9 @@ function inRange(value: bigint, minAtomic: string | undefined, maxAtomic: string
 function matches(p: Predicate, input: EvaluateInput, amount: bigint, budget: bigint): boolean {
   switch (p.kind) {
     case 'evidenceTier':
-      return p.in.some((t) => t === input.evidence.tier);
+      return p.in.some((t) => t === input.evidence?.tier);
     case 'providerScore': {
-      const score = input.evidence.providerScore;
+      const score = input.evidence?.providerScore ?? null;
       if (score === null) return false; // an unknown score never satisfies a score predicate
       if (p.min !== undefined && score < p.min) return false;
       if (p.max !== undefined && score > p.max) return false;
@@ -135,29 +136,54 @@ function applyAction(
   }
 }
 
-export function evaluate(input: EvaluateInput): EvaluateResult {
-  const { policy, quote, evidence } = input;
+/**
+ * Stage A (SPEC section 9): local checks that need no evidence, run BEFORE any Intercepta call (ADR-022).
+ * Returns the terminal result of the first failing check, or null when the quote may be screened.
+ * Steps 1-5 are hard prohibitions (DENY); an invalid validity window is HOLD.
+ */
+export function evaluateLocal(policy: PaymentPolicy, quote: CanonicalQuote): EvaluateResult | null {
   const profile = policy.profile;
-  const amount = parseAtomic(quote.amountAtomic);
-  const budget = parseAtomic(input.context.periodBudgetRemainingAtomic);
-
-  // Steps 1-5: hard prohibitions on the quote itself. No rule, candidate or approval can override them (INV-015).
   if (quote.scheme !== 'exact') return done('DENY', [reason('SCHEME_NOT_SUPPORTED')]);
   if (quote.network !== profile.network) return done('DENY', [reason('NETWORK_NOT_ALLOWED')]);
   if (quote.asset !== profile.asset) return done('DENY', [reason('ASSET_NOT_ALLOWED')]);
   if (!profile.allowedServices.some((prefix) => quote.resourceUrl.startsWith(prefix))) {
     return done('DENY', [reason('SERVICE_NOT_ALLOWED')]);
   }
-  if (amount > parseAtomic(profile.maxPerPaymentAtomic)) return done('DENY', [reason('OVER_PER_PAYMENT_CAP')]);
+  if (parseAtomic(quote.amountAtomic) > parseAtomic(profile.maxPerPaymentAtomic)) {
+    return done('DENY', [reason('OVER_PER_PAYMENT_CAP')]);
+  }
+  if (quote.maxTimeoutSeconds < 1 || quote.maxTimeoutSeconds > QUOTE_MAX_VALIDITY_S) {
+    return done('HOLD', [reason('QUOTE_INVALID')]);
+  }
+  return null;
+}
 
-  // Steps 6-7: unusable evidence fails closed before any rule can run (INV-003).
-  if (evidence.tier === 'UNAVAILABLE' || evidence.address !== quote.payTo) {
+/** Fail-closed wrapper for stage A: an exception becomes HOLD with `ENGINE_ERROR`. */
+export function evaluateLocalFailClosed(policy: PaymentPolicy, quote: CanonicalQuote): EvaluateResult | null {
+  try {
+    return evaluateLocal(policy, quote);
+  } catch {
+    return done('HOLD', [reason('ENGINE_ERROR')]);
+  }
+}
+
+export function evaluate(input: EvaluateInput): EvaluateResult {
+  const { policy, quote, evidence } = input;
+  const amount = parseAtomic(quote.amountAtomic);
+  const budget = parseAtomic(input.context.periodBudgetRemainingAtomic);
+
+  // Stage A: hard prohibitions on the quote itself. No rule, candidate or approval can override them (INV-015).
+  const local = evaluateLocal(policy, quote);
+  if (local) return local;
+
+  // Stage B, steps 6-7: unusable evidence fails closed before any rule can run (INV-003).
+  if (evidence === null || evidence.tier === 'UNAVAILABLE' || evidence.address !== quote.payTo) {
     return done('HOLD', [reason('EVIDENCE_UNAVAILABLE')]);
   }
   const ageMs = parseTime(input.now) - parseTime(evidence.capturedAt);
   if (ageMs < 0 || ageMs > EVIDENCE_FRESHNESS_S * 1000) return done('HOLD', [reason('EVIDENCE_STALE')]);
 
-  // Step 8: the evidence-block hard prohibition. Step 9: the period budget.
+  // Step 8: the evidence-block hard prohibition. Step 9: the period budget (cap - used, excluding this attempt).
   if (evidence.tier === 'BLOCK') return done('DENY', [reason('EVIDENCE_BLOCK')]);
   if (amount > budget) return done('HOLD', [reason('PERIOD_CAP_EXCEEDED')]);
 

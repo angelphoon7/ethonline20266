@@ -54,6 +54,7 @@ export function makeApproval(input: EvaluateInput, patch: Partial<Approval> = {}
     maxAmountAtomic: input.quote.amountAtomic,
     approvedAt: '2026-09-26T10:00:20.000Z',
     expiresAt: '2026-09-26T10:10:20.000Z',
+    status: 'active',
     ...patch,
   };
 }

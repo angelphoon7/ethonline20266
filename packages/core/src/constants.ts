@@ -3,6 +3,8 @@ export const EVIDENCE_FRESHNESS_S = 30;
 export const DECISION_TTL_S = 60;
 export const APPROVAL_TTL_S = 600;
 export const INTERCEPTA_TIMEOUT_MS = 8000;
+/** A quote whose `maxTimeoutSeconds` is outside [1, QUOTE_MAX_VALIDITY_S] is HOLD `QUOTE_INVALID` at the local stage (ADR-022). */
+export const QUOTE_MAX_VALIDITY_S = 600;
 
 /** The only network and asset Risksir may sign on (INV-006, OPERATIONAL_GUARDRAILS section 2). USDC is confirmed against docs.x402.org in Spike B. */
 export const BASE_SEPOLIA_NETWORK = 'eip155:84532' as const;

@@ -101,6 +101,9 @@ export const AUDIT_TYPES = [
   'RiskScreenReturned',
   'RiskScreenUnavailable',
   'PolicyDecided',
+  'PermitArmed',
+  'ApprovalRecorded',
+  'AttemptExpired',
   'SignerInvoked',
   'SignerRefused',
   'PaymentSubmitted',
@@ -243,11 +246,13 @@ export const ATTEMPT_STATUSES = [
   'quoted',
   'screened',
   'decided',
+  'awaiting_approval',
   'signed',
   'submitted',
   'settled',
   'failed',
   'ambiguous',
+  'expired',
 ] as const;
 export const attemptStatusSchema = z.enum(ATTEMPT_STATUSES);
 export type AttemptStatus = z.infer<typeof attemptStatusSchema>;
@@ -272,6 +277,8 @@ export const paymentAttemptSchema = z
     interceptaRequestedAt: timestampSchema.nullable(),
     interceptaReturnedAt: timestampSchema.nullable(),
     decidedAt: timestampSchema.nullable(),
+    /** End of the approval window while status is `awaiting_approval` (SPEC section 9). */
+    awaitingApprovalUntil: timestampSchema.nullable().default(null),
     signerInvokedAt: timestampSchema.nullable(),
     submittedAt: timestampSchema.nullable(),
     settledAt: timestampSchema.nullable(),
@@ -347,8 +354,8 @@ export const decisionSchema = z
     quoteHash: hex32Schema,
     policyVersion: versionSchema,
     policyHash: hex32Schema,
-    /** Every Decision carries evidence (INV-009); an unusable screen is still an evidence record. */
-    evidenceId: idSchema,
+    /** Null ONLY when the local stage rejected the quote before any screen; such a Decision is never signer-eligible (INV-009). */
+    evidenceId: idSchema.nullable(),
     action: actionSchema,
     reasons: z.array(z.strictObject({ code: reasonCodeSchema, ruleId: idSchema.nullable() })).min(1),
     authorisedMaxAtomic: atomicAmountSchema.nullable(),
@@ -366,6 +373,9 @@ export const decisionSchema = z
       if (d.authorisedMaxAtomic === null) {
         ctx.addIssue({ code: 'custom', path: ['authorisedMaxAtomic'], message: 'an eligible decision needs authorisedMaxAtomic' });
       }
+      if (d.evidenceId === null) {
+        ctx.addIssue({ code: 'custom', path: ['evidenceId'], message: 'an eligible decision needs evidence (INV-001, INV-009)' });
+      }
     }
     if (ts(d.expiresAt) <= ts(d.decidedAt)) {
       ctx.addIssue({ code: 'custom', path: ['expiresAt'], message: 'expiresAt must be later than decidedAt' });
@@ -381,8 +391,27 @@ export const approvalSchema = z.strictObject({
   maxAmountAtomic: atomicAmountSchema,
   approvedAt: timestampSchema,
   expiresAt: timestampSchema,
+  /** `consumed` once it has led to a signing permit; single use. */
+  status: z.enum(['active', 'consumed', 'expired']).default('active'),
 });
 export type Approval = z.infer<typeof approvalSchema>;
+
+/**
+ * Single-use signing permit (SPEC section 12, ADR-019), armed by the gate for one attempt after a signer-eligible
+ * Decision and a held reservation. The signer compares typed data with `quote` and consumes the permit on use.
+ */
+export const signingPermitSchema = z.strictObject({
+  permitId: idSchema,
+  attemptId: idSchema,
+  decisionId: idSchema,
+  quote: canonicalQuoteSchema,
+  quoteHash: hex32Schema,
+  policyVersion: versionSchema,
+  armedAt: timestampSchema,
+  expiresAt: timestampSchema,
+  status: z.enum(['armed', 'consumed', 'revoked', 'expired']),
+});
+export type SigningPermit = z.infer<typeof signingPermitSchema>;
 
 export const spendReservationSchema = z
   .strictObject({

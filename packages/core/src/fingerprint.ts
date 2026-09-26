@@ -27,6 +27,7 @@ export const DOMAIN_TAGS = {
   policy: 'risksir/policy/v1',
   dataset: 'risksir/dataset/v1',
   report: 'risksir/report/v1',
+  audit: 'risksir/audit/v1',
 } as const;
 
 export function sha256Tagged(domainTag: string, canonical: string): Hex32 {
@@ -100,4 +101,9 @@ export function hashReport(report: UnsealedReport | RegressionReport): Hex32 {
 
 export function sealReport(report: UnsealedReport, identity: { reportId: string; generatedAt: string }): RegressionReport {
   return regressionReportSchema.parse({ ...report, ...identity, reportHash: hashReport(report) });
+}
+
+/** Hash of an audit event payload (application audit trail, offchain). Any canonical JSON value is accepted. */
+export function hashAuditPayload(payload: unknown): Hex32 {
+  return sha256Tagged(DOMAIN_TAGS.audit, canonicalJson(payload));
 }

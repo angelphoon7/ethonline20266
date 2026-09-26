@@ -1,0 +1,204 @@
+[
+  {
+    "attemptId": "aae1f854-7804-4135-b0c1-c811d182cad0",
+    "status": "failed",
+    "policyVersion": 1,
+    "quote": {
+      "scheme": "exact",
+      "network": "eip155:84532",
+      "asset": "0x036cbd53842c5426634e7929541ec2318f3dcf7e",
+      "amountAtomic": "10000",
+      "payTo": "0x39308ae43e5dda98db5fb17d005c5c764e5a2fed",
+      "resourceUrl": "http://127.0.0.1:4021/paid/report/risky",
+      "attemptId": "aae1f854-7804-4135-b0c1-c811d182cad0",
+      "maxTimeoutSeconds": 300
+    },
+    "quoteHash": "0xb2616ebc713fa27d7e255f7607c4e63d643519a0d0e03d4f7b7ae2ce00a4f0af",
+    "evidence": {
+      "provenance": "real_live",
+      "tier": "BLOCK",
+      "providerScore": 100,
+      "reasons": [
+        "known_scammer",
+        "attack_money_target"
+      ],
+      "capturedAt": "2026-09-26T13:58:41.611Z",
+      "mappingVersion": "quickscan-v1",
+      "address": "0x39308ae43e5dda98db5fb17d005c5c764e5a2fed"
+    },
+    "decision": {
+      "decisionId": "031ca84e-2925-4089-ade8-e0e608106446",
+      "action": "DENY",
+      "reasons": [
+        {
+          "code": "EVIDENCE_BLOCK",
+          "ruleId": null
+        }
+      ],
+      "signerEligible": false,
+      "status": "open"
+    },
+    "timestamps": {
+      "interceptaRequestedAt": "2026-09-26T13:58:39.003Z",
+      "interceptaReturnedAt": "2026-09-26T13:58:41.616Z",
+      "decidedAt": "2026-09-26T13:58:41.617Z",
+      "signerInvokedAt": null,
+      "settledAt": null
+    },
+    "signerCalls": 0,
+    "settlement": "none",
+    "delivery": null,
+    "txHash": null,
+    "basescan": null
+  },
+  {
+    "attemptId": "392a270f-8a18-485e-b3df-9a81b6607feb",
+    "status": "settled",
+    "policyVersion": 1,
+    "quote": {
+      "scheme": "exact",
+      "network": "eip155:84532",
+      "asset": "0x036cbd53842c5426634e7929541ec2318f3dcf7e",
+      "amountAtomic": "50000",
+      "payTo": "0x87cff22e916a4d70675e5b3056c1df6bd401cb1a",
+      "resourceUrl": "http://127.0.0.1:4021/paid/report/safe",
+      "attemptId": "392a270f-8a18-485e-b3df-9a81b6607feb",
+      "maxTimeoutSeconds": 300
+    },
+    "quoteHash": "0x31d06eb55ce95e006a72553b0f57f32c3e1fb5c2e45e90c4dcfc4522cd493dc7",
+    "evidence": {
+      "provenance": "real_live",
+      "tier": "CLEAR",
+      "providerScore": 0,
+      "reasons": [],
+      "capturedAt": "2026-09-26T13:58:54.181Z",
+      "mappingVersion": "quickscan-v1",
+      "address": "0x87cff22e916a4d70675e5b3056c1df6bd401cb1a"
+    },
+    "decision": {
+      "decisionId": "ffa2c597-3469-42c7-9823-f5cb2ea34b65",
+      "action": "PAY",
+      "reasons": [
+        {
+          "code": "RULE_MATCHED",
+          "ruleId": "R1"
+        }
+      ],
+      "signerEligible": true,
+      "status": "consumed"
+    },
+    "timestamps": {
+      "interceptaRequestedAt": "2026-09-26T13:58:53.171Z",
+      "interceptaReturnedAt": "2026-09-26T13:58:54.189Z",
+      "decidedAt": "2026-09-26T13:58:54.190Z",
+      "signerInvokedAt": "2026-09-26T13:58:54.207Z",
+      "settledAt": "2026-09-26T13:58:55.109Z"
+    },
+    "signerCalls": 1,
+    "settlement": "settled",
+    "delivery": "received",
+    "txHash": "0x1cf9ae6f4e155214115528bcbfd917c94ece8fb987f68f193a1ef77114478e6b",
+    "basescan": "https://sepolia.basescan.org/tx/0x1cf9ae6f4e155214115528bcbfd917c94ece8fb987f68f193a1ef77114478e6b"
+  },
+  {
+    "attemptId": "2f05c880-d864-469b-be30-198b35d6fc3f",
+    "status": "failed",
+    "policyVersion": 1,
+    "quote": {
+      "scheme": "exact",
+      "network": "eip155:84532",
+      "asset": "0x036cbd53842c5426634e7929541ec2318f3dcf7e",
+      "amountAtomic": "10000",
+      "payTo": "0x39308ae43e5dda98db5fb17d005c5c764e5a2fed",
+      "resourceUrl": "http://127.0.0.1:4021/paid/report/risky",
+      "attemptId": "2f05c880-d864-469b-be30-198b35d6fc3f",
+      "maxTimeoutSeconds": 300
+    },
+    "quoteHash": "0xaf3670cc4dc3ee0a194219a3a52d97713b0178d40ba0fdf4d8f8292b7cf0a9a6",
+    "evidence": {
+      "provenance": "real_live",
+      "tier": "BLOCK",
+      "providerScore": 100,
+      "reasons": [
+        "known_scammer",
+        "attack_money_target"
+      ],
+      "capturedAt": "2026-09-26T14:37:52.883Z",
+      "mappingVersion": "quickscan-v1",
+      "address": "0x39308ae43e5dda98db5fb17d005c5c764e5a2fed"
+    },
+    "decision": {
+      "decisionId": "b7ce9633-2aaa-487a-839a-f8d39c70d6d7",
+      "action": "DENY",
+      "reasons": [
+        {
+          "code": "EVIDENCE_BLOCK",
+          "ruleId": null
+        }
+      ],
+      "signerEligible": false,
+      "status": "open"
+    },
+    "timestamps": {
+      "interceptaRequestedAt": "2026-09-26T14:37:52.215Z",
+      "interceptaReturnedAt": "2026-09-26T14:37:52.892Z",
+      "decidedAt": "2026-09-26T14:37:52.894Z",
+      "signerInvokedAt": null,
+      "settledAt": null
+    },
+    "signerCalls": 0,
+    "settlement": "none",
+    "delivery": null,
+    "txHash": null,
+    "basescan": null
+  },
+  {
+    "attemptId": "7b94ea6c-bcf3-43a4-9f59-251f544719d3",
+    "status": "settled",
+    "policyVersion": 1,
+    "quote": {
+      "scheme": "exact",
+      "network": "eip155:84532",
+      "asset": "0x036cbd53842c5426634e7929541ec2318f3dcf7e",
+      "amountAtomic": "50000",
+      "payTo": "0x87cff22e916a4d70675e5b3056c1df6bd401cb1a",
+      "resourceUrl": "http://127.0.0.1:4021/paid/report/safe",
+      "attemptId": "7b94ea6c-bcf3-43a4-9f59-251f544719d3",
+      "maxTimeoutSeconds": 300
+    },
+    "quoteHash": "0x95d37e80eed1a41bacdb5e568c405d02c703020d1cc295a7c9b267b7c5a35c67",
+    "evidence": {
+      "provenance": "real_live",
+      "tier": "CLEAR",
+      "providerScore": 0,
+      "reasons": [],
+      "capturedAt": "2026-09-26T14:38:03.592Z",
+      "mappingVersion": "quickscan-v1",
+      "address": "0x87cff22e916a4d70675e5b3056c1df6bd401cb1a"
+    },
+    "decision": {
+      "decisionId": "ceb2b968-1f4c-4add-9a0e-e38b6d32081b",
+      "action": "PAY",
+      "reasons": [
+        {
+          "code": "RULE_MATCHED",
+          "ruleId": "R1"
+        }
+      ],
+      "signerEligible": true,
+      "status": "consumed"
+    },
+    "timestamps": {
+      "interceptaRequestedAt": "2026-09-26T14:38:02.604Z",
+      "interceptaReturnedAt": "2026-09-26T14:38:03.600Z",
+      "decidedAt": "2026-09-26T14:38:03.602Z",
+      "signerInvokedAt": "2026-09-26T14:38:03.619Z",
+      "settledAt": "2026-09-26T14:38:04.504Z"
+    },
+    "signerCalls": 1,
+    "settlement": "settled",
+    "delivery": "received",
+    "txHash": "0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a",
+    "basescan": "https://sepolia.basescan.org/tx/0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a"
+  }
+]

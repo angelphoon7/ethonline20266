@@ -1,0 +1,13 @@
+{
+  "network": "eip155:84532",
+  "txHash": "0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a",
+  "status": "success",
+  "blockNumber": "47332599",
+  "usdcTransfers": [
+    {
+      "from": "0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD",
+      "to": "0x87cFf22e916A4d70675E5b3056c1dF6bD401cB1A",
+      "valueAtomic": "50000"
+    }
+  ]
+}

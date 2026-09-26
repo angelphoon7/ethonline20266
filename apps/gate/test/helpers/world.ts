@@ -9,8 +9,9 @@ import {
   hashQuote,
   paymentAttemptSchema,
   riskEvidenceSchema,
+  signingPermitSchema,
 } from '@risksir/core';
-import type { CanonicalQuote, Decision, PaymentAttempt, RiskEvidence } from '@risksir/core';
+import type { CanonicalQuote, Decision, PaymentAttempt, RiskEvidence, SigningPermit } from '@risksir/core';
 import { createProtectedSigner } from '../../src/signer/public.js';
 import type { AttemptSigner, ProtectedSigner, SignerDeps, TypedDataRequest } from '../../src/signer/public.js';
 import { Store } from '../../src/store/store.js';
@@ -25,6 +26,7 @@ export interface World {
   attemptSigner: AttemptSigner;
   attemptId: string;
   decisionId: string;
+  permitId: string;
   quote: CanonicalQuote;
   clock: { ms: number };
   refusals: { code: string; detail: string }[];
@@ -38,7 +40,10 @@ export interface WorldOptions {
   decision?: Record<string, unknown>;
   evidence?: Record<string, unknown>;
   reserve?: boolean;
-  bind?: boolean;
+  /** Arm a signing permit for the attempt (default true). `false` models a gate that never armed one. */
+  arm?: boolean;
+  /** Field overrides for the armed permit (for example a permit whose stored quote differs). */
+  permit?: Record<string, unknown>;
   extraCheck?: SignerDeps['extraCheck'];
 }
 
@@ -160,7 +165,22 @@ export function makeWorld(opts: WorldOptions = {}): World {
   }
 
   const attemptSigner = signer.forAttempt(attemptId);
-  if (opts.bind !== false) attemptSigner.authorise(decisionId);
+  const permitId = 'permit-1';
+  if (opts.arm !== false) {
+    const permit: SigningPermit = signingPermitSchema.parse({
+      permitId,
+      attemptId,
+      decisionId,
+      quote,
+      quoteHash,
+      policyVersion: 1,
+      armedAt: iso(3),
+      expiresAt: iso(3 + DECISION_TTL_S),
+      status: 'armed',
+      ...opts.permit,
+    });
+    store.armPermit(permit);
+  }
 
   const typedData: World['typedData'] = (patch = {}) => ({
     domain: {
@@ -183,5 +203,5 @@ export function makeWorld(opts: WorldOptions = {}): World {
     },
   });
 
-  return { store, signer, attemptSigner, attemptId, decisionId, quote, clock, refusals, typedData, signerCalls: () => store.signerCallCount(attemptId) };
+  return { store, signer, attemptSigner, attemptId, decisionId, permitId, quote, clock, refusals, typedData, signerCalls: () => store.signerCallCount(attemptId) };
 }
