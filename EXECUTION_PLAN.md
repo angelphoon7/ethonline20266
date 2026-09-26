@@ -227,7 +227,7 @@ Level: integration-tested plus a live read-only check of the chain reader. 2026-
 
 
 # M-007 — Regression engine and labelled dataset
-Status: TODO
+Status: VERIFIED
 Needs credentials: none
 ## Objective
 Pure regression engine, exposure model and metrics (SPEC §13); labelled dataset of `real_live` (from M-005), `sponsor_fixture`, `controlled_variant` and `synthetic` cases with computed metrics.
@@ -248,7 +248,11 @@ AC-010, AC-011, AC-015, AC-032; INV-012, INV-013, INV-023.
 ## Commit boundary
 `feat(regression): add deterministic replay engine, metrics and labelled case dataset`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: unit-tested and integration-tested (offline, from stored evidence only). 2026-09-26.
+- `corepack pnpm verify` green: 25 files, **734 tests**. Engine: `packages/core/src/regression/{replay,metrics,engine}.ts` (pure; static purity test covers the directory). `regression.test.ts` (19): hand-computed numerators and denominators for candidates A, B and C on a 7-case dataset, an independent naive oracle, unknown labels excluded from prevention/friction metrics but counted in the rates (T-013), deterministic report hash independent of case order and of `reportId`/`generatedAt`, metrics and hash change when one case or one label changes (T-014), invalid candidate / duplicate case id / malformed case rejected, empty dataset gives `0/0` and no fabricated value, inputs not mutated. Mutation checks (5 of 5 killed): prevention clamp removed, unknown counted as good, CAP-below-quote counted as exposure, replay using wall time, dataset hash hard-coded.
+- Dataset: `apps/gate/src/dataset/{build,load}.ts`, `fixtures/cases/real_live_manifest.json`, `fixtures/cases/README.md`, `corepack pnpm seed` (idempotent, no network). 19 cases: **4 `real_live`** (the M-005 and M-004b attempts, evidence from the recorded Intercepta files), **11 `controlled_variant`** (the stored SAFE CLEAR and RISKY BLOCK snapshots with other amounts, histories and budgets), **4 `synthetic`** (WARN band, UNAVAILABLE). Labels 9 good, 6 bad, 4 unknown; the Scene-4 incident `cv-01-incident-80000` is seeded `unknown` so the owner labels it (Trigger C). `dataset.test.ts` (16): provenance mix and honesty (no non-real case carries real evidence; real cases replay to their recorded action), hand-computed candidate B metrics on the full dataset (prevents 3/3 exposed bad cases, changes 2/9 good cases, delays 80000/340000 of good value, 6/19 auto-approved), A blunter (4/9, 110000/340000, 12/19 holds), C adds reviews; an owner label on the incident changes the metrics and both hashes.
+- No `sponsor_fixture` cases: the sponsor has not confirmed the RISKY address (Q-003).
+
 
 # M-008 — Policy lifecycle
 Status: TODO

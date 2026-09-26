@@ -7,7 +7,7 @@ Last updated: 2026-09-26, after M-004b. If this file disagrees with the reposito
 
 ## 1. Current Objective
 
-M-004b (SPEC v1.1 conformance fix) and M-006 (store hardening, reconciliation) are done. Next: **M-007** (regression engine and labelled dataset), then M-008 (policy lifecycle and owner API), M-009 (console), M-010 (Layer 4 live proof).
+M-004b, M-006 and M-007 (regression engine and labelled dataset) are done. Next: **M-008** (policy lifecycle: candidates, report binding, owner approval, atomic activation, rollback, owner API with bearer auth), then M-009 (console), M-010 (Layer 4 live proof).
 
 ## 2. Repository State
 
@@ -17,7 +17,7 @@ M-004b (SPEC v1.1 conformance fix) and M-006 (store hardening, reconciliation) a
 ## 3. VERIFIED Working
 
 - **Prize path, live-verified twice** (real 402, live Intercepta on the exact `payTo`, one settled Base Sepolia payment, one Intercepta-driven DENY with `signerCalls=0`): pre-review signer tx `0x1cf9ae6f…8e6b` (M-005) and **permit-based signer tx `0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a`** (M-004b, Base Sepolia block 47332599, RPC receipt `success`, USDC Transfer 50000 payer to SAFE, `signerCalls=1`, permit consumed; block attempt `2f05c880-…` DENY `signerCalls=0`). Evidence: `docs/evidence/M-005_*`, `docs/evidence/M-004b_*`, `docs/spikes/SPIKE_B_X402.md`.
-- SPEC v1.1 implemented and tested: signing permit with tables A/B (51 signer tests, one negative per mismatch), local checks before any Intercepta call, `awaiting_approval`/`expired` with approval resume (fresh screen, re-evaluation, PAY only), single spend ledger, state-machine enforcement in the store. `corepack pnpm verify` green: **643 tests** (offline).
+- SPEC v1.1 implemented and tested: signing permit with tables A/B (51 signer tests, one negative per mismatch), local checks before any Intercepta call, `awaiting_approval`/`expired` with approval resume (fresh screen, re-evaluation, PAY only), single spend ledger, state-machine enforcement in the store. `corepack pnpm verify` green: **734 tests** (offline).
 - Intercepta quick-scan shape observed live (Spike A). Spike A evidence gate (ADR-023): endpoint, base origin, HTTP 200, body shape at scores 0 and 100, reproducibility and latency are real; the 80 threshold, WARN band, `txsCount`, error codes and rate limits are OPEN. Tier thresholds are Risksir policy thresholds, not Intercepta verdicts.
 - Tools: Node v24.18.0, pnpm 12.6.0 via `corepack pnpm`, TypeScript ~6.0.3.
 
@@ -30,7 +30,7 @@ M-004b (SPEC v1.1 conformance fix) and M-006 (store hardening, reconciliation) a
 
 | Level | Status |
 | --- | --- |
-| typecheck / lint / unit / integration | `corepack pnpm verify` green, 643 tests (incl. real multi-process reservation race) |
+| typecheck / lint / unit / integration | `corepack pnpm verify` green, 734 tests (incl. real multi-process reservation race and the regression engine) |
 | live | `LIVE=1 pnpm test:live` T-060 (Intercepta); `LIVE=1 pnpm demo:block` and `demo:pass` ran 2026-09-26 twice (M-005, M-004b) |
 | demo smoke | not run |
 
@@ -62,8 +62,8 @@ ADR-019 signing permit; ADR-020 `awaiting_approval`/`expired`; ADR-021 single sp
 
 ## 10. Next
 
-1. M-007 regression engine (SPEC §13, pure, no signer import) and the labelled dataset built from stored snapshots (use the `real_live` evidence in `fixtures/intercepta/recorded/` and the store; `controlled_variant` incident per SPEC Appendix A).
-2. Add a `seed` CLI that writes the dataset and cases through `store.saveCase`.
+1. M-008: policy lifecycle in the store (candidates, reports, `PolicyVersion` states, approval bound to `reportHash`, atomic activation with pointer change, rollback as a new logged transition, audit events `PolicyApproved/Activated/RolledBack`, `RegressionCompleted`), the owner HTTP API with bearer auth (`OWNER_CONSOLE_TOKEN`, constant-time compare), routes in SPEC §19 including `POST /api/approvals` (calls `resumeWithApproval`) and `POST /api/cases/:id/label`.
+2. Run `corepack pnpm seed` before any manual demo; candidates A/B/C come from `demoCandidates(demoPolicyV1(demoProfile(DEMO_SERVICE_BASE)))`.
 3. M-008 lifecycle and owner API (including `POST /api/approvals` calling `resumeWithApproval`); M-009 console (label the tier as a Risksir policy tier).
 4. M-010 live Layer 4 proof; M-011 demo hardening; M-012 submission.
 

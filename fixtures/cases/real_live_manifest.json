@@ -1,0 +1,57 @@
+{
+  "note": "Maps recorded real_live Intercepta responses (fixtures/intercepta/recorded/) to the live payment attempts they belong to. Hand-written from docs/evidence/M-005_* and docs/evidence/M-004b_*; the response files themselves are recorded, never edited. Labels are derived and stated in each rationale.",
+  "entries": [
+    {
+      "caseId": "real-01-block-risky",
+      "file": "2026-09-26T13-58-41-611Z_0x39308ae43e5dda98db5fb17d005c5c764e5a2fed.json",
+      "attemptId": "aae1f854-7804-4135-b0c1-c811d182cad0",
+      "amountAtomic": "10000",
+      "path": "report/risky",
+      "firstTimeCounterparty": true,
+      "periodBudgetRemainingAtomic": "500000",
+      "recordedAction": "DENY",
+      "signerCalled": false,
+      "label": "bad",
+      "rationale": "Live Intercepta reported known_scammer and attack_money_target (score 100). The label comes from provider evidence, not from a loss."
+    },
+    {
+      "caseId": "real-02-pay-safe",
+      "file": "2026-09-26T13-58-54-181Z_0x87cff22e916a4d70675e5b3056c1df6bd401cb1a.json",
+      "attemptId": "392a270f-8a18-485e-b3df-9a81b6607feb",
+      "amountAtomic": "50000",
+      "path": "report/safe",
+      "firstTimeCounterparty": true,
+      "periodBudgetRemainingAtomic": "500000",
+      "recordedAction": "PAY",
+      "signerCalled": true,
+      "label": "good",
+      "rationale": "Settled on Base Sepolia (tx 0x1cf9ae6f4e155214115528bcbfd917c94ece8fb987f68f193a1ef77114478e6b) and delivered; no incident reported."
+    },
+    {
+      "caseId": "real-03-block-risky",
+      "file": "2026-09-26T14-37-52-883Z_0x39308ae43e5dda98db5fb17d005c5c764e5a2fed.json",
+      "attemptId": "2f05c880-d864-469b-be30-198b35d6fc3f",
+      "amountAtomic": "10000",
+      "path": "report/risky",
+      "firstTimeCounterparty": true,
+      "periodBudgetRemainingAtomic": "450000",
+      "recordedAction": "DENY",
+      "signerCalled": false,
+      "label": "bad",
+      "rationale": "Live Intercepta reported known_scammer and attack_money_target (score 100). The label comes from provider evidence, not from a loss."
+    },
+    {
+      "caseId": "real-04-pay-safe",
+      "file": "2026-09-26T14-38-03-592Z_0x87cff22e916a4d70675e5b3056c1df6bd401cb1a.json",
+      "attemptId": "7b94ea6c-bcf3-43a4-9f59-251f544719d3",
+      "amountAtomic": "50000",
+      "path": "report/safe",
+      "firstTimeCounterparty": false,
+      "periodBudgetRemainingAtomic": "450000",
+      "recordedAction": "PAY",
+      "signerCalled": true,
+      "label": "good",
+      "rationale": "Settled on Base Sepolia (tx 0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a) and delivered; no incident reported."
+    }
+  ]
+}

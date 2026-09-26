@@ -10,6 +10,9 @@ import type { PaymentPolicy, RiskProfile, Rule, UnsealedPolicy } from '../types.
  */
 export const DEMO_ORG_ID = 'org-exampleco';
 
+/** Resource base used by the live demo (127.0.0.1, see `apps/gate/src/cli/demo.ts`) and by the labelled case dataset. */
+export const DEMO_SERVICE_BASE = 'http://127.0.0.1:4021/paid/';
+
 export function demoProfile(serviceBase = 'http://localhost:4021/paid/'): RiskProfile {
   return {
     orgId: DEMO_ORG_ID,

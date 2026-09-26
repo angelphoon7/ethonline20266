@@ -8,3 +8,4 @@ export * from './types.js';
 export * from './fingerprint.js';
 export * from './state.js';
 export * from './policy/index.js';
+export * from './regression/index.js';
