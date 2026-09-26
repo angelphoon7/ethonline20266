@@ -1,13 +1,13 @@
-AGENT_STATUS: CONTINUE
-HUMAN_ACTIONS: 1. Payer wallet holds 39.74 test USDC, above the 20 USDC ceiling in OPERATIONAL_GUARDRAILS: move the excess out (`LIVE=1 pnpm demo:smoke` fails on it until you do). 2. Vercel: the site is deployed at https://ethtokyo2026-kappa.vercel.app/; fill in DEMO_VIDEO_URL in apps/site/src/config.ts. 3. Send the Intercepta questions (overlap, mid-band score meaning, rate limits) and paste the verbatim answer into docs/spikes/SPIKE_E_OVERLAP.md. 4. Confirm with the sponsor that SELLER_PAY_TO_RISKY may be used as a testnet payTo and SELLER_PAY_TO_ALT as a comparator (Q-003). 5. Before judging, screen-record one full live run of Scenes 1 to 5 (DEMO_RUNBOOK.md section 10). 6. Make the GitHub repo public before submission; check the GitHub Actions run of the latest push.
+AGENT_STATUS: ALL_DONE
+HUMAN_ACTIONS: 0. All milestones are verified; only the steps below need a human. 1. Payer wallet holds 39.74 test USDC, above the 20 USDC ceiling in OPERATIONAL_GUARDRAILS: move the excess out (`LIVE=1 pnpm demo:smoke` fails on it until you do). 2. Vercel: the site is deployed at https://ethtokyo2026-kappa.vercel.app/; fill in DEMO_VIDEO_URL in apps/site/src/config.ts. 3. Send the Intercepta questions (overlap, mid-band score meaning, rate limits) and paste the verbatim answer into docs/spikes/SPIKE_E_OVERLAP.md. 4. Confirm with the sponsor that SELLER_PAY_TO_RISKY may be used as a testnet payTo and SELLER_PAY_TO_ALT as a comparator (Q-003). 5. Before judging, screen-record one full live run of Scenes 1 to 5 (DEMO_RUNBOOK.md section 10). 6. Make the GitHub repo public before submission (AC-024); check the GitHub Actions run of the latest push. 7. Review the DRAFT Intercepta API feedback in README.md.
 
 # HANDOFF — Risksir
 
-Last updated: 2026-09-26, after M-011. If this file disagrees with the repository, the repository wins.
+Last updated: 2026-09-26, after M-012. If this file disagrees with the repository, the repository wins.
 
 ## 1. Current Objective
 
-M-004b, M-006 to M-011 are done (M-010 live Layer 4 proof, M-011 demo hardening: `demo:reset`, `demo:smoke`, `demo:failure`, `DEMO_RUNBOOK.md`). Next: **M-012** (README completed with the Intercepta file map and claim boundaries, `FINAL_VALIDATION.md` PASS/FAIL with evidence, 3 to 5 lines of Intercepta API feedback marked DRAFT). Then human steps only (see HUMAN_ACTIONS).
+Every milestone M-000 to M-012 is VERIFIED. `FINAL_VALIDATION.md` has no FAIL; what remains is human only (see HUMAN_ACTIONS). No further build work is planned. Do not add features (CLAUDE.md section 11).
 
 ## 2. Repository State
 
@@ -17,7 +17,7 @@ M-004b, M-006 to M-011 are done (M-010 live Layer 4 proof, M-011 demo hardening:
 ## 3. VERIFIED Working
 
 - **Prize path, live-verified twice** (real 402, live Intercepta on the exact `payTo`, one settled Base Sepolia payment, one Intercepta-driven DENY with `signerCalls=0`): pre-review signer tx `0x1cf9ae6f…8e6b` (M-005) and **permit-based signer tx `0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a`** (M-004b, Base Sepolia block 47332599, RPC receipt `success`, USDC Transfer 50000 payer to SAFE, `signerCalls=1`, permit consumed; block attempt `2f05c880-…` DENY `signerCalls=0`). Evidence: `docs/evidence/M-005_*`, `docs/evidence/M-004b_*`, `docs/spikes/SPIKE_B_X402.md`.
-- SPEC v1.1 implemented and tested: signing permit with tables A/B (51 signer tests, one negative per mismatch), local checks before any Intercepta call, `awaiting_approval`/`expired` with approval resume (fresh screen, re-evaluation, PAY only), single spend ledger, state-machine enforcement in the store. `pnpm verify` green: **798 tests** (offline) plus the live Layer 4 run (M-010).
+- SPEC v1.1 implemented and tested: signing permit with tables A/B (51 signer tests, one negative per mismatch), local checks before any Intercepta call, `awaiting_approval`/`expired` with approval resume (fresh screen, re-evaluation, PAY only), single spend ledger, state-machine enforcement in the store. `pnpm verify` green: **839 tests** (offline) plus the live Layer 4 run (M-010).
 - Intercepta quick-scan shape observed live (Spike A). Spike A evidence gate (ADR-023): endpoint, base origin, HTTP 200, body shape at scores 0 and 100, reproducibility and latency are real; the 80 threshold, WARN band, `txsCount`, error codes and rate limits are OPEN. Tier thresholds are Risksir policy thresholds, not Intercepta verdicts.
 - Tools: Node v24.18.0, pnpm 12.6.0 (plain `pnpm` and `corepack pnpm` both work), TypeScript ~6.0.3.
 
@@ -30,9 +30,9 @@ M-004b, M-006 to M-011 are done (M-010 live Layer 4 proof, M-011 demo hardening:
 
 | Level | Status |
 | --- | --- |
-| typecheck / lint / unit / integration | `pnpm verify` green, 798 tests (incl. the multi-process reservation race, the regression engine, the policy lifecycle, the owner API and the console component/App tests) |
+| typecheck / lint / unit / integration | `pnpm verify` green, 839 tests (incl. the multi-process reservation race, the regression engine, the policy lifecycle, the owner API and the console component/App tests) |
 | live | `LIVE=1 pnpm test:live` T-060 (Intercepta); `LIVE=1 pnpm demo:block` and `demo:pass` ran 2026-09-26 twice (M-005, M-004b) |
-| demo smoke | not run |
+| demo smoke | `LIVE=1 pnpm demo:smoke` ran 2026-09-26: all checks PASS except the payer balance ceiling (39.74 test USDC, human action); reset then re-run of the full loop verified (M-011) |
 
 ## 6. External System Status
 
@@ -67,7 +67,7 @@ ADR-019 signing permit; ADR-020 `awaiting_approval`/`expired`; ADR-021 single sp
 
 ## 10. Next
 
-1. M-012 (`prompts/DEMO_AND_SUBMISSION.md` part B and C): README (file map with line anchors, setup, trust model, claim boundaries, limitations, Intercepta API feedback DRAFT), `FINAL_VALIDATION.md` (07 §27 line by line, prize anchor points 1 to 6, every AC, PASS/FAIL with evidence), keep the "Live site" URL.
+1. Human submission steps: fill `DEMO_VIDEO_URL`, review the README Intercepta feedback draft, make the repository public, record the backup video, send the Intercepta questions (Spike E), confirm Q-003 with the sponsor.
 2. Before judging (human): `pnpm demo:reset`, `LIVE=1 pnpm demo:smoke`, screen-record one full live run as the backup video (`DEMO_RUNBOOK.md` sections 10 and 14). Interactive demo: `pnpm owner-api:live` + `pnpm dev:console`, the console has Run scene 2/3/5 buttons.
 3. Candidates A/B/C rules come from `demoCandidates(demoPolicyV1(demoProfile(DEMO_SERVICE_BASE)))`.
 

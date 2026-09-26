@@ -380,7 +380,7 @@ Level: live-verified (reset then full re-run) plus unit-tested tooling. 2026-09-
 - `DEMO_RUNBOOK.md`: objective, prerequisites, clean start, preflight, Scenes 1 to 5 with evidence per step, 4 and 2 minute scripts, sponsor evidence, failure demo, recovery table, reset, degraded backup (with the HUMAN screen-recording step), Q&A, checklist. The Spike E answer is not recorded yet, so no gap is claimed.
 
 # M-012 — Submission
-Status: TODO
+Status: VERIFIED
 Needs credentials: none
 ## Objective
 README and `FINAL_VALIDATION.md` checked line by line against 07 §27; follows `prompts/DEMO_AND_SUBMISSION.md`.
@@ -401,7 +401,12 @@ AC-016, AC-017, AC-018.
 ## Commit boundary
 `docs: add README and final validation against the demo checklist`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: integration-tested docs plus a clean-checkout run. 2026-09-26.
+- `README.md` completed: summary (07 section 25), problem, flow, file map with line anchors to the Intercepta call (`screenAddress`), evidence mapping, the pre-sign screen in the gate, the decision point (`evaluate`, `evaluateLocal`), the signer gate (`createProtectedSigner`), the regression engine (`runRegression`), approval and rollback; setup, tests, run commands, recorded evidence table (tx hashes), trust model and claim boundaries (CLEAR is not safe, tiers are Risksir thresholds, replay is not prevented loss, code-path isolation), known limitations with the dataset provenance mix, five lines of Intercepta API feedback marked `DRAFT — human to review before submission`, live site link, closing workflow line.
+- `test/docs.test.ts` (T-090, 6 tests): the file-map links point to real lines that contain the named symbol, scripts named in the README exist, every `.env.example` name is documented, 3 to 5 feedback lines with the DRAFT marker, claim boundaries present, no secret value, local links resolve.
+- `FINAL_VALIDATION.md`: 07 section 27 (18 lines), prize anchor points 1 to 6 and AC-001 to AC-037 each marked PASS or PENDING with evidence; **no FAIL**. PENDING (human): AC-024 public repository, sponsor confirmation of the risky `payTo` (Q-003), review of the API feedback draft. Stated gaps: only scores 0 and 100 observed; Spike E unanswered so no gap claimed; ASK_HUMAN resume not exercised live; payer balance 39.74 test USDC above the 20 USDC ceiling (human action).
+- Clean checkout of commit `cc2e9a9`: `pnpm install` then `pnpm verify` without `.env`: first run 838/839 (one cold-start jsdom timeout at 7.2 s), second run 839/839; the timeout limit was raised to 20 s and the working copy passes (36 files, 839 tests).
+- Not done here (human): making the repository public, filling the demo video URL, reviewing the feedback draft.
 
 ---
 

@@ -6,7 +6,7 @@ Checked on 2026-09-26 against the repository, `docs/07_PROJECT_FREEZE.md` sectio
 
 Evidence sources used below:
 
-- `pnpm verify`: offline typecheck, lint and 839 tests (see the last line of this file for the run recorded at the time of writing).
+- `pnpm verify`: offline typecheck, lint and 839 tests (clean-checkout run in section 4).
 - Live evidence files: `docs/evidence/M-004b_traces.json`, `M-005_*`, `M-010_v2_run.json`, `M-011_v2_rerun_after_reset.json`; raw Intercepta responses in `fixtures/intercepta/recorded/` (21 files: 20 successful, 1 real timeout, all `real_live`, no headers).
 - Settled payments, each re-checked read-only against the chain with `pnpm verify:tx` (status `success`, USDC transfer of 50000 atomic from the payer): `0x1cf9ae6f…8e6b`, `0xda62fcb7…a97a`, `0xb38f786a…866a`, `0x9225d604…1b97`, `0xe06c8201…70fa`, `0x5f4d70a1…a4c5`, `0x3d0602d0…ecd8`, `0x2ba64242…b4ab`. Full hashes are in the evidence files. Basescan: `https://sepolia.basescan.org/tx/<hash>`.
 
@@ -88,7 +88,10 @@ Evidence sources used below:
 
 ## 4. Clean checkout
 
-See the last section, added after the run.
+Run 2026-09-26 on commit `cc2e9a9`: `git clone` of the committed repository into an empty folder, then `pnpm install` (34.5 s, lockfile respected, no build scripts needed) and `pnpm verify` with no `.env`, no `data/` and no `node_modules` from the working copy.
+
+- First run: 838 of 839 tests passed; one jsdom test (`apps/site/test/site.test.tsx`, first render) timed out at 7.2 s against the default 5 s limit because 36 test workers started cold at once. A second run in the same checkout: 36 files, 839 tests, all green. Fixed by setting `testTimeout: 20000` in `vitest.config.ts`; the working copy then passed `pnpm verify` (36 files, 839 tests).
+- Nothing in the offline suite needs credentials or network. Live commands (`test:live`, `demo:*`) need `.env` as the README states and were not run in the clean checkout.
 
 ## 5. Gaps that are not FAILs, stated plainly
 
