@@ -10,7 +10,7 @@
  *
  * Preconditions are checked before any spend and every step is asserted: an unexpected decision stops the run
  * immediately. Live limits (OPERATIONAL_GUARDRAILS section 4/5) apply: at most two settlements of 0.05 USDC and three live
- * Intercepta calls. `--no-pay` runs steps 1 to 3 only (one screen, no settlement). Base Sepolia only; never prints secrets.
+ * Intercepta calls. `--no-pay` runs steps 1 to 3 only (one screen, no settlement). Base Sepolia only; never prints secrets. The run summary is written to data/last-demo-v2.json (gitignored) or to `--out=<path>`.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -29,7 +29,7 @@ requireLive();
 const noPay = process.argv.includes('--no-pay');
 const INCIDENT_CASE = 'cv-01-incident-80000';
 
-const fail = (msg: string): never => {
+const fail: (msg: string) => never = (msg) => {
   console.error(`STOP: ${msg}`);
   process.exit(2);
 };
@@ -48,6 +48,9 @@ if (!store.getCase(INCIDENT_CASE)) fail(`incident case ${INCIDENT_CASE} is missi
 const altPay = world.payTo('alt');
 const safePay = world.payTo('safe');
 if (!altPay || !safePay) fail('SELLER_PAY_TO_ALT and SELLER_PAY_TO_SAFE must both be set');
+// the scene 5 contrast needs ALT to be a first-time counterparty and (unless --no-pay) SAFE to be a known one
+if (!store.isFirstTimeCounterparty(orgId, altPay)) fail('ALT was already paid, so it is not a first-time counterparty. Run pnpm demo:reset, then demo:pass, demo:block and demo:v2 again.');
+if (!noPay && store.isFirstTimeCounterparty(orgId, safePay)) fail('SAFE has not been paid yet, so the known-counterparty contrast would not hold. Run demo:pass first (or pnpm demo:reset, then demo:pass, demo:block, demo:v2).');
 const altAmount = world.priceAtomic('alt');
 const safeAmount = world.priceAtomic('safe');
 const planned = noPay ? 0n : altAmount + safeAmount;
@@ -134,9 +137,11 @@ try {
   evidence.signerCallsTotal = Object.values(results).map((r) => ({ attemptId: r.attemptId, policyVersion: r.policyVersion, action: r.decision?.action, signerCalls: r.signerCalls }));
   const ids = new Set(Object.values(results).map((r) => r.attemptId));
   evidence.audit = store.listAudit().filter((e) => (e.refs.attemptId && ids.has(e.refs.attemptId)) || e.type === 'PolicyApproved' || e.type === 'PolicyActivated' || e.type === 'PolicyRolledBack' || e.type === 'IncidentLabelled' || e.type === 'RegressionCompleted').map((e) => ({ seq: e.seq, type: e.type, at: e.at, refs: e.refs }));
-  const out = join(REPO_ROOT, 'docs', 'evidence', `M-010_v2_run${noPay ? '_nopay' : ''}.json`);
+  // Never overwrite committed evidence by default: the run summary goes to the gitignored data/ folder unless --out is given.
+  const outArg = process.argv.find((a) => a.startsWith('--out='))?.slice('--out='.length);
+  const out = outArg ? join(REPO_ROOT, outArg) : join(REPO_ROOT, 'data', `last-demo-v2${noPay ? '-nopay' : ''}.json`);
   writeFileSync(out, JSON.stringify(evidence, null, 2) + '\n');
-  console.log(`\nDONE. evidence written to ${out.slice(REPO_ROOT.length)}. session: ${JSON.stringify({ ...world.session.state(), totalAtomic: atomicToUsdcString(world.session.state().totalAtomic) })}`);
+  console.log(`\nDONE. summary written to ${out.slice(REPO_ROOT.length)}. session: ${JSON.stringify({ ...world.session.state(), totalAtomic: atomicToUsdcString(world.session.state().totalAtomic) })}`);
 } finally {
   await seller.close();
   store.close();

@@ -1,16 +1,18 @@
 /**
  * Seeds the labelled regression dataset into the local store (`data/risksir.db`) from committed fixtures only.
- * Idempotent: cases that already exist are left untouched (their label history is never overwritten).
+ * Also installs policy v1 if none is active. Idempotent: cases that already exist are left untouched (their label history is never overwritten).
  * Run: corepack pnpm seed. Makes no network calls.
  */
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DEMO_ORG_ID } from '@risksir/core';
+import { DEMO_ORG_ID, DEMO_SERVICE_BASE, demoPolicyV1, demoProfile } from '@risksir/core';
 import { loadDataset } from '../dataset/load.js';
+import { installInitialPolicy } from '../policy/index.js';
 import { Store } from '../store/store.js';
 
 const root = fileURLToPath(new URL('../../../../', import.meta.url));
 const store = new Store(join(root, 'data', 'risksir.db'));
+if (store.getActivePolicyVersion(DEMO_ORG_ID) === null) installInitialPolicy(store, DEMO_ORG_ID, demoPolicyV1(demoProfile(DEMO_SERVICE_BASE)));
 let added = 0;
 let kept = 0;
 for (const c of loadDataset(root)) {

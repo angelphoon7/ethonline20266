@@ -86,3 +86,4 @@ input, select { font: inherit; border: 1px solid var(--line); background: var(--
 .list { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 8px; } .list li { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
 .alert { margin-top: 12px; padding: 8px 12px; border-radius: 8px; } .alert.error { background: var(--bad-bg); color: var(--bad); } .alert.ok { background: var(--ok-bg); color: var(--ok); }
 a { color: var(--accent); }
+.scenario-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }

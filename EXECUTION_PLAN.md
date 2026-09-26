@@ -347,7 +347,7 @@ Level: live-verified. 2026-09-26, Base Sepolia only, `LIVE=1 pnpm demo:v2` (scri
 - Not shown: an `ASK_HUMAN` live approval resume (covered offline in M-004b/M-008).
 
 # M-011 — Demo hardening
-Status: TODO
+Status: VERIFIED
 Needs credentials: all live variables (for smoke)
 ## Objective
 Seed and reset scripts, fail-closed demo, `pnpm demo:smoke`, `DEMO_RUNBOOK.md`; follows `prompts/DEMO_AND_SUBMISSION.md`.
@@ -368,7 +368,16 @@ Reproducibility of AC-004, AC-005, AC-013.
 ## Commit boundary
 `feat(demo): add seed, reset, smoke script and runbook`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: live-verified (reset then full re-run) plus unit-tested tooling. 2026-09-26, Base Sepolia only.
+- `pnpm verify` green: 35 files, 833 tests (new: reset 6, preflight 9, console scenario buttons 2).
+- `pnpm demo:reset` (`apps/gate/src/demo/reset.ts`): moved `data/risksir.db` to `data/backup/risksir-2026-09-26T16-17-05-382Z.sqlite` (gitignored, local), installed v1 and seeded 19 cases. Refuses with money in flight unless `--force`; the spend and Intercepta counters are not reset without `--new-session`. `pnpm demo:seed` now also installs v1 if none is active.
+- `LIVE=1 pnpm demo:smoke` (`apps/gate/src/cli/smoke.ts`, pure logic in `apps/gate/src/demo/smoke.ts`): on the used state it FAILED closed (`ALT was already paid`), as designed. After reset: env PASS, local state PASS (fresh v1), seller 402 for safe/risky/alt PASS with the quoted `payTo`, facilitator `/supported` PASS, session limits PASS, live Intercepta PASS (SAFE: CLEAR, score 0, 318 ms, HTTP 200). **Payer balance FAIL: 39.74 test USDC, above the 20 USDC ceiling in OPERATIONAL_GUARDRAILS section 2: a human action** (spend limits are unaffected and were not exceeded).
+- Re-run after reset (`LIVE=1 pnpm demo:pass`, `demo:block`, `demo:v2`): pass attempt `0941a540...` PAY, `signerCalls=1`, tx `0x5f4d70a1...a4c5` (block 47335577); block attempt `f627358f...` BLOCK -> DENY, `signerCalls=0`; v2 loop: report `0x1e367dcb...c362e` approved -> v2, ALT under v2 attempt `0322160f...` CAP, `signerCalls=0`; SAFE under v2 tx `0x3d0602d0...ecd8` (block 47335587); rollback to v1; ALT under v1 tx `0x2ba64242...b4ab` (block 47335587). The three txs re-checked read-only with `pnpm verify:tx` (success, 50000 atomic USDC to SAFE, SAFE, ALT). Evidence: `docs/evidence/M-011_v2_rerun_after_reset.json` and the seven new raw Intercepta responses under `fixtures/intercepta/recorded/`.
+- Counters after the run: 8/20 settlements, 0.40/1.00 USDC, Intercepta 21/40.
+- `pnpm demo:failure`: simulated Intercepta timeout (provenance `synthetic`, no live call, no payment): HOLD `EVIDENCE_UNAVAILABLE`, `signerCalls=0`, attempt `46c7365d...`.
+- `demo:v2` no longer overwrites committed evidence: its summary goes to `data/last-demo-v2.json` unless `--out=<path>`; it refuses to start unless ALT is first-time and (unless `--no-pay`) SAFE is known. (The first M-011 re-run overwrote `docs/evidence/M-010_v2_run.json`; it was restored from git and the new run saved as the M-011 file.) `pnpm export:site --db=<path>` reads an older database: re-exporting the site data from the backup reproduced the committed JSON byte for byte.
+- Console: added "Run scene 2/3/5" buttons (POST `/api/agent/run`), so the demo needs no terminal in `owner-api:live` mode.
+- `DEMO_RUNBOOK.md`: objective, prerequisites, clean start, preflight, Scenes 1 to 5 with evidence per step, 4 and 2 minute scripts, sponsor evidence, failure demo, recovery table, reset, degraded backup (with the HUMAN screen-recording step), Q&A, checklist. The Spike E answer is not recorded yet, so no gap is claimed.
 
 # M-012 — Submission
 Status: TODO

@@ -80,6 +80,7 @@ IDs are stable; files are created by the milestone that owns them (`EXECUTION_PL
 | T-052 | L3 | Concurrent attempts through the gate cannot exceed the period cap |
 | T-053 | L3 | Live-run guard aborts before signing when a `[G §4]` limit would be exceeded |
 | T-054 | L2 | Console: signer badge, provenance badge, active version and settlement/delivery render from API data; no signer timestamp shown when not called |
+| T-055 | L2 | Demo reset backs up the database and never deletes evidence, refuses while a reservation is in flight, does not lift spend or call counters without `--new-session`; the smoke preflight fails closed on state, limits and balance |
 | T-060 | L4 | Live Intercepta screens of `SELLER_PAY_TO_SAFE` and `SELLER_PAY_TO_RISKY`; raw files saved |
 | T-061 | L4 | Live pass: real 402, one signature, Base Sepolia tx hash |
 | T-062 | L4 | Live block: Intercepta-driven HOLD/DENY, log `signerCalls=0` |

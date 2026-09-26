@@ -1,0 +1,614 @@
+{
+  "run": "2026-09-26T16:17:38.314Z",
+  "network": "eip155:84532",
+  "provenance": "real_live",
+  "noPay": false,
+  "candidates": [
+    {
+      "key": "A",
+      "candidateId": "1e9e0b67-04ce-4ff8-85ee-0a4b6670ff12",
+      "reportHash": "0x5425c3e4b6acf6842747ec713079e8443f843cf7b52e878d16465b56c7c0775a",
+      "metrics": [
+        {
+          "name": "bad_cases_prevented",
+          "numerator": "4",
+          "denominator": "4"
+        },
+        {
+          "name": "bad_value_prevented",
+          "numerator": "270000",
+          "denominator": "270000"
+        },
+        {
+          "name": "bad_value_remaining",
+          "numerator": "0",
+          "denominator": "270000"
+        },
+        {
+          "name": "good_cases_changed",
+          "numerator": "4",
+          "denominator": "9"
+        },
+        {
+          "name": "good_value_delayed_or_denied",
+          "numerator": "110000",
+          "denominator": "340000"
+        },
+        {
+          "name": "human_reviews_added",
+          "numerator": "-1",
+          "denominator": "19"
+        },
+        {
+          "name": "auto_approval_rate",
+          "numerator": "4",
+          "denominator": "19"
+        },
+        {
+          "name": "hold_rate",
+          "numerator": "12",
+          "denominator": "19"
+        },
+        {
+          "name": "deny_rate",
+          "numerator": "3",
+          "denominator": "19"
+        },
+        {
+          "name": "bad_cases_weakened",
+          "numerator": "0",
+          "denominator": "7"
+        }
+      ],
+      "provenanceMix": {
+        "real_live": 4,
+        "sponsor_fixture": 0,
+        "controlled_variant": 11,
+        "synthetic": 4
+      }
+    },
+    {
+      "key": "B",
+      "candidateId": "96647730-6b7a-4a3a-a11b-e3b5cfef33b5",
+      "reportHash": "0x1e367dcb4bc76d994a340727a4306e12fb9c99224d083881e7eaa679df5c362e",
+      "metrics": [
+        {
+          "name": "bad_cases_prevented",
+          "numerator": "4",
+          "denominator": "4"
+        },
+        {
+          "name": "bad_value_prevented",
+          "numerator": "270000",
+          "denominator": "270000"
+        },
+        {
+          "name": "bad_value_remaining",
+          "numerator": "0",
+          "denominator": "270000"
+        },
+        {
+          "name": "good_cases_changed",
+          "numerator": "2",
+          "denominator": "9"
+        },
+        {
+          "name": "good_value_delayed_or_denied",
+          "numerator": "80000",
+          "denominator": "340000"
+        },
+        {
+          "name": "human_reviews_added",
+          "numerator": "-1",
+          "denominator": "19"
+        },
+        {
+          "name": "auto_approval_rate",
+          "numerator": "6",
+          "denominator": "19"
+        },
+        {
+          "name": "hold_rate",
+          "numerator": "2",
+          "denominator": "19"
+        },
+        {
+          "name": "deny_rate",
+          "numerator": "3",
+          "denominator": "19"
+        },
+        {
+          "name": "bad_cases_weakened",
+          "numerator": "0",
+          "denominator": "7"
+        }
+      ],
+      "provenanceMix": {
+        "real_live": 4,
+        "sponsor_fixture": 0,
+        "controlled_variant": 11,
+        "synthetic": 4
+      }
+    },
+    {
+      "key": "C",
+      "candidateId": "6c3b2241-3d4c-46de-81cd-7fdff02ed1fd",
+      "reportHash": "0x8034d6c52e1500995d17dea1373326eeeefd4f61f89f99c8ddea526580443fce",
+      "metrics": [
+        {
+          "name": "bad_cases_prevented",
+          "numerator": "4",
+          "denominator": "4"
+        },
+        {
+          "name": "bad_value_prevented",
+          "numerator": "270000",
+          "denominator": "270000"
+        },
+        {
+          "name": "bad_value_remaining",
+          "numerator": "0",
+          "denominator": "270000"
+        },
+        {
+          "name": "good_cases_changed",
+          "numerator": "2",
+          "denominator": "9"
+        },
+        {
+          "name": "good_value_delayed_or_denied",
+          "numerator": "80000",
+          "denominator": "340000"
+        },
+        {
+          "name": "human_reviews_added",
+          "numerator": "7",
+          "denominator": "19"
+        },
+        {
+          "name": "auto_approval_rate",
+          "numerator": "6",
+          "denominator": "19"
+        },
+        {
+          "name": "hold_rate",
+          "numerator": "2",
+          "denominator": "19"
+        },
+        {
+          "name": "deny_rate",
+          "numerator": "3",
+          "denominator": "19"
+        },
+        {
+          "name": "bad_cases_weakened",
+          "numerator": "0",
+          "denominator": "7"
+        }
+      ],
+      "provenanceMix": {
+        "real_live": 4,
+        "sponsor_fixture": 0,
+        "controlled_variant": 11,
+        "synthetic": 4
+      }
+    }
+  ],
+  "approved": {
+    "candidate": "B",
+    "reportHash": "0x1e367dcb4bc76d994a340727a4306e12fb9c99224d083881e7eaa679df5c362e",
+    "policyVersion": 2,
+    "policyHash": "0xafc21f5019baff86cc7d646cad5d1d807dd57cce674159340586e0e376811a51"
+  },
+  "results": {
+    "v2_alt": {
+      "attemptId": "0322160f-8277-4a74-b2ab-ab7dbb868673",
+      "status": "failed",
+      "policyVersion": 2,
+      "quote": {
+        "amountAtomic": "50000",
+        "payTo": "0x351e5b8b343dc0067338b7bcb34e685e87c174d8",
+        "resourceUrl": "http://127.0.0.1:4021/paid/report/alt"
+      },
+      "evidence": {
+        "provenance": "real_live",
+        "tier": "CLEAR",
+        "providerScore": 0,
+        "reasons": [],
+        "capturedAt": "2026-09-26T16:17:39.495Z"
+      },
+      "decision": {
+        "action": "CAP",
+        "reasons": [
+          "RULE_MATCHED",
+          "CAP_BELOW_QUOTE"
+        ],
+        "authorisedMaxAtomic": "20000",
+        "signerEligible": false
+      },
+      "interceptaReturnedAt": "2026-09-26T16:17:39.498Z",
+      "signerInvokedAt": null,
+      "signerCalls": 0,
+      "settlement": "none",
+      "delivery": null,
+      "txHash": null,
+      "basescan": null
+    },
+    "v2_safe": {
+      "attemptId": "2c9f49e8-ebd5-44e8-b4b4-fd1828f76ba5",
+      "status": "settled",
+      "policyVersion": 2,
+      "quote": {
+        "amountAtomic": "50000",
+        "payTo": "0x87cff22e916a4d70675e5b3056c1df6bd401cb1a",
+        "resourceUrl": "http://127.0.0.1:4021/paid/report/safe"
+      },
+      "evidence": {
+        "provenance": "real_live",
+        "tier": "CLEAR",
+        "providerScore": 0,
+        "reasons": [],
+        "capturedAt": "2026-09-26T16:17:39.676Z"
+      },
+      "decision": {
+        "action": "PAY",
+        "reasons": [
+          "RULE_MATCHED"
+        ],
+        "authorisedMaxAtomic": "50000",
+        "signerEligible": true
+      },
+      "interceptaReturnedAt": "2026-09-26T16:17:39.678Z",
+      "signerInvokedAt": "2026-09-26T16:17:39.687Z",
+      "signerCalls": 1,
+      "settlement": "settled",
+      "delivery": "received",
+      "txHash": "0x3d0602d0cbaff2349d8220f2c72484eebec9eeec26b3edee295cb418697eecd8",
+      "basescan": "https://sepolia.basescan.org/tx/0x3d0602d0cbaff2349d8220f2c72484eebec9eeec26b3edee295cb418697eecd8"
+    },
+    "v1_alt_after_rollback": {
+      "attemptId": "08ba465b-c899-490f-9875-25e456ff674a",
+      "status": "settled",
+      "policyVersion": 1,
+      "quote": {
+        "amountAtomic": "50000",
+        "payTo": "0x351e5b8b343dc0067338b7bcb34e685e87c174d8",
+        "resourceUrl": "http://127.0.0.1:4021/paid/report/alt"
+      },
+      "evidence": {
+        "provenance": "real_live",
+        "tier": "CLEAR",
+        "providerScore": 0,
+        "reasons": [],
+        "capturedAt": "2026-09-26T16:17:40.658Z"
+      },
+      "decision": {
+        "action": "PAY",
+        "reasons": [
+          "RULE_MATCHED"
+        ],
+        "authorisedMaxAtomic": "50000",
+        "signerEligible": true
+      },
+      "interceptaReturnedAt": "2026-09-26T16:17:40.660Z",
+      "signerInvokedAt": "2026-09-26T16:17:40.665Z",
+      "signerCalls": 1,
+      "settlement": "settled",
+      "delivery": "received",
+      "txHash": "0x2ba6424276abdbbca2f86773d75c12e80fbafdc07af50bab8722bd64125eb4ab",
+      "basescan": "https://sepolia.basescan.org/tx/0x2ba6424276abdbbca2f86773d75c12e80fbafdc07af50bab8722bd64125eb4ab"
+    }
+  },
+  "interceptaRawResponses": [
+    "fixtures/intercepta/recorded/2026-09-26T16-17-39-495Z_0x351e5b8b343dc0067338b7bcb34e685e87c174d8.json",
+    "fixtures/intercepta/recorded/2026-09-26T16-17-39-676Z_0x87cff22e916a4d70675e5b3056c1df6bd401cb1a.json",
+    "fixtures/intercepta/recorded/2026-09-26T16-17-40-658Z_0x351e5b8b343dc0067338b7bcb34e685e87c174d8.json"
+  ],
+  "policyVersions": [
+    {
+      "policyVersion": 1,
+      "policyHash": "0x95aca69fed8b0ec507375862f0e3c3c6010796e4984524dc72411d5ebd4b22bc",
+      "status": "active",
+      "approvedReportHash": null,
+      "approvedBy": "seed"
+    },
+    {
+      "policyVersion": 2,
+      "policyHash": "0xafc21f5019baff86cc7d646cad5d1d807dd57cce674159340586e0e376811a51",
+      "status": "rolled_back",
+      "approvedReportHash": "0x1e367dcb4bc76d994a340727a4306e12fb9c99224d083881e7eaa679df5c362e",
+      "approvedBy": "owner"
+    }
+  ],
+  "signerCallsTotal": [
+    {
+      "attemptId": "0322160f-8277-4a74-b2ab-ab7dbb868673",
+      "policyVersion": 2,
+      "action": "CAP",
+      "signerCalls": 0
+    },
+    {
+      "attemptId": "2c9f49e8-ebd5-44e8-b4b4-fd1828f76ba5",
+      "policyVersion": 2,
+      "action": "PAY",
+      "signerCalls": 1
+    },
+    {
+      "attemptId": "08ba465b-c899-490f-9875-25e456ff674a",
+      "policyVersion": 1,
+      "action": "PAY",
+      "signerCalls": 1
+    }
+  ],
+  "audit": [
+    {
+      "seq": 1,
+      "type": "PolicyActivated",
+      "at": "2026-09-26T16:17:05.405Z",
+      "refs": {
+        "policyVersion": 1
+      }
+    },
+    {
+      "seq": 15,
+      "type": "IncidentLabelled",
+      "at": "2026-09-26T16:17:38.315Z",
+      "refs": {
+        "caseId": "cv-01-incident-80000"
+      }
+    },
+    {
+      "seq": 16,
+      "type": "RegressionCompleted",
+      "at": "2026-09-26T16:17:38.347Z",
+      "refs": {
+        "candidateId": "1e9e0b67-04ce-4ff8-85ee-0a4b6670ff12",
+        "reportHash": "0x5425c3e4b6acf6842747ec713079e8443f843cf7b52e878d16465b56c7c0775a",
+        "policyVersion": 2
+      }
+    },
+    {
+      "seq": 17,
+      "type": "RegressionCompleted",
+      "at": "2026-09-26T16:17:38.360Z",
+      "refs": {
+        "candidateId": "96647730-6b7a-4a3a-a11b-e3b5cfef33b5",
+        "reportHash": "0x1e367dcb4bc76d994a340727a4306e12fb9c99224d083881e7eaa679df5c362e",
+        "policyVersion": 2
+      }
+    },
+    {
+      "seq": 18,
+      "type": "RegressionCompleted",
+      "at": "2026-09-26T16:17:38.366Z",
+      "refs": {
+        "candidateId": "6c3b2241-3d4c-46de-81cd-7fdff02ed1fd",
+        "reportHash": "0x8034d6c52e1500995d17dea1373326eeeefd4f61f89f99c8ddea526580443fce",
+        "policyVersion": 2
+      }
+    },
+    {
+      "seq": 19,
+      "type": "PolicyApproved",
+      "at": "2026-09-26T16:17:38.369Z",
+      "refs": {
+        "candidateId": "96647730-6b7a-4a3a-a11b-e3b5cfef33b5",
+        "reportHash": "0x1e367dcb4bc76d994a340727a4306e12fb9c99224d083881e7eaa679df5c362e",
+        "policyVersion": 2
+      }
+    },
+    {
+      "seq": 20,
+      "type": "PolicyActivated",
+      "at": "2026-09-26T16:17:38.369Z",
+      "refs": {
+        "candidateId": "96647730-6b7a-4a3a-a11b-e3b5cfef33b5",
+        "policyVersion": 2
+      }
+    },
+    {
+      "seq": 21,
+      "type": "QuoteSelected",
+      "at": "2026-09-26T16:17:38.714Z",
+      "refs": {
+        "attemptId": "0322160f-8277-4a74-b2ab-ab7dbb868673"
+      }
+    },
+    {
+      "seq": 22,
+      "type": "RiskScreenRequested",
+      "at": "2026-09-26T16:17:38.715Z",
+      "refs": {
+        "attemptId": "0322160f-8277-4a74-b2ab-ab7dbb868673"
+      }
+    },
+    {
+      "seq": 23,
+      "type": "RiskScreenReturned",
+      "at": "2026-09-26T16:17:39.499Z",
+      "refs": {
+        "attemptId": "0322160f-8277-4a74-b2ab-ab7dbb868673",
+        "evidenceId": "ed5be41f-87f6-4a9e-80e2-d5ab379ada53"
+      }
+    },
+    {
+      "seq": 24,
+      "type": "PolicyDecided",
+      "at": "2026-09-26T16:17:39.504Z",
+      "refs": {
+        "attemptId": "0322160f-8277-4a74-b2ab-ab7dbb868673",
+        "decisionId": "1c63c014-866b-412e-aa53-bfe56827c91e",
+        "evidenceId": "ed5be41f-87f6-4a9e-80e2-d5ab379ada53",
+        "policyVersion": 2
+      }
+    },
+    {
+      "seq": 25,
+      "type": "QuoteSelected",
+      "at": "2026-09-26T16:17:39.522Z",
+      "refs": {
+        "attemptId": "2c9f49e8-ebd5-44e8-b4b4-fd1828f76ba5"
+      }
+    },
+    {
+      "seq": 26,
+      "type": "RiskScreenRequested",
+      "at": "2026-09-26T16:17:39.523Z",
+      "refs": {
+        "attemptId": "2c9f49e8-ebd5-44e8-b4b4-fd1828f76ba5"
+      }
+    },
+    {
+      "seq": 27,
+      "type": "RiskScreenReturned",
+      "at": "2026-09-26T16:17:39.679Z",
+      "refs": {
+        "attemptId": "2c9f49e8-ebd5-44e8-b4b4-fd1828f76ba5",
+        "evidenceId": "1319382c-106c-41b5-b626-0cb6be3c33a1"
+      }
+    },
+    {
+      "seq": 28,
+      "type": "PolicyDecided",
+      "at": "2026-09-26T16:17:39.681Z",
+      "refs": {
+        "attemptId": "2c9f49e8-ebd5-44e8-b4b4-fd1828f76ba5",
+        "decisionId": "de5aa4ac-fd79-45b1-9983-ad9af3364eff",
+        "evidenceId": "1319382c-106c-41b5-b626-0cb6be3c33a1",
+        "policyVersion": 2
+      }
+    },
+    {
+      "seq": 29,
+      "type": "PermitArmed",
+      "at": "2026-09-26T16:17:39.682Z",
+      "refs": {
+        "attemptId": "2c9f49e8-ebd5-44e8-b4b4-fd1828f76ba5",
+        "decisionId": "de5aa4ac-fd79-45b1-9983-ad9af3364eff",
+        "policyVersion": 2
+      }
+    },
+    {
+      "seq": 30,
+      "type": "SignerInvoked",
+      "at": "2026-09-26T16:17:39.687Z",
+      "refs": {
+        "attemptId": "2c9f49e8-ebd5-44e8-b4b4-fd1828f76ba5",
+        "decisionId": "de5aa4ac-fd79-45b1-9983-ad9af3364eff"
+      }
+    },
+    {
+      "seq": 31,
+      "type": "PaymentSubmitted",
+      "at": "2026-09-26T16:17:40.354Z",
+      "refs": {
+        "attemptId": "2c9f49e8-ebd5-44e8-b4b4-fd1828f76ba5"
+      }
+    },
+    {
+      "seq": 32,
+      "type": "SettlementObserved",
+      "at": "2026-09-26T16:17:40.355Z",
+      "refs": {
+        "attemptId": "2c9f49e8-ebd5-44e8-b4b4-fd1828f76ba5",
+        "txHash": "0x3d0602d0cbaff2349d8220f2c72484eebec9eeec26b3edee295cb418697eecd8"
+      }
+    },
+    {
+      "seq": 33,
+      "type": "ResourceReturned",
+      "at": "2026-09-26T16:17:40.356Z",
+      "refs": {
+        "attemptId": "2c9f49e8-ebd5-44e8-b4b4-fd1828f76ba5"
+      }
+    },
+    {
+      "seq": 34,
+      "type": "PolicyRolledBack",
+      "at": "2026-09-26T16:17:40.357Z",
+      "refs": {
+        "policyVersion": 1
+      }
+    },
+    {
+      "seq": 35,
+      "type": "QuoteSelected",
+      "at": "2026-09-26T16:17:40.366Z",
+      "refs": {
+        "attemptId": "08ba465b-c899-490f-9875-25e456ff674a"
+      }
+    },
+    {
+      "seq": 36,
+      "type": "RiskScreenRequested",
+      "at": "2026-09-26T16:17:40.367Z",
+      "refs": {
+        "attemptId": "08ba465b-c899-490f-9875-25e456ff674a"
+      }
+    },
+    {
+      "seq": 37,
+      "type": "RiskScreenReturned",
+      "at": "2026-09-26T16:17:40.661Z",
+      "refs": {
+        "attemptId": "08ba465b-c899-490f-9875-25e456ff674a",
+        "evidenceId": "841eb790-156d-42ed-bfeb-f08cd3471368"
+      }
+    },
+    {
+      "seq": 38,
+      "type": "PolicyDecided",
+      "at": "2026-09-26T16:17:40.663Z",
+      "refs": {
+        "attemptId": "08ba465b-c899-490f-9875-25e456ff674a",
+        "decisionId": "57d71462-ea35-49a2-89e9-9b9a6b19f0a9",
+        "evidenceId": "841eb790-156d-42ed-bfeb-f08cd3471368",
+        "policyVersion": 1
+      }
+    },
+    {
+      "seq": 39,
+      "type": "PermitArmed",
+      "at": "2026-09-26T16:17:40.663Z",
+      "refs": {
+        "attemptId": "08ba465b-c899-490f-9875-25e456ff674a",
+        "decisionId": "57d71462-ea35-49a2-89e9-9b9a6b19f0a9",
+        "policyVersion": 1
+      }
+    },
+    {
+      "seq": 40,
+      "type": "SignerInvoked",
+      "at": "2026-09-26T16:17:40.665Z",
+      "refs": {
+        "attemptId": "08ba465b-c899-490f-9875-25e456ff674a",
+        "decisionId": "57d71462-ea35-49a2-89e9-9b9a6b19f0a9"
+      }
+    },
+    {
+      "seq": 41,
+      "type": "PaymentSubmitted",
+      "at": "2026-09-26T16:17:41.511Z",
+      "refs": {
+        "attemptId": "08ba465b-c899-490f-9875-25e456ff674a"
+      }
+    },
+    {
+      "seq": 42,
+      "type": "SettlementObserved",
+      "at": "2026-09-26T16:17:41.512Z",
+      "refs": {
+        "attemptId": "08ba465b-c899-490f-9875-25e456ff674a",
+        "txHash": "0x2ba6424276abdbbca2f86773d75c12e80fbafdc07af50bab8722bd64125eb4ab"
+      }
+    },
+    {
+      "seq": 43,
+      "type": "ResourceReturned",
+      "at": "2026-09-26T16:17:41.513Z",
+      "refs": {
+        "attemptId": "08ba465b-c899-490f-9875-25e456ff674a"
+      }
+    }
+  ]
+}

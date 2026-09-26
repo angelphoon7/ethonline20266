@@ -39,6 +39,7 @@ export function createApi(token: string, fetchImpl: typeof fetch = (...a) => fet
     approve: (candidateId: string, reportHash: string) => call<PolicyVersion>('POST', `/candidates/${encodeURIComponent(candidateId)}/approve`, { reportHash }),
     rollback: (toVersion: number) => call<PolicyVersion>('POST', '/policy/rollback', { toVersion }),
     approveAttempt: (attemptId: string, quoteHash: string) => call<Approved>('POST', '/approvals', { attemptId, quoteHash }),
+    runScenario: (scenario: 'pass' | 'block' | 'v2') => call<{ attemptId: string; status: string; action: string | null }>('POST', '/agent/run', { scenario }),
     audit: () => call<{ events: AuditEvent[] }>('GET', '/audit'),
   };
 }

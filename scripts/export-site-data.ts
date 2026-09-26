@@ -26,7 +26,9 @@ const SCENES = {
 } as const;
 type SceneKey = keyof typeof SCENES;
 
-const store = new Store(join(root, 'data', 'risksir.db'));
+// `--db=<path>` reads an older database, for example a backup made by pnpm demo:reset (default: data/risksir.db)
+const dbArg = process.argv.find((a) => a.startsWith('--db='))?.slice('--db='.length);
+const store = new Store(dbArg ? join(root, dbArg) : join(root, 'data', 'risksir.db'));
 
 function attemptByPrefix(prefix: string): PaymentAttempt {
   const matches = store.listAttempts(DEMO_ORG_ID).filter((a) => a.attemptId.startsWith(prefix));

@@ -1,13 +1,13 @@
 AGENT_STATUS: CONTINUE
-HUMAN_ACTIONS: 0. Vercel: import the repo, check the project settings listed in the final message of the site commit (root directory, Node version, pnpm), then fill in DEMO_VIDEO_URL (apps/site/src/config.ts) and the README Live site URL. 1. Keep the payer wallet `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD` at or below 20 test USDC (19.84 now). 2. Confirm with the sponsor that `SELLER_PAY_TO_RISKY` (the known-risk mainnet address) may be used as a testnet merchant `payTo`, and that `SELLER_PAY_TO_ALT` is an acceptable comparator (Q-003). 3. Ask Intercepta the overlap question from 07 §20 (Spike E) and paste the verbatim answer into `docs/spikes/SPIKE_E_OVERLAP.md`. 4. Make the GitHub repo public before submission. 5. Check the GitHub Actions run of the latest push (a concurrent session reported run 36247203846 green on Ubuntu for `f5a956a`; later pushes are unconfirmed).
+HUMAN_ACTIONS: 1. Payer wallet holds 39.74 test USDC, above the 20 USDC ceiling in OPERATIONAL_GUARDRAILS: move the excess out (`LIVE=1 pnpm demo:smoke` fails on it until you do). 2. Vercel: the site is deployed at https://ethtokyo2026-kappa.vercel.app/; fill in DEMO_VIDEO_URL in apps/site/src/config.ts. 3. Send the Intercepta questions (overlap, mid-band score meaning, rate limits) and paste the verbatim answer into docs/spikes/SPIKE_E_OVERLAP.md. 4. Confirm with the sponsor that SELLER_PAY_TO_RISKY may be used as a testnet payTo and SELLER_PAY_TO_ALT as a comparator (Q-003). 5. Before judging, screen-record one full live run of Scenes 1 to 5 (DEMO_RUNBOOK.md section 10). 6. Make the GitHub repo public before submission; check the GitHub Actions run of the latest push.
 
 # HANDOFF — Risksir
 
-Last updated: 2026-09-26, after M-010. If this file disagrees with the repository, the repository wins.
+Last updated: 2026-09-26, after M-011. If this file disagrees with the repository, the repository wins.
 
 ## 1. Current Objective
 
-M-004b, M-006, M-007, M-008 (policy lifecycle and owner API), M-009 (owner console) and M-010 (live Layer 4 proof) are done. Next: **M-011** (demo hardening: reset script, `demo:smoke`, `DEMO_RUNBOOK.md`), then M-012 (README, FINAL_VALIDATION, Intercepta feedback, submission).
+M-004b, M-006 to M-011 are done (M-010 live Layer 4 proof, M-011 demo hardening: `demo:reset`, `demo:smoke`, `demo:failure`, `DEMO_RUNBOOK.md`). Next: **M-012** (README completed with the Intercepta file map and claim boundaries, `FINAL_VALIDATION.md` PASS/FAIL with evidence, 3 to 5 lines of Intercepta API feedback marked DRAFT). Then human steps only (see HUMAN_ACTIONS).
 
 ## 2. Repository State
 
@@ -41,17 +41,17 @@ M-004b, M-006, M-007, M-008 (policy lifecycle and owner API), M-009 (owner conso
 | Intercepta | **live**, inside the payment flow (10 of 40 calls used: `data/intercepta-calls.json`) |
 | x402 seller | **live** local `@x402/express` seller on 127.0.0.1; stub facilitator in tests only |
 | Facilitator | **live** (the facilitator configured in `X402_FACILITATOR_URL`; three successful settles (the latest, tx `0xb38f786a…e866a`, block 47333318, was run by the human from PowerShell and checked read-only by `verify:tx`); failure modes only via the stub) |
-| Base Sepolia RPC + payer wallet | **live**, funded: 19.84 test USDC, 0.1 ETH; payer `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD`; live session 3/20 settlements, 0.15/1.00 USDC (`data/live-session.json`) |
+| Base Sepolia RPC + payer wallet | **live**, **39.74 test USDC as of the last preflight (above the 20 USDC ceiling: human action)**, 0.1 ETH; payer `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD`; live session 8/20 settlements, 0.40/1.00 USDC (`data/live-session.json`), Intercepta 21/40 |
 
 ## 7. Known Issues
 
 - Plain `pnpm` works (corepack shims installed into `%APPDATA%\npm`, ADR-014 amendment); `corepack enable` itself still needs an admin shell and is no longer needed. `gh` CLI is not installed.
 - A concurrent "CI repair" session also edits `HANDOFF.md`, `EXECUTION_PLAN.md` and `pnpm-workspace.yaml`; expect merge noise and check `git status` before staging.
-- `data/risksir.db` (gitignored) holds the live demo attempts; SAFE is no longer a first-time counterparty there.
+- `data/risksir.db` (gitignored) now holds the reset-then-rerun demo attempts (v1 active, SAFE and ALT paid, history v1 -> v2 -> v1). The pre-reset database (all earlier live attempts, including the ones the showcase site was exported from) is `data/backup/risksir-2026-09-26T16-17-05-382Z.sqlite`, local only. `pnpm export:site --db=data/backup/risksir-2026-09-26T16-17-05-382Z.sqlite` reproduces the committed site data. Run `pnpm demo:reset` before the next full demo.
 - Only scores 0 and 100 were observed, so the WARN tier rests on a labelled synthetic fixture.
 - git identity is `angelphoon7@gmail.com`; confirm it is linked to the GitHub account for attribution.
 - The owner API: `pnpm owner-api` (policies, cases, traces only; run/resume answer 501 / `resumed: false`) or `pnpm owner-api:live` (LIVE=1: local seller plus the live gate; run scenarios and approval resume work). 127.0.0.1:4100, bearer `OWNER_CONSOLE_TOKEN`, no CORS (the console uses the Vite `/api` proxy). The console was smoke-started but not yet viewed in a browser with real data.
-- **The live data/risksir.db is now in a used state:** ALT and SAFE are known counterparties, policy history is v1 -> v2 (rolled back) -> v1. `demo:v2` needs a fresh first-time ALT, so it can only be re-run after the M-011 reset script (or with a fresh db).
+- `demo:v2` writes its summary to `data/last-demo-v2.json` (not committed evidence) unless `--out=<path>` is given, and refuses to start unless ALT is first-time and SAFE is known.
 
 ### Public showcase site (ADR-025, human-approved, static)
 
@@ -67,9 +67,9 @@ ADR-019 signing permit; ADR-020 `awaiting_approval`/`expired`; ADR-021 single sp
 
 ## 10. Next
 
-1. Console: `pnpm owner-api` in one terminal and `pnpm dev:console` in another, open http://127.0.0.1:5173, paste `OWNER_CONSOLE_TOKEN` (held in memory only). Run `pnpm seed` first for labelled cases.
-2. Candidates A/B/C rules come from `demoCandidates(demoPolicyV1(demoProfile(DEMO_SERVICE_BASE)))`.
-3. M-011: `pnpm reset` (fresh db, session counters), `pnpm demo:smoke`, `DEMO_RUNBOOK.md` (see `prompts/DEMO_AND_SUBMISSION.md`); M-012 submission. Live session counters now: 5/20 settlements, 0.25/1.00 USDC, Intercepta 14/40 (one call timed out, fail-closed HOLD). Reset the counters by deleting `data/live-session.json` and `data/intercepta-calls.json` only when starting a new agent session.
+1. M-012 (`prompts/DEMO_AND_SUBMISSION.md` part B and C): README (file map with line anchors, setup, trust model, claim boundaries, limitations, Intercepta API feedback DRAFT), `FINAL_VALIDATION.md` (07 §27 line by line, prize anchor points 1 to 6, every AC, PASS/FAIL with evidence), keep the "Live site" URL.
+2. Before judging (human): `pnpm demo:reset`, `LIVE=1 pnpm demo:smoke`, screen-record one full live run as the backup video (`DEMO_RUNBOOK.md` sections 10 and 14). Interactive demo: `pnpm owner-api:live` + `pnpm dev:console`, the console has Run scene 2/3/5 buttons.
+3. Candidates A/B/C rules come from `demoCandidates(demoPolicyV1(demoProfile(DEMO_SERVICE_BASE)))`.
 
 ## 11. Do Not Repeat
 

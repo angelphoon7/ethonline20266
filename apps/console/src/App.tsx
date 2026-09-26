@@ -13,6 +13,12 @@ import type { ApiState, AttemptSummary, CandidatePolicy, PaymentCase, PolicyVers
  * the decision traces, incident labels (Trigger C), regression comparison with approval, and rollback. The owner token
  * lives only in this component's memory.
  */
+const SCENARIO_BUTTONS = [
+  ['pass', 'Run scene 2: pay SAFE'],
+  ['block', 'Run scene 3: risky payTo'],
+  ['v2', 'Run scene 5: new ALT payment'],
+] as const;
+
 export function App({ apiFactory = createApi }: { apiFactory?: (token: string) => Api }) {
   const [tokenInput, setTokenInput] = useState('');
   const [api, setApi] = useState<Api | null>(null);
@@ -103,6 +109,20 @@ export function App({ apiFactory = createApi }: { apiFactory?: (token: string) =
           </Panel>
 
           <Panel title="Live trace" note="Every attempt with its decision. Select one to see the quote, evidence, policy, signer and settlement.">
+            <div className="scenario-buttons" aria-label="run a scenario">
+              {SCENARIO_BUTTONS.map(([scenario, label]) => (
+                <button
+                  key={scenario}
+                  onClick={() => api && void run(async () => {
+                    const r = await api.runScenario(scenario);
+                    await refresh(api);
+                    setTrace(await api.trace(r.attemptId));
+                  }, `${label}: attempt recorded (live Intercepta screen, testnet only).`)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <div className="table-wrap">
               <table>
                 <thead><tr><th>Attempt</th><th>Status</th><th>v</th><th>Action</th><th>Amount</th><th>Signer</th></tr></thead>

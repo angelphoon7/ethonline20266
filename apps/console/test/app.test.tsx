@@ -215,3 +215,21 @@ describe('candidates, comparison, approval and rollback', () => {
     expect((await screen.findByRole('alert')).textContent).toBe('REPORT_DATASET_STALE: the dataset changed since the report: replay again');
   });
 });
+
+describe('scenario buttons (live testnet run through the owner API)', () => {
+  it('run the named scenario, then show that attempt trace', async () => {
+    const runScenario = vi.fn(async (_s: string) => ({ attemptId: 'att-blocked-0002', status: 'failed', action: 'DENY' }));
+    const { calls } = await connected({ runScenario });
+    fireEvent.click(screen.getByRole('button', { name: 'Run scene 3: risky payTo' }));
+    await screen.findByText(/Run scene 3: risky payTo: attempt recorded/);
+    expect(runScenario).toHaveBeenCalledWith('block');
+    expect(calls.trace?.at(-1)?.[0]).toBe('att-blocked-0002');
+    expect((await screen.findByTestId('trace')).textContent).toMatch(/signer calls: 0/);
+  });
+
+  it('a server that is not in live mode answers 501 and the error is shown, with no invented attempt', async () => {
+    await connected({ runScenario: async () => { throw new ApiError(501, 'no scenario runner is wired in this process', 'NOT_IMPLEMENTED'); } });
+    fireEvent.click(screen.getByRole('button', { name: 'Run scene 2: pay SAFE' }));
+    expect((await screen.findByRole('alert')).textContent).toBe('NOT_IMPLEMENTED: no scenario runner is wired in this process');
+  });
+});

@@ -36,6 +36,11 @@ export class FileBudget implements CallBudget {
     }
   }
 
+  /** Calls used so far in this session (a read; nothing is consumed). */
+  used(): number {
+    return this.read();
+  }
+
   tryConsume() {
     const used = this.read();
     if (used >= this.limit) return { ok: false, used, limit: this.limit };
