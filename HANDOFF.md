@@ -1,5 +1,5 @@
 AGENT_STATUS: ALL_DONE
-HUMAN_ACTIONS: 0. All milestones are verified; only the steps below need a human. 1. Payer wallet holds 39.74 test USDC, above the 20 USDC ceiling in OPERATIONAL_GUARDRAILS: move the excess out (`LIVE=1 pnpm demo:smoke` fails on it until you do). 2. Vercel: the site is deployed at https://ethtokyo2026-kappa.vercel.app/; fill in DEMO_VIDEO_URL in apps/site/src/config.ts. 3. Send the Intercepta questions (overlap, mid-band score meaning, rate limits) and paste the verbatim answer into docs/spikes/SPIKE_E_OVERLAP.md. 4. Confirm with the sponsor that SELLER_PAY_TO_RISKY may be used as a testnet payTo and SELLER_PAY_TO_ALT as a comparator (Q-003). 5. Before judging, screen-record one full live run of Scenes 1 to 5 (DEMO_RUNBOOK.md section 10). 6. Make the GitHub repo public before submission (AC-024); check the GitHub Actions run of the latest push. 7. Review the DRAFT Intercepta API feedback in README.md.
+HUMAN_ACTIONS: 0. All milestones are verified; only the steps below need a human. 1. (Done) The payer balance ceiling was raised from 20 to 100 test USDC by the human (ADR-026). 2. Vercel: the site is deployed at https://ethtokyo2026-kappa.vercel.app/; fill in DEMO_VIDEO_URL in apps/site/src/config.ts. 3. Send the Intercepta questions (overlap, mid-band score meaning, rate limits) and paste the verbatim answer into docs/spikes/SPIKE_E_OVERLAP.md. 4. Confirm with the sponsor that SELLER_PAY_TO_RISKY may be used as a testnet payTo and SELLER_PAY_TO_ALT as a comparator (Q-003). 5. Before judging, screen-record one full live run of Scenes 1 to 5 (DEMO_RUNBOOK.md section 10). 6. Make the GitHub repo public before submission (AC-024); check the GitHub Actions run of the latest push. 7. Review the DRAFT Intercepta API feedback in README.md.
 
 # HANDOFF — Risksir
 
@@ -32,7 +32,7 @@ Every milestone M-000 to M-012 is VERIFIED. `FINAL_VALIDATION.md` has no FAIL; w
 | --- | --- |
 | typecheck / lint / unit / integration | `pnpm verify` green, 839 tests (incl. the multi-process reservation race, the regression engine, the policy lifecycle, the owner API and the console component/App tests) |
 | live | `LIVE=1 pnpm test:live` T-060 (Intercepta); `LIVE=1 pnpm demo:block` and `demo:pass` ran 2026-09-26 twice (M-005, M-004b) |
-| demo smoke | `LIVE=1 pnpm demo:smoke` ran 2026-09-26: all checks PASS except the payer balance ceiling (39.74 test USDC, human action); reset then re-run of the full loop verified (M-011) |
+| demo smoke | `LIVE=1 pnpm demo:smoke` ran 2026-09-26: all checks PASS (the payer balance check now uses the 100 test USDC ceiling, ADR-026); reset then re-run of the full loop verified (M-011) |
 
 ## 6. External System Status
 
@@ -41,7 +41,7 @@ Every milestone M-000 to M-012 is VERIFIED. `FINAL_VALIDATION.md` has no FAIL; w
 | Intercepta | **live**, inside the payment flow (10 of 40 calls used: `data/intercepta-calls.json`) |
 | x402 seller | **live** local `@x402/express` seller on 127.0.0.1; stub facilitator in tests only |
 | Facilitator | **live** (the facilitator configured in `X402_FACILITATOR_URL`; three successful settles (the latest, tx `0xb38f786a…e866a`, block 47333318, was run by the human from PowerShell and checked read-only by `verify:tx`); failure modes only via the stub) |
-| Base Sepolia RPC + payer wallet | **live**, **39.74 test USDC as of the last preflight (above the 20 USDC ceiling: human action)**, 0.1 ETH; payer `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD`; live session 8/20 settlements, 0.40/1.00 USDC (`data/live-session.json`), Intercepta 21/40 |
+| Base Sepolia RPC + payer wallet | **live**, **39.44 test USDC as of the last preflight (ceiling raised to 100, ADR-026)**, 0.1 ETH; payer `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD`; live session 8/20 settlements, 0.40/1.00 USDC (`data/live-session.json`), Intercepta 21/40 |
 
 ## 7. Known Issues
 

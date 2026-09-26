@@ -98,4 +98,4 @@ Run 2026-09-26 on commit `cc2e9a9`: `git clone` of the committed repository into
 - Only scores 0 and 100 were observed from Intercepta. The 80 threshold and the WARN tier are Risksir policy choices (ADR-017); the WARN tier is exercised by a labelled synthetic fixture only.
 - The Intercepta overlap question (does Automation Rules already offer customer-specific replay?) is unanswered (`docs/spikes/SPIKE_E_OVERLAP.md` does not exist), so no gap in Intercepta is claimed.
 - Replay metrics are counterfactual on 19 labelled cases (4 real_live, 11 controlled_variant, 4 synthetic), not real prevented losses.
-- The payer wallet held 39.74 test USDC at the last preflight, above the 20 USDC ceiling in `OPERATIONAL_GUARDRAILS.md`. The spend limits were never exceeded (0.40 of 1.00 USDC, 8 of 20 settlements); this is a human action.
+- The payer wallet held 39.74 test USDC at the last preflight, above the 20 USDC balance ceiling that applied then. The human raised the ceiling to 100 on 2026-09-26 (ADR-026); the balance is now within it. The spend limits were never exceeded (0.40 of 1.00 USDC, 8 of 20 settlements).

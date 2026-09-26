@@ -11,7 +11,7 @@ Opening line: "A $0.20 API call and a $5,000 payment should not react identicall
 ## 2. Prerequisites
 
 - Environment variable names that must be SET (values are never printed): `INTERCEPTA_API_KEY`, `INTERCEPTA_BASE_URL`, `PAYER_PRIVATE_KEY`, `BASE_SEPOLIA_RPC_URL`, `X402_FACILITATOR_URL`, `SELLER_PAY_TO_SAFE`, `SELLER_PAY_TO_RISKY`, `SELLER_PAY_TO_ALT`, `OWNER_CONSOLE_TOKEN`. Check with `bash scripts/env-status.sh`.
-- Payer wallet (Base Sepolia): a little test ETH and **at most 20 test USDC** (the preflight fails above that). A full run spends 0.15 USDC.
+- Payer wallet (Base Sepolia): a little test ETH and **at most 100 test USDC** (the preflight fails above that). A full run spends 0.15 USDC.
 - Live limits per agent session: 0.10 USDC per payment, 1.00 USDC in total, 20 settlements, 40 live Intercepta calls. A full scripted run uses 3 settlements and 5 Intercepta calls. Counters live in `data/live-session.json` and `data/intercepta-calls.json`.
 - Processes (all on 127.0.0.1): `pnpm owner-api:live` (owner API with the local x402 seller and the live gate) and `pnpm dev:console` (console at http://127.0.0.1:5173). The CLI demos start their own seller, so stop `owner-api:live` before running `demo:pass`, `demo:block` or `demo:v2`.
 
@@ -81,7 +81,7 @@ Simulates an Intercepta timeout: the result is `HOLD` (`EVIDENCE_UNAVAILABLE`) w
 
 | Symptom | Do |
 | --- | --- |
-| Smoke: payer balance FAIL | Balance above 20 test USDC: move funds out. Below 0.15 USDC or no ETH: fund from the Base Sepolia faucets (human), keep at most 20 USDC |
+| Smoke: payer balance FAIL | Balance above 100 test USDC: move funds out. Below 0.15 USDC or no ETH: fund from the Base Sepolia faucets (human), keep at most 100 USDC |
 | Facilitator down | Do not retry blindly. Show scenes 3, 4 and the recorded scene 2 trace (section 10); label it recorded |
 | Intercepta 429 or timeout | The gate holds (`signer calls: 0`). Wait, retry once from a new attempt (each attempt is a new call and spends the 40-call budget). Do not lower any check |
 | Session limit or call budget reached | Stop live payments. Starting a new session is a human decision (`pnpm demo:reset --new-session`) |
@@ -127,7 +127,7 @@ Never present recorded, simulated or synthetic material as live.
 ## 14. Final pre-demo checklist
 
 1. `bash scripts/env-status.sh`: all names SET.
-2. Payer holds 0.15 USDC or more and at most 20 test USDC, plus test ETH.
+2. Payer holds 0.15 USDC or more and at most 100 test USDC, plus test ETH.
 3. `pnpm demo:reset` (owner API stopped), then `LIVE=1 pnpm demo:smoke` shows only PASS.
 4. `pnpm owner-api:live` and `pnpm dev:console` are running; console shows `Policy v1`, 19 cases.
 5. One Basescan (Base Sepolia) tab open.

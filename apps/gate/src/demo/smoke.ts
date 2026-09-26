@@ -2,7 +2,7 @@
  * Pure pieces of the demo preflight (`pnpm demo:smoke`): state classification and the limits arithmetic. Kept free of I/O so
  * they can be tested. The checks themselves (seller 402, facilitator, balance, live Intercepta) live in the CLI.
  */
-import { LIVE_LIMITS } from '@risksir/core';
+import { LIVE_LIMITS, PAYER_BALANCE_CEILING_ATOMIC } from '@risksir/core';
 import { INTERCEPTA_CALL_LIMIT } from '../intercepta/budget.js';
 
 export type CheckStatus = 'PASS' | 'FAIL' | 'SKIP';
@@ -42,11 +42,11 @@ export function limitsCheck(session: { settlements: number; totalAtomic: bigint 
   return problems.length ? { status: 'FAIL', detail: `${problems.join('; ')} (${detail}). A new agent session is a human decision: pnpm demo:reset --new-session` } : { status: 'PASS', detail };
 }
 
-/** The payer must cover a full run and must respect the human's 20 test USDC ceiling. */
+/** The payer must cover a full run and must respect the human's balance ceiling (100 test USDC). */
 export function balanceCheck(usdcAtomic: bigint, ethWei: bigint): { status: CheckStatus; detail: string } {
   if (ethWei === 0n) return { status: 'FAIL', detail: 'no Base Sepolia ETH for gas' };
   if (usdcAtomic < FULL_RUN.spendAtomic) return { status: 'FAIL', detail: `payer holds ${usdcAtomic} atomic USDC, a full run needs ${FULL_RUN.spendAtomic}` };
-  if (usdcAtomic > 20_000_000n) return { status: 'FAIL', detail: `payer holds ${usdcAtomic} atomic USDC, above the 20 test USDC ceiling: move funds out` };
+  if (usdcAtomic > PAYER_BALANCE_CEILING_ATOMIC) return { status: 'FAIL', detail: `payer holds ${usdcAtomic} atomic USDC, above the ${PAYER_BALANCE_CEILING_ATOMIC} atomic (100 test USDC) ceiling: move funds out` };
   return { status: 'PASS', detail: `${usdcAtomic} atomic test USDC, ${ethWei} wei ETH` };
 }
 

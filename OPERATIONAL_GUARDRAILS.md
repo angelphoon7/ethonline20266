@@ -23,7 +23,7 @@ The chain and asset allowlist must be **enforced in code**: the signer rejects a
 
 ## 3. Wallets
 
-- Use one **fresh, dedicated** Base Sepolia payer wallet, with its key in `.env` as `PAYER_PRIVATE_KEY`. It must never have held mainnet funds. Keep its balance at 20 test USDC or less, plus a little test ETH.
+- Use one **fresh, dedicated** Base Sepolia payer wallet, with its key in `.env` as `PAYER_PRIVATE_KEY`. It must never have held mainnet funds. Keep its balance at 100 test USDC or less, plus a little test ETH (the human raised this from 20 on 2026-09-26, ADR-026; the spending limits in section 4 are unchanged).
 - Merchant `payTo` addresses only receive funds. No merchant private key is needed, and none is allowed in this repo.
 - Never generate, import or export a wallet on the human's behalf. The one exception is throwaway keys created inside unit tests, which are never funded.
 

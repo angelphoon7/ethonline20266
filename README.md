@@ -86,7 +86,7 @@ cp .env.example .env        # fill in the values; never commit .env
 git config core.hooksPath .githooks   # the pre-commit hook blocks secrets
 ```
 
-Environment variable names (values are yours and are never printed by any script; check with `bash scripts/env-status.sh`): `INTERCEPTA_API_KEY`, `INTERCEPTA_BASE_URL`, `PAYER_PRIVATE_KEY`, `BASE_SEPOLIA_RPC_URL`, `X402_FACILITATOR_URL`, `SELLER_PAY_TO_SAFE`, `SELLER_PAY_TO_RISKY`, `SELLER_PAY_TO_ALT`, `OWNER_CONSOLE_TOKEN`. Use a **fresh Base Sepolia test wallet** with a little test ETH and at most 20 test USDC; it must never have held mainnet funds. Only Base Sepolia (`eip155:84532`) is ever signed on.
+Environment variable names (values are yours and are never printed by any script; check with `bash scripts/env-status.sh`): `INTERCEPTA_API_KEY`, `INTERCEPTA_BASE_URL`, `PAYER_PRIVATE_KEY`, `BASE_SEPOLIA_RPC_URL`, `X402_FACILITATOR_URL`, `SELLER_PAY_TO_SAFE`, `SELLER_PAY_TO_RISKY`, `SELLER_PAY_TO_ALT`, `OWNER_CONSOLE_TOKEN`. Use a **fresh Base Sepolia test wallet** with a little test ETH and at most 100 test USDC; it must never have held mainnet funds. Only Base Sepolia (`eip155:84532`) is ever signed on.
 
 ## Tests
 

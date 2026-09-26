@@ -10,6 +10,9 @@ export const QUOTE_MAX_VALIDITY_S = 600;
 export const BASE_SEPOLIA_NETWORK = 'eip155:84532' as const;
 export const BASE_SEPOLIA_USDC = '0x036cbd53842c5426634e7929541ec2318f3dcf7e' as const;
 
+/** Largest test USDC balance the payer wallet may hold (OPERATIONAL_GUARDRAILS section 3, raised from 20 to 100 by the human on 2026-09-26, ADR-026). Checked by the demo preflight, not by the signer. */
+export const PAYER_BALANCE_CEILING_ATOMIC = 100_000_000n;
+
 /** Live testnet spend limits, OPERATIONAL_GUARDRAILS section 4, in USDC atomic units. */
 export const LIVE_LIMITS = {
   maxPerPaymentAtomic: 100_000n,

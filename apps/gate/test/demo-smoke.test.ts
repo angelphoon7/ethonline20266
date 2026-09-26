@@ -37,11 +37,13 @@ describe('demo preflight limits and balance', () => {
     expect(limitsCheck({ settlements: 0, totalAtomic: 0n }, 34, 1).status).toBe('PASS');
     expect(limitsCheck({ settlements: 0, totalAtomic: 0n }, 35, 1).status).toBe('FAIL');
   });
-  it('balance: needs gas, enough USDC for a full run, and stays under the 20 test USDC ceiling', () => {
+  it('balance: needs gas, enough USDC for a full run, and stays under the 100 test USDC ceiling', () => {
     expect(balanceCheck(19_840_000n, 1n).status).toBe('PASS');
     expect(balanceCheck(19_840_000n, 0n).status).toBe('FAIL');
     expect(balanceCheck(100_000n, 1n).status).toBe('FAIL');
-    expect(balanceCheck(20_000_001n, 1n).status).toBe('FAIL');
+    expect(balanceCheck(39_440_000n, 1n).status).toBe('PASS'); // above the old 20 USDC ceiling
+    expect(balanceCheck(100_000_000n, 1n).status).toBe('PASS');
+    expect(balanceCheck(100_000_001n, 1n).status).toBe('FAIL');
   });
   it('the overall result is FAIL if any check fails, SKIP if only skips, PASS otherwise', () => {
     expect(worst([{ name: 'a', status: 'PASS', detail: '' }, { name: 'b', status: 'FAIL', detail: '' }])).toBe('FAIL');

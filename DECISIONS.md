@@ -223,3 +223,12 @@ Status vocabulary: Accepted | Accepted (agent default) | Open. New ADRs append a
 - **Alternatives:** no public page. **Why not chosen:** the human asked for it.
 - **Consequences:** `vercel.json` at the repo root, `pnpm export:site`, site tests that scan the data and the build output for secret-like names, keys and signature-shaped values. Re-run `pnpm export:site` after new live runs and review the diff before committing.
 - **Reversibility:** delete the Vercel project. **Source:** human instruction, CLAUDE.md section 6.
+
+## ADR-026 — Payer balance ceiling raised from 20 to 100 test USDC (human instruction 2026-09-26)
+- **Status:** Accepted (explicit human instruction). **Date:** 2026-09-26.
+- **Context:** `OPERATIONAL_GUARDRAILS.md` section 3 capped the payer wallet at 20 test USDC. The wallet held 39.4 to 39.7 test USDC (testnet faucet top-ups), so `LIVE=1 pnpm demo:smoke` failed on the balance. The human asked for a higher ceiling.
+- **Decision:** The balance ceiling is 100 test USDC (`PAYER_BALANCE_CEILING_ATOMIC` in `packages/core/src/constants.ts`, checked by the preflight). Nothing else changes: the wallet must still be a fresh dedicated Base Sepolia wallet that never held mainnet funds, and the spending limits stay 0.10 USDC per payment, 1.00 USDC and 20 settlements per session and 40 live Intercepta calls per session.
+- **Rationale:** *Evidence:* testnet USDC has no monetary value and the per-session spend limits, not the balance, bound what a run can spend. *Preference:* the human's explicit choice.
+- **Alternatives:** remove the ceiling. **Why not chosen:** a high ceiling keeps a hygiene check against accidentally funding the wallet heavily; the human can raise it again by editing the one constant.
+- **Consequences:** guardrail text, preflight, runbook and README updated; the preflight test now covers the new bounds.
+- **Reversibility:** edit the constant and the guardrail text. **Source:** human instruction.
