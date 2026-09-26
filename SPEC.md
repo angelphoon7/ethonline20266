@@ -118,7 +118,7 @@ interface RiskProfile {                 // embedded, immutable, inside each Paym
   orgId: string; profileVersion: number;
   network: 'eip155:84532'; asset: Address;               // allowlist of one (INV-006)
   maxPerPaymentAtomic: AtomicAmount; periodCapAtomic: AtomicAmount; periodSeconds: number;
-  allowedServices: string[];            // resource URL prefixes / task ids
+  allowedServices: string[];            // resource URL prefixes; a quote is allowed iff its resourceUrl starts with one
   hardProhibitions: HardProhibition[];  // must equal HARD_PROHIBITIONS = all six values of HardProhibition
   reviewCapacityPerPeriod: number;
 }
@@ -255,10 +255,10 @@ interface EvaluateInput {
 | 1 | `scheme != exact` | DENY | `SCHEME_NOT_SUPPORTED` |
 | 2 | `network != profile.network` | DENY | `NETWORK_NOT_ALLOWED` |
 | 3 | `asset != profile.asset` | DENY | `ASSET_NOT_ALLOWED` |
-| 4 | service not in `allowedServices` | DENY | `SERVICE_NOT_ALLOWED` |
+| 4 | `quote.resourceUrl` starts with no `allowedServices` prefix | DENY | `SERVICE_NOT_ALLOWED` |
 | 5 | `amount > maxPerPaymentAtomic` | DENY | `OVER_PER_PAYMENT_CAP` |
-| 6 | evidence `UNAVAILABLE` | HOLD | `EVIDENCE_UNAVAILABLE` |
-| 7 | evidence older than `EVIDENCE_FRESHNESS_S` at `now` | HOLD | `EVIDENCE_STALE` |
+| 6 | evidence `UNAVAILABLE`, or its `address` differs from `quote.payTo` (evidence of another subject is unusable) | HOLD | `EVIDENCE_UNAVAILABLE` |
+| 7 | evidence older than `EVIDENCE_FRESHNESS_S` at `now`, or captured after `now` (clock skew fails closed) | HOLD | `EVIDENCE_STALE` |
 | 8 | evidence tier `BLOCK` | DENY | `EVIDENCE_BLOCK` |
 | 9 | `amount > periodBudgetRemainingAtomic` | HOLD | `PERIOD_CAP_EXCEEDED` |
 | 10 | first rule whose predicates all match | rule action | `RULE_MATCHED` + `ruleId` |
@@ -278,7 +278,7 @@ Steps 1–5 and 8 are the **hard prohibitions**: no rule, candidate or human app
 
 **Reason codes (closed set, `ReasonCode`):** `SCHEME_NOT_SUPPORTED, NETWORK_NOT_ALLOWED, ASSET_NOT_ALLOWED, SERVICE_NOT_ALLOWED, OVER_PER_PAYMENT_CAP, EVIDENCE_UNAVAILABLE, EVIDENCE_STALE, EVIDENCE_BLOCK, PERIOD_CAP_EXCEEDED, RULE_MATCHED, NO_RULE_MATCHED, CAP_BELOW_QUOTE, APPROVAL_PENDING, HUMAN_APPROVED, APPROVAL_EXPIRED, QUOTE_INVALID, QUOTE_MUTATED, POLICY_CHANGED, RESERVATION_FAILED, DECISION_EXPIRED, SIGNER_REFUSED, ENGINE_ERROR`.
 
-**Candidate validity (checked before replay):** `profile.hardProhibitions` ⊇ `HARD_PROHIBITIONS`; `profile.network/asset` unchanged; `maxPerPaymentAtomic` ≤ guardrail limit; `defaultAction ∈ {HOLD, ASK_HUMAN, DENY}`; every `CAP` rule has `capAtomic`; rule ids unique. An invalid candidate cannot be replayed or approved.
+**Candidate validity (checked before replay):** `hardProhibitions` complete; same `orgId`, `profile.network` and `profile.asset` as the base; `parentVersion` = base version and `policyVersion` > base; `maxPerPaymentAtomic` and `periodCapAtomic` not above the base's and `maxPerPaymentAtomic` ≤ the `[G §4]` per-payment limit (a candidate may tighten limits, never loosen them; ADR-013); `policyHash` matches the body; `defaultAction ∈ {HOLD, ASK_HUMAN, DENY}`; every `CAP` rule has `capAtomic`; rule ids unique. An invalid candidate cannot be replayed or approved.
 
 Default demo policy v1 and candidates are in Appendix A (ADR-012).
 

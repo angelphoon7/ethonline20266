@@ -59,7 +59,7 @@ AC-015, AC-022 (hash part); INV-005, INV-020, INV-022.
 Level: unit-tested. 2026-09-26: `corepack pnpm verify` green (tsc + eslint + vitest): 6 files, 102 tests. T-001 (money), T-002 (canonical JSON), T-003 (quote hash changes per field; golden vector `0xc2998300…fca9c` equals an independently built tag + canonical string), T-004 (policy/dataset/report hashes; report hash ignores `reportId`/`generatedAt`), T-016 (provenance survives parse/JSON round trip, relabel rejected, non-live evidence rejected in a `real_live` case, label revisions append-only). zod 4.6.5. Schema refinements also enforce INV-019 (signer timestamp after Intercepta return), INV-009 (decision completeness), INV-002 (HOLD/DENY/ASK_HUMAN never eligible), INV-015 (complete hard-prohibition set).
 
 # M-002 — Deterministic policy engine v1
-Status: TODO
+Status: VERIFIED
 Needs credentials: none
 ## Objective
 Pure `evaluate()` with the five actions, fail-closed, reason codes, candidate validation, profile schema; tiers provisional (ADR-007).
@@ -80,7 +80,7 @@ AC-007 (data), AC-020 (engine part), AC-030; INV-002, INV-003, INV-009, INV-015,
 ## Commit boundary
 `feat(policy): add deterministic five-action policy engine with fail-closed evidence handling`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: unit-tested. 2026-09-26: `corepack pnpm verify` green: 9 files, 228 tests. `packages/core/src/policy/{evaluate,candidate,demo}.ts`. T-005 (five actions reachable), T-006 (steps 1–11 table + precedence + hard prohibitions beat a catch-all PAY rule), T-007 (UNAVAILABLE ×6 codes, stale, future timestamp, wrong-address evidence ⇒ HOLD; `evaluateFailClosed` ⇒ `ENGINE_ERROR`), T-008 (CAP eligible ≤ cap, `CAP_BELOW_QUOTE` above), T-009 (approval valid ⇒ PAY; wrong hash/version/expired/over-max/wrong attempt ⇒ not eligible; approval never overrides hard prohibitions), T-010 (candidate validation), T-011 (static purity: no Date.now/new Date/Math.random/fetch/process/node builtins/signer API in `policy` and `regression`), AC-020 engine part (same CLEAR evidence: v1 PAY, A HOLD, B CAP below quote, C ASK_HUMAN). Mutation check: disabling the UNAVAILABLE check made 8 tests fail, restored afterwards. Evidence tiers remain provisional (ADR-007).
 
 # M-003 — SPIKE A (P0): Intercepta adapter and live semantics
 Status: TODO

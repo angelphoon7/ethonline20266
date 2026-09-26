@@ -41,7 +41,7 @@ Do not rely on remembered SDK behaviour. Before using x402, viem, better-sqlite3
 | Money (`bigint` atomic units, decimal strings): `parseAtomic`, `formatAtomic`, `usdcStringToAtomic` | `packages/core/src/money.ts` | M-001 ✓ |
 | The one quote/policy/dataset/report hash helper: `hashQuote`, `sealPolicy`, `hashDataset`, `sealReport` (+ `canonicalJson`) | `packages/core/src/fingerprint.ts`, `canonical.ts` | M-001 ✓ |
 | zod schemas for every type in SPEC §7 (+ provenance helpers) | `packages/core/src/types.ts`, `provenance.ts` | M-001 ✓ |
-| `evaluate()` policy engine | `packages/core/src/policy` | M-002 |
+| `evaluate()` / `evaluateFailClosed()` policy engine, `validateCandidate()`, demo policy v1 and candidates A/B/C | `packages/core/src/policy` | M-002 ✓ |
 | Intercepta client | `apps/gate/src/intercepta` | M-003 |
 | Signer interface (`createGuardedAccount`, `runWithDecision`) | `apps/gate/src/signer/public.ts` | M-004 |
 

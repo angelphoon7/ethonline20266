@@ -7,7 +7,7 @@ Last updated: 2026-09-26 (bootstrap run). If this file disagrees with the reposi
 
 ## 1. Current Objective
 
-Bootstrap contract written and pushed; M-000 (scaffold) and M-001 (core domain) VERIFIED. Next: M-002 (policy engine), then down the critical path in `EXECUTION_PLAN.md`. Prize path first: M-002 → M-005.
+Bootstrap contract written and pushed; M-000 (scaffold), M-001 (core domain) and M-002 (policy engine) VERIFIED. Next: M-003 (Spike A, live Intercepta), then down the critical path in `EXECUTION_PLAN.md`. Prize path first: M-003 → M-005.
 
 ## 2. Repository State
 
@@ -20,6 +20,7 @@ Bootstrap contract written and pushed; M-000 (scaffold) and M-001 (core domain) 
 - Remote reachable and `main` pushed (`git push -u origin HEAD`, exit 0). Hooks path is `.githooks`; the pre-commit secret guard ran on the first commit.
 - `bash scripts/env-status.sh`: all nine variable **names** are SET (values never inspected).
 - Tools: Node v24.18.0, npm 11.16.0, corepack 0.35.0, pnpm 12.6.0 via `corepack pnpm`.
+- M-002: deterministic five-action policy engine, candidate validation and demo policies unit-tested (228 tests total, mutation-checked).
 - M-001: core domain (money, canonical JSON, the single hash helper, zod schemas, provenance) unit-tested: 102 tests green.
 - M-000: `corepack pnpm verify` green offline (tsc + eslint + vitest, 4 tests); `test:live` refuses without `LIVE=1`; `demo:smoke` fails by design until M-011. TypeScript pinned to ~6.0.3 (ADR-016).
 
@@ -32,7 +33,7 @@ Nothing. The docs are a contract, not evidence.
 | Level | Status |
 | --- | --- |
 | typecheck / lint | green (`corepack pnpm verify`, 2026-09-26) |
-| unit / integration | 102 tests green (core domain + hygiene); no engine/gate tests yet |
+| unit / integration | 228 tests green (core domain, policy engine, hygiene); no gate tests yet |
 | live | not run |
 | demo smoke | not run |
 
@@ -62,11 +63,11 @@ ADR-001…ADR-016 in `DECISIONS.md` (name, Intercepta load-bearing, rail, offcha
 
 ## 10. Next
 
-1. M-002: deterministic policy engine with tests first for fail-closed rows.
-2. M-003 (Spike A): live Intercepta screen of SAFE and RISKY; record raw responses; write the tier-mapping ADR.
-3. M-004 (Spike B): seller, gate, protected signer.
-4. M-005 prize checkpoint (live pass + live block).
-5. M-006/M-007: store hardening and regression engine (credential-free).
+1. M-003 (Spike A): Intercepta adapter, live screen of SAFE and RISKY (≤ 40 calls), record raw responses, write the tier-mapping ADR.
+2. M-004 (Spike B): seller, gate, protected signer (needs a funded payer wallet).
+3. M-005 prize checkpoint (live pass + live block).
+4. M-006/M-007: store hardening and regression engine (credential-free).
+5. M-008/M-009: lifecycle and console.
 
 ## 11. Do Not Repeat
 

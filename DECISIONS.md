@@ -110,7 +110,7 @@ Status vocabulary: Accepted | Accepted (agent default) | Open. New ADRs append a
 
 ## ADR-013 — Engine and gate defaults
 - **Status:** Accepted (agent default). **Date:** 2026-09-26.
-- **Decision:** `EVIDENCE_FRESHNESS_S=30`, `DECISION_TTL_S=60`, `APPROVAL_TTL_S=600`, `INTERCEPTA_TIMEOUT_MS=8000` with **no automatic retry** (calls are budgeted to 40 per session), fixed period windows (`periodKey = floor(epochSeconds / periodSeconds)`), `defaultAction ∈ {HOLD, ASK_HUMAN, DENY}` (a default that pays is invalid), an approval never bypasses hard prohibitions, evaluation order as in SPEC §9.
+- **Decision:** `EVIDENCE_FRESHNESS_S=30`, `DECISION_TTL_S=60`, `APPROVAL_TTL_S=600`, `INTERCEPTA_TIMEOUT_MS=8000` with **no automatic retry** (calls are budgeted to 40 per session), fixed period windows (`periodKey = floor(epochSeconds / periodSeconds)`), `defaultAction ∈ {HOLD, ASK_HUMAN, DENY}` (a default that pays is invalid), an approval never bypasses hard prohibitions, evaluation order as in SPEC §9, evidence about a different address than the quote `payTo` is unusable (HOLD), evidence captured after `now` is stale, and a candidate may tighten limits but never loosen them (per-payment and period caps not above the base, per-payment not above the `[G §4]` limit).
 - **Rationale:** *Evidence:* 08 §8 (short validity window, residual time-of-check gap), `[G §5]`. *Preference:* smallest windows that a demo can meet; fixed windows are simpler to reserve against than rolling ones.
 - **Alternatives:** rolling windows, retries. **Why not chosen:** complexity and budget burn.
 - **Consequences:** documented residual gap between screen and settlement (08 §8).
