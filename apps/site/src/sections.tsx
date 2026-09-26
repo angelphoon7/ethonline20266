@@ -61,11 +61,11 @@ const LOOP_STEPS = [
   ['Next payment', 'a fresh live screen, decided by v(N+1)'],
 ];
 
-function Flow({ label, steps }: { label: string; steps: string[][] }) {
+function Flow({ label, steps, cols }: { label: string; steps: string[][]; cols: 5 | 6 }) {
   return (
     <div className="flow-block">
       <h3>{label}</h3>
-      <ol className="flow" aria-label={label}>
+      <ol className={`flow flow-${cols}`} aria-label={label}>
         {steps.map(([name, note]) => (
           <li key={name}>
             <strong>{name}</strong>
@@ -80,8 +80,8 @@ function Flow({ label, steps }: { label: string; steps: string[][] }) {
 export function HowItWorks() {
   return (
     <Section id="how" title="How it works">
-      <Flow label="Every payment attempt" steps={PAYMENT_STEPS} />
-      <Flow label="After an incident" steps={LOOP_STEPS} />
+      <Flow label="Every payment attempt" steps={PAYMENT_STEPS} cols={5} />
+      <Flow label="After an incident" steps={LOOP_STEPS} cols={6} />
     </Section>
   );
 }

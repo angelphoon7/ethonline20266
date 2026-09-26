@@ -19,82 +19,87 @@ const Row = ({ k, children }: { k: string; children: ReactNode }) => (
   </div>
 );
 
+const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+
+/** A trace as a short card: the facts a judge needs first, the full record one click away. */
 export function TraceCard({ trace, heading }: { trace: SiteTrace; heading?: string }) {
   const { quote, evidence, decision, signer, settlement } = trace;
+  const traits = evidence.returned.traits;
   return (
     <article className="panel trace-card" data-testid={`trace-${trace.scene}`} aria-label={heading ?? trace.title}>
       <header className="trace-head">
         <h3>{heading ?? trace.title}</h3>
         <SignerBadge calls={signer.calls} />
       </header>
-      <p>
-        <RecordedBadge at={trace.recordedAt} />{' '}
+      <p className="badges">
+        <RecordedBadge at={trace.recordedAt} />
         <span className="badge prov prov-other" data-provenance={evidence.provenance} title="The Intercepta call was a real API call when it was made. It is stored here, not repeated.">
           provenance: {evidence.provenance} at capture
         </span>
       </p>
 
-      <h4>1. Selected x402 quote</h4>
-      <dl>
-        <Row k="Amount">
-          {formatUsdc(quote.amountAtomic)} <span className="muted small">({quote.amountAtomic} atomic)</span>
+      <dl className="facts">
+        <Row k="Payment">
+          {formatUsdc(quote.amountAtomic)} to <span title={quote.payTo}>{short(quote.payTo)}</span>
         </Row>
-        <Row k="Network / asset">
-          {quote.network} (Base Sepolia testnet) · {shortHash(quote.asset)}
+        <Row k="Intercepta">
+          <span className={`badge tier-${evidence.tier.toLowerCase()}`}>{evidence.tier}</span> score {evidence.returned.toxicScore ?? 'n/a'}
+          {traits.length ? <span className="muted"> · {traits.map((t) => t.name).join(', ')}</span> : null}
+          <span className="muted small block">{TIER_LABEL}</span>
         </Row>
-        <Row k="payTo">{quote.payTo}</Row>
-        <Row k="Resource">{quote.resourcePath}</Row>
-        <Row k="Quote hash">{shortHash(trace.quoteHash)}</Row>
-      </dl>
-
-      <h4>2. Intercepta evidence for that exact payTo</h4>
-      <dl>
-        <Row k="Screened address">{evidence.screenedAddress}</Row>
-        <Row k="Returned at">
-          {timeOf(evidence.capturedAt)}
-          {evidence.latencyMs !== null ? (
-            <span className="muted small">
+        <Row k="Policy">
+          v{decision.policyVersion} → <span className={`badge action action-${decision.action.toLowerCase()}`}>{decision.action}</span>
+          <span className="muted small"> {decision.reasons.join(', ')}</span>
+        </Row>
+        <Row k="Settlement">
+          {settlement.status === 'none' ? '-' : `${settlement.status}${settlement.delivery ? `, ${settlement.delivery}` : ''}`}
+          {settlement.txHash ? (
+            <>
               {' '}
-              · {evidence.latencyMs} ms · HTTP {evidence.httpStatus}
-            </span>
+              <a href={settlement.basescan ?? basescanTx(settlement.txHash)} target="_blank" rel="noreferrer">
+                {shortHash(settlement.txHash)} on Basescan (Base Sepolia)
+              </a>
+            </>
           ) : null}
         </Row>
-        <Row k="Returned fields">
-          toxicScore {evidence.returned.toxicScore ?? 'n/a'}; traits{' '}
-          {evidence.returned.traits.length ? evidence.returned.traits.map((t) => `${t.name} (risk ${t.risk ?? 'n/a'})`).join(', ') : 'none'}
-        </Row>
-        <Row k="Risksir tier">
-          <span className={`badge tier-${evidence.tier.toLowerCase()}`}>{evidence.tier}</span> <span className="muted small">{TIER_LABEL}</span>
-        </Row>
       </dl>
 
-      <h4>3. Policy decision</h4>
-      <dl>
-        <Row k="Active policy">
-          v{decision.policyVersion} <span className="muted small">({shortHash(decision.policyHash)})</span>
-        </Row>
-        <Row k="Action">
-          <span className={`badge action action-${decision.action.toLowerCase()}`}>{decision.action}</span>
-        </Row>
-        <Row k="Reasons">{decision.reasons.join(', ')}</Row>
-        {decision.authorisedMaxAtomic !== null ? <Row k="Authorised maximum">{formatUsdc(decision.authorisedMaxAtomic)}</Row> : null}
-      </dl>
-
-      <h4>4. Signer</h4>
-      {signer.calls > 0 ? <p>Signer invoked at {timeOf(signer.invokedAt)}, after the Intercepta call.</p> : <p className="muted">The signer was not called.</p>}
-
-      <h4>5. Settlement and delivery (separate)</h4>
-      <dl>
-        <Row k="Settlement">{settlement.status}</Row>
-        <Row k="Delivery">{settlement.delivery ?? 'n/a'}</Row>
-        {settlement.txHash ? (
-          <Row k="Transaction">
-            <a href={settlement.basescan ?? basescanTx(settlement.txHash)} target="_blank" rel="noreferrer">
-              {shortHash(settlement.txHash)} on Basescan (Base Sepolia)
-            </a>
+      <details>
+        <summary>Full trace</summary>
+        <h4>Selected x402 quote</h4>
+        <dl>
+          <Row k="Amount">
+            {quote.amountAtomic} atomic USDC <span className="muted small">(6 decimals)</span>
           </Row>
-        ) : null}
-      </dl>
+          <Row k="Network / asset">
+            {quote.network} (Base Sepolia testnet) · {shortHash(quote.asset)}
+          </Row>
+          <Row k="payTo">{quote.payTo}</Row>
+          <Row k="Resource">{quote.resourcePath}</Row>
+          <Row k="Quote hash">{shortHash(trace.quoteHash)}</Row>
+        </dl>
+        <h4>Intercepta evidence for that exact payTo</h4>
+        <dl>
+          <Row k="Screened address">{evidence.screenedAddress}</Row>
+          <Row k="Returned at">
+            {timeOf(evidence.capturedAt)}
+            {evidence.latencyMs !== null ? <span className="muted small"> · {evidence.latencyMs} ms · HTTP {evidence.httpStatus}</span> : null}
+          </Row>
+          <Row k="Returned fields">
+            toxicScore {evidence.returned.toxicScore ?? 'n/a'}; traits {traits.length ? traits.map((t) => `${t.name} (risk ${t.risk ?? 'n/a'})`).join(', ') : 'none'}
+          </Row>
+        </dl>
+        <h4>Decision and signer</h4>
+        <dl>
+          <Row k="Policy">
+            v{decision.policyVersion} <span className="muted small">({shortHash(decision.policyHash)})</span>
+          </Row>
+          {decision.authorisedMaxAtomic !== null ? <Row k="Authorised maximum">{formatUsdc(decision.authorisedMaxAtomic)}</Row> : null}
+          <Row k="Signer">{signer.calls > 0 ? `invoked at ${timeOf(signer.invokedAt)}, after the Intercepta call` : '-'}</Row>
+          <Row k="Delivery">{settlement.delivery ?? 'n/a'}</Row>
+          {settlement.txHash ? <Row k="Transaction">{settlement.txHash}</Row> : null}
+        </dl>
+      </details>
     </article>
   );
 }
