@@ -132,3 +132,12 @@ Status vocabulary: Accepted | Accepted (agent default) | Open. New ADRs append a
 - **Alternatives:** hook only. **Why not chosen:** a hook bypass would break the product (07 §9).
 - **Consequences:** typed-data field checks depend on the observed EIP-3009 typed data shape (Spike B).
 - **Reversibility:** human-only (weakens INV-002/004). **Source:** `CLAUDE.md` §7, 07 §9, 08 §11.
+
+## ADR-016 — TypeScript is pinned to ~6.0.3
+- **Status:** Accepted (agent default). **Date:** 2026-09-26.
+- **Context:** `npm view typescript version` returns 7.0.2, but `typescript-eslint@8.70.1` throws "does not support TS 7.0" at load, so `eslint` (part of `pnpm verify`) fails.
+- **Decision:** Pin `typescript` to `~6.0.3` in the root `package.json`. Revisit when typescript-eslint supports TS >= 7.1 (issue linked in its error message).
+- **Rationale:** *Evidence:* observed error output from `corepack pnpm verify` with TS 7.0.2, then green with 6.0.3. *Preference:* keep lint in the verify gate.
+- **Alternatives:** run typescript-eslint against a side-by-side TS 6 API; drop typescript-eslint. **Why not chosen:** extra config / weaker lint.
+- **Consequences:** none for runtime; tooling only.
+- **Reversibility:** trivial. **Source:** observed output (M-000).

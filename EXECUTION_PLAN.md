@@ -11,7 +11,7 @@ Refinements to the bootstrap skeleton (dependency order kept, prize path first):
 ---
 
 # M-000 — Scaffold
-Status: TODO
+Status: VERIFIED
 Needs credentials: none
 ## Objective
 pnpm workspace, TypeScript strict ESM, vitest, minimal eslint, green `pnpm verify`, CI running it, minimal README, `AGENTS.md`.
@@ -32,7 +32,7 @@ AC-016 (partial); INV-018.
 ## Commit boundary
 One commit: `feat(repo): scaffold pnpm workspace with green verify and CI`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: integration-tested (offline). 2026-09-26: `corepack pnpm install` ok (pnpm 12.6.0); `corepack pnpm verify` = `tsc --noEmit` + `eslint .` + `vitest run` green (2 files, 4 tests). `test:live` exits 1 without `LIVE=1` and exits 1 with `LIVE=1` (no live tests yet); `demo:smoke` exits 1 by design. `bash scripts/env-status.sh` shows all names SET. TypeScript pinned to ~6.0.3 (ADR-016). CI file `.github/workflows/ci.yml` added but not yet observed running on GitHub.
 
 # M-001 — Core domain
 Status: TODO

@@ -7,19 +7,20 @@ Last updated: 2026-09-26 (bootstrap run). If this file disagrees with the reposi
 
 ## 1. Current Objective
 
-Bootstrap contract is written. Next: build `M-000` (scaffold) then continue down the critical path in `EXECUTION_PLAN.md`. Prize path first: M-000 → M-005.
+Bootstrap contract written and pushed; M-000 (scaffold) VERIFIED. Next: M-001 (core domain), then down the critical path in `EXECUTION_PLAN.md`. Prize path first: M-001 → M-005.
 
 ## 2. Repository State
 
 - Branch `main`, remote `origin` = `https://github.com/angelphoon7/ethonline20266.git`.
 - Pushed: `215f766` (agent pack and frozen docs). The contract commit adds `REPO_AUDIT.md`, `SPEC.md`, `DECISIONS.md`, `TEST_PLAN.md`, `EXECUTION_PLAN.md`, `HANDOFF.md`.
-- No application code exists yet.
+- Scaffold present (workspace, tooling, CI, README, `AGENTS.md`); no product logic yet.
 
 ## 3. VERIFIED Working
 
 - Remote reachable and `main` pushed (`git push -u origin HEAD`, exit 0). Hooks path is `.githooks`; the pre-commit secret guard ran on the first commit.
 - `bash scripts/env-status.sh`: all nine variable **names** are SET (values never inspected).
 - Tools: Node v24.18.0, npm 11.16.0, corepack 0.35.0, pnpm 12.6.0 via `corepack pnpm`.
+- M-000: `corepack pnpm verify` green offline (tsc + eslint + vitest, 4 tests); `test:live` refuses without `LIVE=1`; `demo:smoke` fails by design until M-011. TypeScript pinned to ~6.0.3 (ADR-016).
 
 ## 4. Implemented, Not Verified
 
@@ -29,8 +30,8 @@ Nothing. The docs are a contract, not evidence.
 
 | Level | Status |
 | --- | --- |
-| typecheck / lint | none yet (no code) |
-| unit / integration | none yet |
+| typecheck / lint | green (`corepack pnpm verify`, 2026-09-26) |
+| unit / integration | 4 scaffold/hygiene tests green; no product tests yet |
 | live | not run |
 | demo smoke | not run |
 
@@ -47,7 +48,7 @@ Nothing. The docs are a contract, not evidence.
 
 - Plain `pnpm` is not on PATH (`corepack enable` gives EPERM); use `corepack pnpm` (ADR-014).
 - `gh` CLI not installed; pushes use the credential manager.
-- `.gitattributes` is missing, so LF/CRLF warnings appear; M-000 adds `*.sh text eol=lf`.
+- `.gitattributes` added in M-000 (`*.sh` and hooks forced to LF); CI workflow not yet observed running on GitHub.
 - git identity is `angelphoon7@gmail.com`; the session account email differs. Confirm the address is linked to the GitHub account so commits are attributed.
 
 ## 8. Blockers
@@ -56,15 +57,15 @@ Nothing. The docs are a contract, not evidence.
 
 ## 9. Recent Decisions
 
-ADR-001…ADR-015 in `DECISIONS.md` (name, Intercepta load-bearing, rail, offchain governance, triggers A+C, deterministic engines, fail-closed + tier mapping, CAP semantics, stack, autonomous mode, credential-free-first, demo thresholds, engine defaults, `corepack pnpm`, signer defence in depth).
+ADR-001…ADR-016 in `DECISIONS.md` (name, Intercepta load-bearing, rail, offchain governance, triggers A+C, deterministic engines, fail-closed + tier mapping, CAP semantics, stack, autonomous mode, credential-free-first, demo thresholds, engine defaults, `corepack pnpm`, signer defence in depth, TypeScript ~6.0.3).
 
 ## 10. Next
 
-1. M-000: pnpm workspace, TS strict, vitest, eslint, CI, README, `AGENTS.md`, `.gitattributes`; `corepack pnpm verify` green.
-2. M-001: core domain types, money, canonical fingerprint, provenance.
-3. M-002: deterministic policy engine with tests first for fail-closed rows.
-4. M-003 (Spike A): live Intercepta screen of SAFE and RISKY; record raw responses; write the tier-mapping ADR.
-5. M-004 (Spike B): seller, gate, protected signer; then M-005 prize checkpoint.
+1. M-001: core domain types (zod), money, canonical fingerprint, provenance.
+2. M-002: deterministic policy engine with tests first for fail-closed rows.
+3. M-003 (Spike A): live Intercepta screen of SAFE and RISKY; record raw responses; write the tier-mapping ADR.
+4. M-004 (Spike B): seller, gate, protected signer.
+5. M-005 prize checkpoint (live pass + live block).
 
 ## 11. Do Not Repeat
 
