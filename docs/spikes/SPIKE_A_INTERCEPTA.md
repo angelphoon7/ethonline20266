@@ -86,4 +86,4 @@ No kill condition observed.
 
 ## Addendum 2026-09-26 (M-010): a live timeout was observed
 
-One live quick-scan call from the owner API process timed out after 8021 ms (`TIMEOUT`, no HTTP status), recorded raw in `fixtures/intercepta/recorded/2026-09-26T15-45-44-474Z_0x39308ae4...json`. The gate failed closed (`HOLD`, `EVIDENCE_UNAVAILABLE`, `signerCalls=0`). A retry moments later succeeded in the other calls of the day (13 further calls, none failed). This is one observation, not a rate-limit finding; error codes and rate limits remain OPEN (ADR-023).
+The three calls of the M-010 demo run minutes earlier all succeeded. One live quick-scan call from the owner API process timed out after 8021 ms (`TIMEOUT`, no HTTP status), recorded raw in `fixtures/intercepta/recorded/2026-09-26T15-45-44-474Z_0x39308ae4...json`. The gate failed closed (`HOLD`, `EVIDENCE_UNAVAILABLE`, `signerCalls=0`). This is one observation, not a rate-limit finding; error codes and rate limits remain OPEN (ADR-023).
