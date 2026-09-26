@@ -8,10 +8,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p apps/console/tsconfig.json",
     "lint": "eslint .",
     "test": "vitest run",
-    "verify": "tsc --noEmit -p tsconfig.json && eslint . && vitest run",
+    "verify": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p apps/console/tsconfig.json && eslint . && vitest run",
     "test:live": "node scripts/live-guard.mjs",
     "demo:smoke": "node scripts/not-implemented.mjs demo:smoke M-011",
     "wallet:status": "tsx --env-file=.env apps/gate/src/cli/wallet-status.ts",
@@ -22,7 +22,9 @@
     "verify:tx": "tsx --env-file=.env apps/gate/src/cli/verify-tx.ts",
     "reconcile": "tsx --env-file=.env apps/gate/src/cli/reconcile.ts",
     "seed": "tsx apps/gate/src/cli/seed.ts",
-    "owner-api": "tsx --env-file=.env apps/gate/src/cli/owner-api.ts"
+    "owner-api": "tsx --env-file=.env apps/gate/src/cli/owner-api.ts",
+    "build:console": "pnpm --filter @risksir/console build",
+    "dev:console": "pnpm --filter @risksir/console dev"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

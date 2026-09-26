@@ -3,11 +3,11 @@ HUMAN_ACTIONS: 1. Keep the payer wallet `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD
 
 # HANDOFF — Risksir
 
-Last updated: 2026-09-26, after M-004b. If this file disagrees with the repository, the repository wins.
+Last updated: 2026-09-26, after M-009. If this file disagrees with the repository, the repository wins.
 
 ## 1. Current Objective
 
-M-004b, M-006, M-007 and M-008 (policy lifecycle and owner API) are done. Next: **M-009** (owner console: Vite + React one page), then M-010 (Layer 4 live proof, which also wires `runScenario` and `resumeApproval` into the owner API), M-011, M-012.
+M-004b, M-006, M-007, M-008 (policy lifecycle and owner API) and M-009 (owner console) are done. Next: **M-010** (Layer 4 live proof, which also wires `runScenario` and `resumeApproval` into the owner API), M-011, M-012.
 
 ## 2. Repository State
 
@@ -17,7 +17,7 @@ M-004b, M-006, M-007 and M-008 (policy lifecycle and owner API) are done. Next: 
 ## 3. VERIFIED Working
 
 - **Prize path, live-verified twice** (real 402, live Intercepta on the exact `payTo`, one settled Base Sepolia payment, one Intercepta-driven DENY with `signerCalls=0`): pre-review signer tx `0x1cf9ae6f…8e6b` (M-005) and **permit-based signer tx `0xda62fcb74165323b7d6707c92a0aa02b00e09dd739128e3c568328282a5ca97a`** (M-004b, Base Sepolia block 47332599, RPC receipt `success`, USDC Transfer 50000 payer to SAFE, `signerCalls=1`, permit consumed; block attempt `2f05c880-…` DENY `signerCalls=0`). Evidence: `docs/evidence/M-005_*`, `docs/evidence/M-004b_*`, `docs/spikes/SPIKE_B_X402.md`.
-- SPEC v1.1 implemented and tested: signing permit with tables A/B (51 signer tests, one negative per mismatch), local checks before any Intercepta call, `awaiting_approval`/`expired` with approval resume (fresh screen, re-evaluation, PAY only), single spend ledger, state-machine enforcement in the store. `pnpm verify` green: **771 tests** (offline).
+- SPEC v1.1 implemented and tested: signing permit with tables A/B (51 signer tests, one negative per mismatch), local checks before any Intercepta call, `awaiting_approval`/`expired` with approval resume (fresh screen, re-evaluation, PAY only), single spend ledger, state-machine enforcement in the store. `pnpm verify` green: **797 tests** (offline).
 - Intercepta quick-scan shape observed live (Spike A). Spike A evidence gate (ADR-023): endpoint, base origin, HTTP 200, body shape at scores 0 and 100, reproducibility and latency are real; the 80 threshold, WARN band, `txsCount`, error codes and rate limits are OPEN. Tier thresholds are Risksir policy thresholds, not Intercepta verdicts.
 - Tools: Node v24.18.0, pnpm 12.6.0 (plain `pnpm` and `corepack pnpm` both work), TypeScript ~6.0.3.
 
@@ -30,7 +30,7 @@ M-004b, M-006, M-007 and M-008 (policy lifecycle and owner API) are done. Next: 
 
 | Level | Status |
 | --- | --- |
-| typecheck / lint / unit / integration | `pnpm verify` green, 771 tests (incl. the multi-process reservation race, the regression engine, the policy lifecycle and the owner API) |
+| typecheck / lint / unit / integration | `pnpm verify` green, 797 tests (incl. the multi-process reservation race, the regression engine, the policy lifecycle, the owner API and the console component/App tests) |
 | live | `LIVE=1 pnpm test:live` T-060 (Intercepta); `LIVE=1 pnpm demo:block` and `demo:pass` ran 2026-09-26 twice (M-005, M-004b) |
 | demo smoke | not run |
 
@@ -50,7 +50,7 @@ M-004b, M-006, M-007 and M-008 (policy lifecycle and owner API) are done. Next: 
 - `data/risksir.db` (gitignored) holds the live demo attempts; SAFE is no longer a first-time counterparty there.
 - Only scores 0 and 100 were observed, so the WARN tier rests on a labelled synthetic fixture.
 - git identity is `angelphoon7@gmail.com`; confirm it is linked to the GitHub account for attribution.
-- The owner API exists (`pnpm owner-api`, 127.0.0.1:4100, bearer `OWNER_CONSOLE_TOKEN`) but `POST /api/agent/run` returns 501 and `POST /api/approvals` returns `resumed: false` until the live gate is wired in M-010. There is no CORS yet: the console (M-009) needs a Vite proxy or CORS for localhost.
+- The owner API exists (`pnpm owner-api`, 127.0.0.1:4100, bearer `OWNER_CONSOLE_TOKEN`) but `POST /api/agent/run` returns 501 and `POST /api/approvals` returns `resumed: false` until the live gate is wired in M-010. There is no CORS: the console (`pnpm dev:console`, 127.0.0.1:5173) reaches it through the Vite `/api` proxy. The console was smoke-started but not yet viewed in a browser with real data; its Run/approve-resume buttons depend on the M-010 wiring.
 
 ## 8. Blockers
 
@@ -62,8 +62,8 @@ ADR-019 signing permit; ADR-020 `awaiting_approval`/`expired`; ADR-021 single sp
 
 ## 10. Next
 
-1. M-009: Vite + React one-page console (SPEC section 20): always-visible active policy version, decision trace with a large `signer calls: 0/1` badge, provenance badges, the tier labelled as a Risksir policy tier, settlement and delivery shown separately, Basescan link, regression comparison with numerators and denominators, label / approve / rollback controls. Call the owner API through a dev proxy (no CORS yet). Never store the bearer token in the repo.
-2. Run `pnpm seed` before a manual demo; candidates A/B/C rules come from `demoCandidates(demoPolicyV1(demoProfile(DEMO_SERVICE_BASE)))`.
+1. Console: `pnpm owner-api` in one terminal and `pnpm dev:console` in another, open http://127.0.0.1:5173, paste `OWNER_CONSOLE_TOKEN` (held in memory only). Run `pnpm seed` first for labelled cases.
+2. Candidates A/B/C rules come from `demoCandidates(demoPolicyV1(demoProfile(DEMO_SERVICE_BASE)))`.
 3. M-010 live Layer 4 proof (wire `runScenario` and `resumeApproval` into the owner API process); M-011 demo hardening; M-012 submission.
 
 ## 11. Do Not Repeat

@@ -286,7 +286,7 @@ Level: integration-tested (offline; real local x402 seller, stub facilitator, fi
 
 
 # M-009 — Owner console
-Status: TODO
+Status: VERIFIED
 Needs credentials: none
 ## Objective
 Vite + React one-page console: profile view, live trace, incident labelling (Trigger C), regression comparison, approve, rollback; UX contract in SPEC §20.
@@ -307,7 +307,11 @@ AC-006, AC-007, AC-008, AC-015; INV-012, INV-019.
 ## Commit boundary
 `feat(console): add owner console with decision trace, regression comparison and approval`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: unit-tested (jsdom component and App tests with a fake API) plus a local smoke of the dev server; no live payment in this milestone. 2026-09-26.
+- `pnpm verify` green (now also type-checks `apps/console`): 31 files, **797 tests** (26 console tests). `pnpm build:console` (vite build) succeeds: 20 modules, 237 kB JS.
+- Console `apps/console` (Vite + React, one page): always-visible `Policy vN` header, large `signer calls: N` badge, provenance badges (only `real_live` reads REAL LIVE), tier labelled "Risksir tier (policy threshold ADR-017), not an Intercepta verdict", settlement and delivery shown separately, Basescan link, no signer timestamp when the signer was not called, "No Intercepta call was made" for locally rejected quotes, incident labelling, candidate A/B/C presets (equal to core's demo candidates, tested), replay with numerator/denominator per metric and the provenance mix, approval bound to the report hash, rollback, approve-quote button that sends the shown quote hash.
+- Token handling: bearer token held in memory only, passed to the API factory, input cleared; tests assert nothing in `localStorage`, `sessionStorage`, cookies, URL or DOM. Dev proxy `/api` to `127.0.0.1:4100` (no CORS).
+- Smoke: `pnpm owner-api` + `pnpm dev:console` started locally; `GET /` returned 200 and `GET /api/state` through the proxy returned 401 without a token; both stopped. Not yet viewed in a browser with real data (M-010/M-011 demo run).
 
 # M-010 — Layer 4 proof
 Status: TODO
