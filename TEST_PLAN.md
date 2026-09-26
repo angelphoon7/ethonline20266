@@ -167,10 +167,10 @@ Fixtures, stubs and synthetic data are labelled as such and never counted as liv
 
 ## CURRENT COVERAGE GAPS
 
-At bootstrap **no code and no tests exist**: every row above is unimplemented. Additionally:
+Status after M-005 (2026-09-26): T-001 to T-016 (core), T-020 (partly), T-023 to T-028, T-030 (not yet: owner API), T-040 to T-049, T-052, T-053, T-060 to T-062 have been implemented (350 offline tests; T-061/T-062 as live CLI runs recorded in `docs/evidence/`). Still unimplemented: T-021/T-022 full (two-connection reservation test, chain reconciliation, M-006), T-029 to T-032 (lifecycle, owner API, audit, M-006/M-008), T-012 to T-015 regression (M-007), T-050/T-051 loop (M-008/M-010), T-054 console (M-009), T-063, T-070, T-090. Additionally:
 
-- Intercepta response fields and tier thresholds are unknown until Spike A, so T-027 uses synthetic fixtures first and gains recorded fixtures after M-003.
-- The x402 typed-data shape, hook semantics and settlement shapes are unknown until Spike B, so T-024/T-043/T-048 assert against a stub facilitator and a locally built seller until then.
+- Intercepta: only scores 0 and 100 were observed live; the WARN band, 401/429/5xx and rate limits rest on labelled synthetic fixtures and stubbed fetch (never claimed as live).
+- The facilitator failure modes (drop, 500, `success:false`) are exercised only through the stub; a single successful real settlement was observed.
 - AC-024 (public repo) and Spike E (sponsor overlap) are human-verified only.
-- The payer wallet's funding is unverified; T-061–T-063 and T-070 cannot run until it is.
+- The payer wallet is funded (19.94 test USDC); T-063 and T-070 wait for M-008 to M-011.
 - The console (T-054) relies on component tests only; no browser end-to-end automation is planned.

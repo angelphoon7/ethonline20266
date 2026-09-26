@@ -13,12 +13,19 @@
     "test": "vitest run",
     "verify": "tsc --noEmit -p tsconfig.json && eslint . && vitest run",
     "test:live": "node scripts/live-guard.mjs",
-    "demo:smoke": "node scripts/not-implemented.mjs demo:smoke M-011"
+    "demo:smoke": "node scripts/not-implemented.mjs demo:smoke M-011",
+    "wallet:status": "tsx --env-file=.env apps/gate/src/cli/wallet-status.ts",
+    "demo:pass": "tsx --env-file=.env apps/gate/src/cli/demo.ts pass",
+    "demo:block": "tsx --env-file=.env apps/gate/src/cli/demo.ts block",
+    "demo:v2": "tsx --env-file=.env apps/gate/src/cli/demo.ts v2",
+    "trace:export": "tsx apps/gate/src/cli/export-trace.ts",
+    "verify:tx": "tsx --env-file=.env apps/gate/src/cli/verify-tx.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.3",
     "eslint": "^10.11.0",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.70.1",
     "vitest": "^5.0.2"

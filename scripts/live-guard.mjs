@@ -1,7 +1,7 @@
 // `pnpm test:live` entry point. Live tests spend Intercepta calls and testnet funds,
 // so they never run by accident (OPERATIONAL_GUARDRAILS section 4-5, TEST_PLAN section 2).
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, URL } from 'node:url';
 
 if (process.env.LIVE !== '1') {
   console.error('test:live refused: set LIVE=1 to run live checks (limits: OPERATIONAL_GUARDRAILS section 4-5).');

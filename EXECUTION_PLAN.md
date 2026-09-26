@@ -32,7 +32,9 @@ AC-016 (partial); INV-018.
 ## Commit boundary
 One commit: `feat(repo): scaffold pnpm workspace with green verify and CI`.
 ## Evidence (filled in when VERIFIED)
-Level: integration-tested (offline). 2026-09-26: `corepack pnpm install` ok (pnpm 12.6.0); `corepack pnpm verify` = `tsc --noEmit` + `eslint .` + `vitest run` green (2 files, 4 tests). `test:live` exits 1 without `LIVE=1` and exits 1 with `LIVE=1` (no live tests yet); `demo:smoke` exits 1 by design. `bash scripts/env-status.sh` shows all names SET. TypeScript pinned to ~6.0.3 (ADR-016). CI file `.github/workflows/ci.yml` added but not yet observed running on GitHub.
+Level: integration-tested (offline). 2026-09-26: `corepack pnpm install` ok (pnpm 12.6.0); `corepack pnpm verify` = `tsc --noEmit` + `eslint .` + `vitest run` green (2 files, 4 tests). `test:live` exits 1 without `LIVE=1` and exits 1 with `LIVE=1` (no live tests yet); `demo:smoke` exits 1 by design. `bash scripts/env-status.sh` shows all names SET. TypeScript pinned to ~6.0.3 (ADR-016). CI file `.github/workflows/ci.yml` added.
+
+CI follow-up (2026-09-26, AC-016 / INV-018): [run 36245757448](https://github.com/angelphoon7/ethonline20266/actions/runs/36245757448) for `a97e48b` failed at `pnpm install --frozen-lockfile`, before verification. An isolated export reproduced `ERR_PNPM_IGNORED_BUILDS` for `esbuild@0.28.2`; replacing the unresolved `allowBuilds.esbuild` placeholder with `true` fixes installation. Continuing verification exposed `no-undef` for `URL` in `scripts/live-guard.mjs`, fixed with an explicit `node:url` import. The snapshot plus both fixes passes `CI=true corepack pnpm install --frozen-lockfile --offline` and `corepack pnpm verify` (11 files, 265 tests); the lockfile is unchanged. Concurrent M-004 changes were excluded. Remote Linux confirmation is pending push.
 
 # M-001 — Core domain
 Status: VERIFIED
@@ -110,7 +112,7 @@ Level: live-verified for the address screen (adapter path only; not yet in a pay
 - Mapping `quickscan-v1` (ADR-017). `docs/spikes/SPIKE_A_INTERCEPTA.md` written; SPEC §10/§25 updated (Q-001, Q-002 resolved). Kill-condition check: none observed; placement before the signer is untested until M-004; Q-003 (sponsor confirmation that RISKY may be a testnet `payTo`) remains a human action. Mid band, 401/429/5xx and rate limits were not observed live.
 
 # M-004 — SPIKE B (P0): x402 seller, buyer gate, protected signer
-Status: TODO
+Status: VERIFIED
 Needs credentials: `PAYER_PRIVATE_KEY` (funded), `BASE_SEPOLIA_RPC_URL`, `X402_FACILITATOR_URL`, `SELLER_PAY_TO_SAFE`, `SELLER_PAY_TO_RISKY`, `SELLER_PAY_TO_ALT`
 ## Objective
 Local x402 seller (Base Sepolia `exact` USDC), buyer gate with a pre-sign hook, protected signer with a call counter and guarded viem account. A pass signs once and settles; deny, timeout and mutation sign zero times.
@@ -131,10 +133,13 @@ AC-001–AC-006, AC-022, AC-026; INV-001, INV-002, INV-004–INV-006, INV-008, I
 ## Commit boundary
 `feat(gate): add x402 seller, pre-sign buyer gate and protected signer with zero-call guarantees`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: live-verified (pass and deny); timeout/mutation/expiry/policy-change zero-signer cases are integration-tested against a real local seller and a stub facilitator (fixture evidence, never claimed as live). 2026-09-26.
+- `corepack pnpm verify` green: 15 files, 350 tests (signer matrix T-023/T-024 49 tests, key isolation T-025 7 tests with self-test, live-session guard T-053, gate integration T-040 to T-049 and T-052 22 tests, Intercepta adapter/mapper).
+- Live pass: tx `0x1cf9ae6f4e155214115528bcbfd917c94ece8fb987f68f193a1ef77114478e6b` (Base Sepolia, block 47331424, RPC receipt `status: success`, USDC Transfer 50000 payer to SAFE), `signerCalls=1`. Live deny: attempt `aae1f854-7804-4135-b0c1-c811d182cad0`, `signerCalls=0`, no signer timestamp.
+- `docs/spikes/SPIKE_B_X402.md` (installed-source facts, kill-condition check: none observed), ADR-018, SPEC Q-005/Q-006/Q-009 resolved. Gaps: ambiguous reconciliation against the chain (M-006), real facilitator failure modes.
 
 # M-005 — PRIZE CHECKPOINT
-Status: TODO
+Status: VERIFIED
 Needs credentials: all live variables
 ## Objective
 One live pass (tx hash), one live Intercepta-driven block (`signerCalls=0`), and persisted decision traces.
@@ -155,7 +160,11 @@ AC-004, AC-005, AC-006, AC-019, AC-023, AC-029; INV-001, INV-002.
 ## Commit boundary
 `test(live): record prize-path pass and Intercepta-driven block evidence`.
 ## Evidence (filled in when VERIFIED)
-—
+Level: live-verified. 2026-09-26: `LIVE=1 corepack pnpm demo:block` then `LIVE=1 corepack pnpm demo:pass`.
+- Pass: `attempt=392a270f-8a18-485e-b3df-9a81b6607feb status=settled action=PAY signerCalls=1 settlement=settled delivery=received tx=0x1cf9ae6f4e155214115528bcbfd917c94ece8fb987f68f193a1ef77114478e6b`; Intercepta CLEAR (`real_live`, `fixtures/intercepta/recorded/2026-09-26T13-58-54-181Z_0x87cff22e...json`), policy v1.
+- Block: `attempt=aae1f854-7804-4135-b0c1-c811d182cad0 status=failed action=DENY signerCalls=0 settlement=none`; Intercepta BLOCK (`known_scammer`, `attack_money_target`, score 100; `fixtures/intercepta/recorded/2026-09-26T13-58-41-611Z_0x39308ae4...json`).
+- Persisted traces `docs/evidence/M-005_prize_checkpoint_traces.json`; on-chain receipt check `docs/evidence/M-005_tx_receipt_check.json`; summary `docs/evidence/M-005_prize_checkpoint.md`. Limits respected: 0.05 USDC per payment, session 1/20 settlements and 0.05/1.00 USDC.
+- Caveat: Q-003 (sponsor confirmation that the RISKY address may be a merchant payTo) is still a human action, so the block is labelled as the live screen of the configured merchant address, not a sponsor-confirmed qualification claim.
 
 # M-006 — Case store, reservations, reconciliation
 Status: TODO

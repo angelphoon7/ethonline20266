@@ -2,6 +2,7 @@ packages:
   - "packages/*"
   - "apps/*"
 allowBuilds:
-  esbuild: set this to true or false
+  better-sqlite3: false
+  esbuild: true
 minimumReleaseAgeExclude:
   - '@types/node@26.6.3'

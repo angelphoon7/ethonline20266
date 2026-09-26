@@ -4,7 +4,7 @@ Short on purpose; reread every session. Product behaviour is in `SPEC.md`, rules
 
 ## Stack (detected 2026-09-26)
 
-Node v24.18.0 (>= 20 required) · pnpm 12.6.0 (workspaces, pinned in `packageManager`) · TypeScript **~6.0.3** strict ESM (TS 7.0 breaks typescript-eslint, ADR-016) · vitest 5.0.2 · eslint 10.11 + typescript-eslint 8.70 · zod 4.6.5 (in `@risksir/core`) · planned: viem, better-sqlite3, `@x402/*`, Vite + React (versions are recorded here when each is first installed).
+Node v24.18.0 (>= 20 required) · pnpm 12.6.0 (workspaces, pinned in `packageManager`) · TypeScript **~6.0.3** strict ESM (TS 7.0 breaks typescript-eslint, ADR-016) · vitest 5.0.2 · eslint 10.11 + typescript-eslint 8.70 · zod 4.6.5 · viem 2.56.9 · better-sqlite3 13.0.3 (prebuilt binary; build script disabled via `allowBuilds: false` in `pnpm-workspace.yaml`, no C++ toolchain here) · `@x402/core|fetch|evm|express` 2.27.0 · express 5.2.1 · tsx 4.23.15 · planned: Vite + React (recorded here when installed).
 
 ## Package manager rule
 
@@ -28,7 +28,7 @@ Node v24.18.0 (>= 20 required) · pnpm 12.6.0 (workspaces, pinned in `packageMan
 ## Commands
 
 VERIFIED (run 2026-09-26): `corepack pnpm install`, `corepack pnpm verify` (tsc + eslint + vitest, offline, green), `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `LIVE=1 corepack pnpm test:live` (runs `*.live.test.ts`; refuses without `LIVE=1`), `LIVE=1 corepack pnpm --filter @risksir/gate spike:a` (observe-only Intercepta probe), `corepack pnpm demo:smoke` (placeholder, exits 1 until M-011), `bash scripts/env-status.sh`.
-Not yet defined: per-app `dev`/`build` (added with the app that needs them, then listed here).
+Live/read-only tools (need `.env`, run through the root scripts): `corepack pnpm wallet:status` (public payer address and balances), `LIVE=1 corepack pnpm demo:pass|demo:block` (live Intercepta + real Base Sepolia payment within guardrails), `corepack pnpm verify:tx <hash>` (RPC receipt check), `corepack pnpm trace:export` (stored decision traces), `corepack pnpm --filter @risksir/seller start` (local seller). Not yet defined: console `dev`/`build`, `seed`, `reset`, `demo:v2`, `demo:smoke`.
 
 ## Framework-docs rule
 
@@ -43,7 +43,10 @@ Do not rely on remembered SDK behaviour. Before using x402, viem, better-sqlite3
 | zod schemas for every type in SPEC §7 (+ provenance helpers) | `packages/core/src/types.ts`, `provenance.ts` | M-001 ✓ |
 | `evaluate()` / `evaluateFailClosed()` policy engine, `validateCandidate()`, demo policy v1 and candidates A/B/C | `packages/core/src/policy` | M-002 ✓ |
 | Intercepta client `screenAddress()`, `quickScanMapper`, `FileBudget`, `writeRecordedResponse()` | `apps/gate/src/intercepta` | M-003 ✓ |
-| Signer interface (`createGuardedAccount`, `runWithDecision`) | `apps/gate/src/signer/public.ts` | M-004 |
+| Signer interface: `createProtectedSigner(deps).forAttempt(attemptId)` returns `{ address, authorise, signTypedData }`; `SignerRefusedError`; `payerPublicAddress`; `readWalletStatus` | `apps/gate/src/signer/public.ts` (only entry point; `key.ts` and `guard.ts` are internal) | M-004 ✓ |
+| SQLite `Store` (attempts, evidence, decisions, reservations, signer ledger, policies, active pointer) and its `SignerStore` view | `apps/gate/src/store/store.ts` | M-004 ✓ (extended in M-006) |
+| `createGate(deps).run(task)` buyer gate; `runBuyerTask`, `scenarioTask` | `apps/gate/src/x402/gate.ts`, `apps/gate/src/agent/runner.ts` | M-004 ✓ |
+| `LiveSession` limits and `formatBanner` | `apps/gate/src/live/session.ts` | M-004 ✓ |
 
 Search before creating; never add a second hash or money helper.
 
@@ -76,7 +79,7 @@ Offline tests need none of them.
 
 ## Chain config source
 
-One module (created in M-004, `apps/gate/src/chain.ts`) holds `eip155:84532` and the USDC address from `OPERATIONAL_GUARDRAILS.md` §2, confirmed against docs.x402.org. The signer enforces it independently.
+One module (`apps/gate/src/chain.ts`, M-004 ✓) holds `eip155:84532` and the USDC address from `OPERATIONAL_GUARDRAILS.md` §2, confirmed against docs.x402.org. The signer enforces it independently.
 
 ## Git hygiene
 

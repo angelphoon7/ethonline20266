@@ -69,9 +69,9 @@ Version 1.0 (2026-09-26). Status: binding for implementation. Source tags: `[07 
 | 2 | Agent | Allowed task + resource URL → request without payment credential → `402` | `PaymentAttempt created` | Resource not allowlisted: attempt `failed`, no quote |
 | 3 | Seller | Route returns `PaymentRequired` (`exact`, network, USDC, `payTo`) | — | Non-402 / invalid body: `QUOTE_INVALID`, HOLD |
 | 4 | Gate | Parse (zod) + select one requirement → `CanonicalQuote` + `quoteHash` | `quoted` | Unsupported scheme/network/asset: evaluated by policy → DENY (§9) |
-| 5 | Gate | Local pre-checks (asset, ceiling, service, expiry); if they pass, serialised budget reservation | `SpendReservation reserved` | Pre-check fails or cap exceeded: no reservation kept; the failure is still turned into a Decision at step 7 |
+| 5 | Gate | Local pre-checks (service scope; SDK spend controls); no reservation yet | none | Pre-check fails: attempt `failed`, no quote |
 | 6 | Intercepta adapter | Live quick-scan of the selected `payTo` → raw snapshot + `RiskEvidence`. Runs for **every parseable quote**, even one a local pre-check will deny, so every Decision carries an evidence id (INV-009) | `screened`; `interceptaRequestedAt/ReturnedAt` | Error/timeout/429/malformed/stale ⇒ `UNAVAILABLE` evidence record ⇒ HOLD |
-| 7 | Policy engine | Active policy + evidence + quote + context → `Decision` (action, reasons) | `decided` | Engine exception ⇒ HOLD |
+| 7 | Policy engine + gate | Active policy + evidence + quote + context → `Decision` (action, reasons). If eligible, the serialised budget reservation is made **atomically with the decision, before any signer call** (a failed reservation downgrades it to HOLD) | `decided` | Engine exception ⇒ HOLD |
 | 8 | Protected signer | For eligible PAY/CAP: re-verify binding, then sign one EIP-3009 authorisation | `signed`; `signerCalls` = 1 | Any mismatch ⇒ refuse, `SIGNER_REFUSED`, count stays 0 |
 | 9 | Gate/seller/facilitator | Retry with payment payload; facilitator verifies+settles USDC | `submitted` → `settled`/`failed`/`ambiguous` | Ambiguous keeps reservation (INV-014) |
 | 10 | Case recorder | Correlate request, quote, evidence, decision, signer count, tx hash, HTTP result | `PaymentOutcome`, `PaymentCase` | Crash before write: attempt persisted before signing; reconcile on restart |
@@ -352,7 +352,8 @@ Illegal transitions throw and are never persisted (tested exhaustively).
 - **Budget:** per-payment cap and period cap (fixed windows: `periodKey = floor(epochSeconds / periodSeconds)`, ADR-013). Reservation runs in one synchronous better-sqlite3 `BEGIN IMMEDIATE` transaction: `settled + committed + reserved + reconciling (same period) + amount ≤ periodCap`, otherwise no reservation and no signature (INV-007).
 - **Ambiguous settlement:** attempt `ambiguous`, reservation `reconciling`; reconcile from facilitator status and/or Base Sepolia receipt/nonce state through viem before releasing, committing or retrying.
 - **Retry rules:** no automatic Intercepta retry (§10); no signing retry for the same decision; a fresh attempt repeats §5 steps 2–10 with fresh evidence; the HTTP retry after a valid signature is the single SDK payment retry only.
-- **Settlement ordering** (authorise-first vs upfront): `OPEN — resolve with Spike B evidence`, recorded in an ADR. Delivery is never inferred from settlement.
+- **Settlement ordering:** the SDK default **authorization** flow (verify, resource handler, settle), ADR-018. Delivery is never inferred from settlement.
+- **Observed typed data (Spike B, `@x402/evm` 2.27.0):** `primaryType = TransferWithAuthorization`, `domain = { name, version, chainId, verifyingContract }`, `message = { from, to, value, validAfter = 0, validBefore = now + maxTimeoutSeconds, nonce }`. The signer refuses any other typed data. The SDK hands the signer only `address` and `signTypedData`.
 
 ## 13. Regression semantics
 
@@ -562,11 +563,11 @@ New threat-detection model or scam database; wallet blacklist as the product; cr
 | Q-002 | Correct Intercepta endpoint and base URL | Adapter | Agent, docs + Spike A | **RESOLVED 2026-09-26**: quick-scan path on `https://api.web3antivirus.io` observed working |
 | Q-003 | Is the sponsor known-risk address usable as a testnet `payTo`, and is the block tied to the quote? | Qualifying block (07 §22 kill condition) | **Human** (sponsor) | Label the blocked branch as a controlled merchant configuration; do not claim qualification |
 | Q-004 | Does Intercepta already offer customer-specific historical replay / policy comparison? (Spike E, 07 §20) | Novelty gate, 07 §22.5 | **Human** (sponsor) | Treat novelty as hypothesis; never claim it |
-| Q-005 | x402 package names/versions, `onBeforePaymentCreation` semantics, exact 402 and settlement shapes | Buyer gate, signer typed-data checks | Agent, Spike B + ADR | Signer wrapper guards `signTypedData` regardless of hook behaviour |
-| Q-006 | Settlement ordering (authorise-first vs upfront) | Ambiguity/reconciliation design | Agent, Spike B + ADR | Authorise-first (default) with explicit `ambiguous` state |
+| Q-005 | x402 package names/versions, `onBeforePaymentCreation` semantics, exact 402 and settlement shapes | Buyer gate, signer typed-data checks | Agent, Spike B + ADR | **RESOLVED 2026-09-26** (ADR-018): `@x402/*` 2.27.0, hook runs before signing, aborts throw |
+| Q-006 | Settlement ordering (authorise-first vs upfront) | Ambiguity/reconciliation design | Agent, Spike B + ADR | **RESOLVED 2026-09-26** (ADR-018): authorization flow (default) with explicit `ambiguous` state |
 | Q-007 | Does token scan / EIP-712 message scan accept this payload? | Optional claim only | Agent, Spike A/B | Claim address screening only |
 | Q-008 | History/alert/webhook API for risk-state changes (Trigger B) | Optional trigger | Agent | Trigger B not built; Trigger C only |
-| Q-009 | Is the payer wallet funded (Base Sepolia ETH + test USDC ≤ 20)? | Live payments | **Human** | Live milestones report `HUMAN_REQUIRED` |
+| Q-009 | Is the payer wallet funded (Base Sepolia ETH + test USDC ≤ 20)? | Live payments | **Human** | **RESOLVED 2026-09-26**: 0.1 ETH and 19.99 test USDC observed by `wallet:status`; keep ≤ 20 |
 | Q-010 | Reselect a cheaper advertised requirement after CAP-below-quote? | CAP completeness | Agent, if the 402 ever advertises more than one option | Do not reselect; CAP below quote = no signing |
 | Q-011 | Intercepta timeout and rate limits | Adapter timeout, session budget | Agent, Spike A | `INTERCEPTA_TIMEOUT_MS = 8000`, no retry. Latency 325–2814 ms over 4 calls; rate limits and error codes unobserved (not in docs) |
 
