@@ -1,14 +1,47 @@
 # Risksir
 
+**Regression testing for autonomous payment policies.**
+
 Risksir is a closed-loop risk-policy engine for x402 agents: Intercepta supplies live payment risk, while each organisation can test, version and improve how its agents respond to that risk before money is signed.
 
-Target: ETHGlobal Tokyo 2026, Intercepta prize *Safe Agent-to-Agent Payments with x402*.
+> Intercepta tells the agent what is risky. Risksir makes sure the organisation's payment policy learns from what happened.
 
-**Live site:** https://ethtokyo2026-kappa.vercel.app/ (static showcase of recorded evidence from Base Sepolia test runs; it never signs, pays or calls Intercepta).
+Built for ETHGlobal Tokyo 2026, Intercepta prize *Safe Agent-to-Agent Payments with x402*.
+**Live site:** https://ethtokyo2026-kappa.vercel.app/ (a static showcase of recorded evidence from Base Sepolia test runs; it never signs, pays or calls Intercepta).
 
-## The problem
+## The problem: knowing the risk does not prove the response is right
 
-Autonomous agents need more than a universal risk verdict. The same risk signal can legitimately produce different actions depending on the payment value, how familiar the counterparty is, the business context, the organisation's risk appetite and its capacity for human review. And a static policy needs a disciplined way to improve after an incident without overcorrecting and blocking normal commerce.
+- Intercepta gives organisations live risk intelligence and programmable responses.
+- But each organisation still has to decide how its agents should react in different payment contexts: the payment value, how familiar the counterparty is, the business context, its risk appetite and its capacity for human review.
+- A policy that is **too loose** can allow unacceptable payments.
+- A policy that is **too strict** can block legitimate payments and increase human review.
+- When a decision goes wrong, simply changing the rule does not prove that the new rule is better.
+
+**The core gap:** before a new payment policy controls real agent money, organisations need a way to test how it would have performed on past good and bad payments.
+
+## The solution: every bad decision becomes a regression test
+
+- Every x402 payment still receives a **fresh Intercepta risk check before signing**.
+- Risksir applies the organisation's active response policy: **Pay, Cap, Hold, Review (`ASK_HUMAN`) or Deny**.
+- Incidents and false positives become **regression cases**, each labelled by an authenticated owner and carrying its provenance.
+- Proposed policy changes are **replayed** against past good and bad payments.
+- Risksir measures the bad cases and value that would have been prevented, the legitimate payments affected and the human-review cost, each with its numerator and denominator.
+- Only an **owner-approved, replay-tested** policy version enters the versioned policy store and controls future payments. Rollback exists.
+
+Intercepta detects risk. Risksir governs and continuously validates how an autonomous payer reacts to it. It does not replace Intercepta's threat intelligence.
+
+### The loop, as implemented
+
+| Stage | What happens | Where |
+| --- | --- | --- |
+| 1. Detect | A live Intercepta screen of the exact selected `payTo`, before any signer call | [`screenAddress`](apps/gate/src/intercepta/client.ts#L37) |
+| 2. Respond | The active policy, the organisation profile and the payment context give exactly one of `PAY`, `CAP`, `HOLD`, `ASK_HUMAN`, `DENY` | [`evaluate`](packages/core/src/policy/evaluate.ts#L170) |
+| 3. Observe | Quote, evidence, decision, signer calls, settlement and delivery are stored and audited; the owner labels incidents and false positives (there is no automatic detection) | [`gate.ts`](apps/gate/src/x402/gate.ts#L75) |
+| 4. Test | Candidate policies are replayed over the labelled cases, deterministically | [`runRegression`](packages/core/src/regression/engine.ts#L22) |
+| 5. Validate | Metrics with numerators and denominators: bad cases and value prevented, good cases changed, human reviews added, hold and deny rates | [`metrics.ts`](packages/core/src/regression/metrics.ts) |
+| 6. Reuse | The owner approves one candidate, bound to its report; it becomes policy vN+1 in one transaction, immutable, with rollback | [`approveCandidate`](apps/gate/src/policy/lifecycle.ts#L165) |
+
+The replay is counterfactual evidence on labelled cases, not a measure of real prevented loss (see the claim boundaries below).
 
 ## How it works
 
@@ -28,7 +61,7 @@ after an incident
     -> the next x402 attempt gets a fresh live screen and is decided by vN+1
 ```
 
-HOLD, DENY and a pending ASK_HUMAN mean zero signer calls. Missing or unusable Intercepta evidence means HOLD.
+`HOLD`, `DENY` and a pending `ASK_HUMAN` mean zero signer calls. Missing or unusable Intercepta evidence means `HOLD`.
 
 ## Where the integration lives
 
