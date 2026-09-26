@@ -141,3 +141,12 @@ Status vocabulary: Accepted | Accepted (agent default) | Open. New ADRs append a
 - **Alternatives:** run typescript-eslint against a side-by-side TS 6 API; drop typescript-eslint. **Why not chosen:** extra config / weaker lint.
 - **Consequences:** none for runtime; tooling only.
 - **Reversibility:** trivial. **Source:** observed output (M-000).
+
+## ADR-017 — Intercepta quick-scan evidence mapping (`quickscan-v1`)
+- **Status:** Accepted (agent default, resolves the OPEN item in ADR-007). **Date:** 2026-09-26.
+- **Context:** Spike A observed `GET /api/public/v2/extension/account/{address}/quick-scan` returning `{ toxicScore, traits[{ risk, name, description }] }`. There is no verdict field. Observed scores: 0 with no traits (SAFE) and 100 with `known_scammer` (risk 100) and `attack_money_target` (risk 85) (RISKY). Two identical results per address.
+- **Decision:** `BLOCK` when `toxicScore >= 80` or any trait `risk >= 80`; `WARN` for any other non-zero score or any trait; `CLEAR` only for score 0 with no traits; any body outside the observed schema is `UNAVAILABLE(MALFORMED)` (HOLD). Reasons are the trait names verbatim. Mapping version `quickscan-v1` is stored on every evidence record.
+- **Rationale:** *Evidence:* `fixtures/intercepta/recorded/*` and `docs/spikes/SPIKE_A_INTERCEPTA.md`; only 0 and 100 were observed. *Preference:* the 80 threshold and "any signal is at least WARN" are the conservative reading (never turn an unseen signal into a pass).
+- **Alternatives:** BLOCK only at exactly 100; use trait names as hard-block list. **Why not chosen:** 100 alone is too permissive for an unobserved band; a name list would rely on undocumented semantics.
+- **Consequences:** The WARN band is unobserved, so demo Scene 5 relies on the observed CLEAR tier plus context predicates (SPEC §22). If a later live response falls in the mid band, add it to `fixtures/intercepta/recorded/` and revisit the threshold with a new ADR.
+- **Reversibility:** easy: new ADR and a new `mappingVersion`. **Source:** SPIKE_A_INTERCEPTA.md, 08 §9, `CLAUDE.md` §5.

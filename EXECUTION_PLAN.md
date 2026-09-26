@@ -83,7 +83,7 @@ AC-007 (data), AC-020 (engine part), AC-030; INV-002, INV-003, INV-009, INV-015,
 Level: unit-tested. 2026-09-26: `corepack pnpm verify` green: 9 files, 228 tests. `packages/core/src/policy/{evaluate,candidate,demo}.ts`. T-005 (five actions reachable), T-006 (steps 1–11 table + precedence + hard prohibitions beat a catch-all PAY rule), T-007 (UNAVAILABLE ×6 codes, stale, future timestamp, wrong-address evidence ⇒ HOLD; `evaluateFailClosed` ⇒ `ENGINE_ERROR`), T-008 (CAP eligible ≤ cap, `CAP_BELOW_QUOTE` above), T-009 (approval valid ⇒ PAY; wrong hash/version/expired/over-max/wrong attempt ⇒ not eligible; approval never overrides hard prohibitions), T-010 (candidate validation), T-011 (static purity: no Date.now/new Date/Math.random/fetch/process/node builtins/signer API in `policy` and `regression`), AC-020 engine part (same CLEAR evidence: v1 PAY, A HOLD, B CAP below quote, C ASK_HUMAN). Mutation check: disabling the UNAVAILABLE check made 8 tests fail, restored afterwards. Evidence tiers remain provisional (ADR-007).
 
 # M-003 — SPIKE A (P0): Intercepta adapter and live semantics
-Status: TODO
+Status: VERIFIED
 Needs credentials: `INTERCEPTA_API_KEY`, `INTERCEPTA_BASE_URL`, `SELLER_PAY_TO_SAFE`, `SELLER_PAY_TO_RISKY`
 ## Objective
 Adapter for the read-only address screen; live screen of the SAFE and RISKY `payTo`; record raw responses; finalise the evidence mapping from **observed** fields.
@@ -104,7 +104,10 @@ AC-019 (address screened), AC-021 (adapter part), AC-029; INV-003, INV-021.
 ## Commit boundary
 `feat(intercepta): add live address-screen adapter and record Spike A evidence` (recorded fixtures committed; no headers, no key).
 ## Evidence (filled in when VERIFIED)
-—
+Level: live-verified for the address screen (adapter path only; not yet in a payment flow). 2026-09-26, 4 of 40 live calls.
+- Raw responses (`real_live`, no headers): `fixtures/intercepta/recorded/2026-09-26T13-33-52-198Z_0x87cff22e…cb1a.json` (SAFE: HTTP 200, 1336 ms, `toxicScore 0`, `traits []`), `…13-33-55-020Z_0x39308ae4…2fed.json` (RISKY: HTTP 200, 2814 ms, `toxicScore 100`, `known_scammer` 100, `attack_money_target` 85), plus a second identical pair from T-060 at `13-35-25-957Z` / `13-35-26-286Z`.
+- `LIVE=1 corepack pnpm test:live` passed (T-060: SAFE ⇒ CLEAR, RISKY ⇒ BLOCK through the production adapter and mapper). `corepack pnpm verify` green: 11 files, 265 tests (T-027, T-028, mapper tests on the recorded files).
+- Mapping `quickscan-v1` (ADR-017). `docs/spikes/SPIKE_A_INTERCEPTA.md` written; SPEC §10/§25 updated (Q-001, Q-002 resolved). Kill-condition check: none observed; placement before the signer is untested until M-004; Q-003 (sponsor confirmation that RISKY may be a testnet `payTo`) remains a human action. Mid band, 401/429/5xx and rate limits were not observed live.
 
 # M-004 — SPIKE B (P0): x402 seller, buyer gate, protected signer
 Status: TODO

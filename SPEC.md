@@ -288,10 +288,10 @@ The tier mapping is **Risksir policy over observed fields**, not an Intercepta c
 
 | Aspect | Contract |
 | --- | --- |
-| Endpoint | W3A `GET /api/public/v2/extension/account/{address}/quick-scan`, header `X-API-KEY`, base URL from `INTERCEPTA_BASE_URL`. `OPEN — resolve with Spike A evidence` (path, base URL, params, mainnet interpretation). Only read-only endpoints are ever called `[G §2]` |
+| Endpoint | W3A `GET /api/public/v2/extension/account/{address}/quick-scan`, header `X-API-KEY`, base URL from `INTERCEPTA_BASE_URL` (observed working: `https://api.web3antivirus.io`, no query string; **resolved by Spike A**, ADR-017). The address is interpreted as an EVM **mainnet** address. Only read-only endpoints are ever called `[G §2]` |
 | Subject | The exact selected `payTo`, interpreted as an EVM **mainnet** address even though settlement is on Base Sepolia `[08 §1]` |
-| Parse | zod schema over the response. Field names `OPEN — resolve with Spike A evidence`. Before Spike A the mapper returns `UNAVAILABLE(MALFORMED)` for every real response and accepts only fixtures under `fixtures/intercepta/synthetic/` |
-| Tier | `CLEAR` = no disqualifying observed signal (**not** "safe"); `WARN`; `BLOCK`; `UNAVAILABLE`. Thresholds and reason-flag lists `OPEN`, recorded in an ADR after Spike A with the observed values that justify them |
+| Parse | zod schema over the observed body `{ toxicScore: number 0–100, traits: [{ risk: number 0–100, name: string, description: string }] }`; extra fields are ignored; anything else is `UNAVAILABLE(MALFORMED)` (Spike A, `docs/spikes/SPIKE_A_INTERCEPTA.md`) |
+| Tier | `CLEAR` = no disqualifying observed signal (**not** "safe"); `WARN`; `BLOCK`; `UNAVAILABLE`. Mapping `quickscan-v1` (ADR-017): `BLOCK` if `toxicScore ≥ 80` or any trait `risk ≥ 80`; `WARN` for any other non-zero signal; `CLEAR` only for score 0 with no traits. Only scores 0 and 100 were observed; the mid band is unobserved and covered by a labelled synthetic fixture only |
 | Unavailable | Error, timeout, non-2xx, 429, schema mismatch, or empty body ⇒ tier `UNAVAILABLE` with the matching `unavailable` code ⇒ HOLD. **No retry** (each call spends the 40-call budget `[G §5]`); a new attempt makes a new call |
 | Freshness | `EVIDENCE_FRESHNESS_S = 30` between `capturedAt` and decision time; a decision expires after `DECISION_TTL_S = 60`. Both ADR-013 defaults |
 | No reuse | Evidence is bound to one attempt. A previous pass is never reused for a new attempt (INV-003). The regression engine reads stored snapshots only |
@@ -558,8 +558,8 @@ New threat-detection model or scam database; wallet blacklist as the product; cr
 
 | ID | Question | Why it matters / blocks | Who decides | Conservative default |
 | --- | --- | --- | --- | --- |
-| Q-001 | Exact Intercepta response fields, reasons, score semantics, tier thresholds | Evidence tiers, adapter parser, live pass/block (M-003) | Agent with Spike A evidence + ADR | Everything real maps to `UNAVAILABLE` (HOLD) until observed |
-| Q-002 | Correct Intercepta endpoint and base URL | Adapter | Agent, docs + Spike A | Adapter refuses to call if unverified |
+| Q-001 | Exact Intercepta response fields, reasons, score semantics, tier thresholds | Evidence tiers, adapter parser, live pass/block (M-003) | Agent with Spike A evidence + ADR | **RESOLVED 2026-09-26** for `toxicScore`/`traits` (ADR-017). Mid-band behaviour still unobserved |
+| Q-002 | Correct Intercepta endpoint and base URL | Adapter | Agent, docs + Spike A | **RESOLVED 2026-09-26**: quick-scan path on `https://api.web3antivirus.io` observed working |
 | Q-003 | Is the sponsor known-risk address usable as a testnet `payTo`, and is the block tied to the quote? | Qualifying block (07 §22 kill condition) | **Human** (sponsor) | Label the blocked branch as a controlled merchant configuration; do not claim qualification |
 | Q-004 | Does Intercepta already offer customer-specific historical replay / policy comparison? (Spike E, 07 §20) | Novelty gate, 07 §22.5 | **Human** (sponsor) | Treat novelty as hypothesis; never claim it |
 | Q-005 | x402 package names/versions, `onBeforePaymentCreation` semantics, exact 402 and settlement shapes | Buyer gate, signer typed-data checks | Agent, Spike B + ADR | Signer wrapper guards `signTypedData` regardless of hook behaviour |
@@ -568,7 +568,7 @@ New threat-detection model or scam database; wallet blacklist as the product; cr
 | Q-008 | History/alert/webhook API for risk-state changes (Trigger B) | Optional trigger | Agent | Trigger B not built; Trigger C only |
 | Q-009 | Is the payer wallet funded (Base Sepolia ETH + test USDC ≤ 20)? | Live payments | **Human** | Live milestones report `HUMAN_REQUIRED` |
 | Q-010 | Reselect a cheaper advertised requirement after CAP-below-quote? | CAP completeness | Agent, if the 402 ever advertises more than one option | Do not reselect; CAP below quote = no signing |
-| Q-011 | Intercepta timeout and rate limits | Adapter timeout, session budget | Agent, Spike A | `INTERCEPTA_TIMEOUT_MS = 8000`, no retry |
+| Q-011 | Intercepta timeout and rate limits | Adapter timeout, session budget | Agent, Spike A | `INTERCEPTA_TIMEOUT_MS = 8000`, no retry. Latency 325–2814 ms over 4 calls; rate limits and error codes unobserved (not in docs) |
 
 ---
 

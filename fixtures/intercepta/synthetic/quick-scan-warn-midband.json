@@ -1,0 +1,14 @@
+{
+  "provenance": "synthetic",
+  "note": "Hand-made body for the WARN band, which was NOT observed live in Spike A (only score 0 and score 100 were). Used by unit tests only; never present as recorded or live.",
+  "timestamp": "2026-09-26T00:00:00.000Z",
+  "endpoint": "synthetic://quick-scan",
+  "address": "0x1111111111111111111111111111111111111111",
+  "httpStatus": 200,
+  "body": {
+    "toxicScore": 35,
+    "traits": [
+      { "risk": 35, "name": "non_kyc_transfers", "description": "synthetic mid-band example" }
+    ]
+  }
+}

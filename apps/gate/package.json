@@ -4,6 +4,13 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@risksir/core": "workspace:*"
+    "@risksir/core": "workspace:*",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
+  },
+  "scripts": {
+    "spike:a": "tsx --env-file=../../.env src/cli/spike-a.ts"
   }
 }

@@ -7,7 +7,7 @@ Last updated: 2026-09-26 (bootstrap run). If this file disagrees with the reposi
 
 ## 1. Current Objective
 
-Bootstrap contract written and pushed; M-000 (scaffold), M-001 (core domain) and M-002 (policy engine) VERIFIED. Next: M-003 (Spike A, live Intercepta), then down the critical path in `EXECUTION_PLAN.md`. Prize path first: M-003 → M-005.
+Bootstrap contract written and pushed; M-000–M-003 VERIFIED (scaffold, core domain, policy engine, Spike A live Intercepta). Next: M-004 (Spike B: x402 seller, gate, protected signer), then M-005 prize checkpoint.
 
 ## 2. Repository State
 
@@ -20,6 +20,7 @@ Bootstrap contract written and pushed; M-000 (scaffold), M-001 (core domain) and
 - Remote reachable and `main` pushed (`git push -u origin HEAD`, exit 0). Hooks path is `.githooks`; the pre-commit secret guard ran on the first commit.
 - `bash scripts/env-status.sh`: all nine variable **names** are SET (values never inspected).
 - Tools: Node v24.18.0, npm 11.16.0, corepack 0.35.0, pnpm 12.6.0 via `corepack pnpm`.
+- M-003 (Spike A): live-verified Intercepta address screen. SAFE `toxicScore 0` ⇒ CLEAR, RISKY `toxicScore 100` (`known_scammer`, `attack_money_target`) ⇒ BLOCK; two reproducible pairs, raw files in `fixtures/intercepta/recorded/`, 4 of 40 calls used; `docs/spikes/SPIKE_A_INTERCEPTA.md`, ADR-017.
 - M-002: deterministic five-action policy engine, candidate validation and demo policies unit-tested (228 tests total, mutation-checked).
 - M-001: core domain (money, canonical JSON, the single hash helper, zod schemas, provenance) unit-tested: 102 tests green.
 - M-000: `corepack pnpm verify` green offline (tsc + eslint + vitest, 4 tests); `test:live` refuses without `LIVE=1`; `demo:smoke` fails by design until M-011. TypeScript pinned to ~6.0.3 (ADR-016).
@@ -33,15 +34,15 @@ Nothing. The docs are a contract, not evidence.
 | Level | Status |
 | --- | --- |
 | typecheck / lint | green (`corepack pnpm verify`, 2026-09-26) |
-| unit / integration | 228 tests green (core domain, policy engine, hygiene); no gate tests yet |
-| live | not run |
+| unit / integration | 265 tests green (core, policy engine, Intercepta adapter + mapper, hygiene); no signer/seller tests yet |
+| live | `LIVE=1 pnpm test:live` T-060 passed 2026-09-26 (Intercepta only) |
 | demo smoke | not run |
 
 ## 6. External System Status
 
 | System | Status |
 | --- | --- |
-| Intercepta | none (key SET, unvalidated; endpoint/schema unknown until Spike A) |
+| Intercepta | **live** for the address screen (Spike A, 4/40 calls used this session; `data/intercepta-calls.json`); not yet inside a payment flow |
 | x402 seller | none |
 | Facilitator | none (`X402_FACILITATOR_URL` SET, untested) |
 | Base Sepolia RPC + payer wallet | none (funding unverified) |
@@ -59,22 +60,23 @@ Nothing. The docs are a contract, not evidence.
 
 ## 9. Recent Decisions
 
-ADR-001…ADR-016 in `DECISIONS.md` (name, Intercepta load-bearing, rail, offchain governance, triggers A+C, deterministic engines, fail-closed + tier mapping, CAP semantics, stack, autonomous mode, credential-free-first, demo thresholds, engine defaults, `corepack pnpm`, signer defence in depth, TypeScript ~6.0.3).
+ADR-001…ADR-017 in `DECISIONS.md` (name, Intercepta load-bearing, rail, offchain governance, triggers A+C, deterministic engines, fail-closed + tier mapping, CAP semantics, stack, autonomous mode, credential-free-first, demo thresholds, engine defaults, `corepack pnpm`, signer defence in depth, TypeScript ~6.0.3, Intercepta tier mapping).
 
 ## 10. Next
 
-1. M-003 (Spike A): Intercepta adapter, live screen of SAFE and RISKY (≤ 40 calls), record raw responses, write the tier-mapping ADR.
-2. M-004 (Spike B): seller, gate, protected signer (needs a funded payer wallet).
-3. M-005 prize checkpoint (live pass + live block).
-4. M-006/M-007: store hardening and regression engine (credential-free).
-5. M-008/M-009: lifecycle and console.
+1. M-004 (Spike B): read installed x402 packages/docs, build seller, gate, protected signer, minimal SQLite store; check wallet funding (needs a funded payer wallet).
+2. M-005 prize checkpoint (live pass + live block).
+3. M-006/M-007: store hardening and regression engine (credential-free).
+4. M-008/M-009: lifecycle and console.
+5. M-010–M-012: Layer 4 proof, demo hardening, submission.
 
 ## 11. Do Not Repeat
 
 - Do not open `.env`; use `bash scripts/env-status.sh`.
 - Do not run `corepack enable` (EPERM); use `corepack pnpm`.
 - Do not create a second "first commit"; `215f766` already exists and is pushed (no history rewrite).
-- Do not guess Intercepta field names or x402 hook behaviour; read the response and the installed package types.
+- Do not guess x402 hook behaviour; read the installed package types. Intercepta fields are now observed (Spike A); the mid band (score 1–99), 401/429/5xx and rate limits are still unobserved.
+- `data/intercepta-calls.json` counts live Intercepta calls (4/40 used); delete it only at a new session start.
 
 ## 12. SPEC Review Checklist (asynchronous, non-blocking; skim on GitHub)
 

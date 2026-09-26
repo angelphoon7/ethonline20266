@@ -29,3 +29,6 @@ data/*.db-*
 
 # claude code personal settings
 .claude/settings.local.json
+
+# local runtime state
+data/*.json

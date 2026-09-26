@@ -27,7 +27,7 @@ Node v24.18.0 (>= 20 required) · pnpm 12.6.0 (workspaces, pinned in `packageMan
 
 ## Commands
 
-VERIFIED (run 2026-09-26): `corepack pnpm install`, `corepack pnpm verify` (tsc + eslint + vitest, offline, green), `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `corepack pnpm test:live` (refuses without `LIVE=1`; currently exits 1 because no live test exists), `corepack pnpm demo:smoke` (placeholder, exits 1 until M-011), `bash scripts/env-status.sh`.
+VERIFIED (run 2026-09-26): `corepack pnpm install`, `corepack pnpm verify` (tsc + eslint + vitest, offline, green), `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm test`, `LIVE=1 corepack pnpm test:live` (runs `*.live.test.ts`; refuses without `LIVE=1`), `LIVE=1 corepack pnpm --filter @risksir/gate spike:a` (observe-only Intercepta probe), `corepack pnpm demo:smoke` (placeholder, exits 1 until M-011), `bash scripts/env-status.sh`.
 Not yet defined: per-app `dev`/`build` (added with the app that needs them, then listed here).
 
 ## Framework-docs rule
@@ -42,7 +42,7 @@ Do not rely on remembered SDK behaviour. Before using x402, viem, better-sqlite3
 | The one quote/policy/dataset/report hash helper: `hashQuote`, `sealPolicy`, `hashDataset`, `sealReport` (+ `canonicalJson`) | `packages/core/src/fingerprint.ts`, `canonical.ts` | M-001 ✓ |
 | zod schemas for every type in SPEC §7 (+ provenance helpers) | `packages/core/src/types.ts`, `provenance.ts` | M-001 ✓ |
 | `evaluate()` / `evaluateFailClosed()` policy engine, `validateCandidate()`, demo policy v1 and candidates A/B/C | `packages/core/src/policy` | M-002 ✓ |
-| Intercepta client | `apps/gate/src/intercepta` | M-003 |
+| Intercepta client `screenAddress()`, `quickScanMapper`, `FileBudget`, `writeRecordedResponse()` | `apps/gate/src/intercepta` | M-003 ✓ |
 | Signer interface (`createGuardedAccount`, `runWithDecision`) | `apps/gate/src/signer/public.ts` | M-004 |
 
 Search before creating; never add a second hash or money helper.
