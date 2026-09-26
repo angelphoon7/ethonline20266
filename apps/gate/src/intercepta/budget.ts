@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-/** OPERATIONAL_GUARDRAILS section 5: at most 40 live Intercepta calls per agent session. */
-export const INTERCEPTA_CALL_LIMIT = 40;
+/** OPERATIONAL_GUARDRAILS section 5: at most 100 live Intercepta calls per agent session (raised from 40 by the human on 2026-09-26, ADR-027). */
+export const INTERCEPTA_CALL_LIMIT = 100;
 
 export interface CallBudget {
   /** Consumes one call if any remain. Never throws. */

@@ -1,7 +1,7 @@
 /**
  * Demo preflight (M-011): `LIVE=1 pnpm demo:smoke`. Spends NO funds. Checks, in order: environment variable names (never
  * values), local state, the seller's 402 for each route, the facilitator, the payer balance, the session limits and, with
- * LIVE=1, one live Intercepta screen of the SAFE address (one call of the 40-call budget). Exit code 1 if any check FAILs.
+ * LIVE=1, one live Intercepta screen of the SAFE address (one call of the 100-call budget). Exit code 1 if any check FAILs.
  */
 import { join } from 'node:path';
 import { DEMO_ORG_ID, DEMO_SERVICE_BASE } from '@risksir/core';
@@ -89,7 +89,7 @@ add('session limits', l.status, l.detail);
 
 // live Intercepta
 if (!live) {
-  add('live Intercepta', 'SKIP', 'set LIVE=1 to make one live screen (spends 1 of the 40 calls)');
+  add('live Intercepta', 'SKIP', 'set LIVE=1 to make one live screen (spends 1 of the 100 calls)');
 } else if (safe) {
   const r = await screenAddress(safe, { baseUrl: process.env.INTERCEPTA_BASE_URL, apiKey: process.env.INTERCEPTA_API_KEY, mapper: quickScanMapper, provenance: 'real_live', mappingVersion: QUICK_SCAN_MAPPING_VERSION, budget });
   if (r.raw) console.log(`     recorded ${writeRecordedResponse(join(REPO_ROOT, 'fixtures', 'intercepta', 'recorded'), r.raw).slice(REPO_ROOT.length)}`);

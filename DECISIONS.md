@@ -235,3 +235,12 @@ Status vocabulary: Accepted | Accepted (agent default) | Open. New ADRs append a
 
 ### Addendum to ADR-025 (human instruction 2026-09-26): console login page as a preview on the same site
 The owner console's login page is built into the same static site at `/console/` (`pnpm build:site` also runs the console's `build:hosted`). On any host other than localhost the console is a preview: the token field and Connect are disabled, no API client is created and no token is ever sent; it says to run `pnpm demo:up`. No backend, no keys, no new Vercel project or setting. The live demo runs only on the human's machine.
+
+## ADR-027 — Intercepta live call limit raised from 40 to 100 per session (human instruction 2026-09-26)
+- **Status:** Accepted (explicit human instruction). **Date:** 2026-09-26.
+- **Context:** `OPERATIONAL_GUARDRAILS.md` section 5 allowed 40 live Intercepta calls per agent session. It is a Risksir self-imposed budget, not an Intercepta limit (no rate limit was ever observed or documented). Rehearsals and the recorded demo needed more than the 3 calls left.
+- **Decision:** The session limit is 100 (`INTERCEPTA_CALL_LIMIT` in `apps/gate/src/intercepta/budget.ts`). The persisted counter is not reset (37 used at the time). Nothing else changes: no automatic retry, spend limits unchanged (0.10 USDC per payment, 1.00 USDC and 20 settlements per session), and on a 429 or quota answer from Intercepta live calls stop.
+- **Rationale:** *Evidence:* the limit is ours; every call so far succeeded except one timeout. *Preference:* the human's explicit choice.
+- **Alternatives:** reset the counter each time (`pnpm demo:reset --new-session`). **Why not chosen:** it lifts the spend limits too.
+- **Consequences:** guardrail, SPEC section 10 budget row, preflight (`limitsCheck` now measures against 100), runbook and README updated.
+- **Reversibility:** edit the constant and the guardrail text. **Source:** human instruction.

@@ -7,7 +7,7 @@ import type { Mapper } from './mapping.js';
 /**
  * Live Intercepta (W3A) address screen. Read-only GET of the quick-scan endpoint only (INV-021, guardrails section 2).
  * The API key is sent as a header and never stored, logged or returned. No automatic retry: every call spends the
- * 40-call session budget, and a new attempt makes a new call (ADR-013). Every failure becomes an UNAVAILABLE evidence
+ * 100-call session budget, and a new attempt makes a new call (ADR-013). Every failure becomes an UNAVAILABLE evidence
  * record, which the policy engine turns into HOLD (INV-003).
  */
 export const QUICK_SCAN_PATH_RE = /^\/api\/public\/v2\/extension\/account\/0x[0-9a-f]{40}\/quick-scan$/;

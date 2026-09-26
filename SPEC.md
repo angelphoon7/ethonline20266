@@ -317,7 +317,7 @@ The tier mapping is **Risksir policy over observed fields**, not an Intercepta c
 | Freshness | `EVIDENCE_FRESHNESS_S = 30` between `capturedAt` and decision time; a decision expires after `DECISION_TTL_S = 60`. Both ADR-013 defaults |
 | No reuse | Evidence is bound to one attempt. A previous pass is never reused for a new attempt (INV-003). The regression engine reads stored snapshots only |
 | Storage | Every live response stored raw under `fixtures/intercepta/recorded/` (timestamp, endpoint, address, HTTP status, body; **no headers**) and in the DB with `provenance: real_live`. Hand-made responses live under `fixtures/intercepta/synthetic/` with `"provenance": "synthetic"` `[G §5]` |
-| Budget | ≤ 40 live calls per agent session; on 429/quota, stop live calls and record it in `HANDOFF.md` `[G §5]` |
+| Budget | ≤ 100 live calls per agent session (was 40 until 2026-09-26, ADR-027); on 429/quota, stop live calls and record it in `HANDOFF.md` `[G §5]` |
 
 ## 11. State machines
 

@@ -38,7 +38,7 @@ Every milestone M-000 to M-012 is VERIFIED. `FINAL_VALIDATION.md` has no FAIL; w
 
 | System | Status |
 | --- | --- |
-| Intercepta | **live**, inside the payment flow (10 of 40 calls used: `data/intercepta-calls.json`) |
+| Intercepta | **live**, inside the payment flow (37 of 100 calls used as of the last preflight; the limit was raised from 40 by the human, ADR-027: `data/intercepta-calls.json`) |
 | x402 seller | **live** local `@x402/express` seller on 127.0.0.1; stub facilitator in tests only |
 | Facilitator | **live** (the facilitator configured in `X402_FACILITATOR_URL`; three successful settles (the latest, tx `0xb38f786a…e866a`, block 47333318, was run by the human from PowerShell and checked read-only by `verify:tx`); failure modes only via the stub) |
 | Base Sepolia RPC + payer wallet | **live**, **39.44 test USDC as of the last preflight (ceiling raised to 100, ADR-026)**, 0.1 ETH; payer `0x4a599d033E1295E93bbFB5feA17aB44b2CbAD9fD`; live session 8/20 settlements, 0.40/1.00 USDC (`data/live-session.json`), Intercepta 21/40 |

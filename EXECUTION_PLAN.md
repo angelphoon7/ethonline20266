@@ -104,7 +104,7 @@ x402, signing, policy changes beyond the mapping.
 ## Acceptance (AC-xxx, INV-xxx)
 AC-019 (address screened), AC-021 (adapter part), AC-029; INV-003, INV-021.
 ## Validation (exact commands and evidence required)
-`pnpm verify` green; `LIVE=1 pnpm test:live -- intercepta` prints `INTERCEPTA calls used: n/40`. Evidence: raw response file paths and timestamps for SAFE and RISKY, plus a note on whether the RISKY subject can be tied to a quote `payTo` (Q-003). Stop with `HUMAN_REQUIRED` on a 07 §22 kill condition or on 429/quota.
+`pnpm verify` green; `LIVE=1 pnpm test:live -- intercepta` prints `INTERCEPTA calls used: n/100` (40 until ADR-027). Evidence: raw response file paths and timestamps for SAFE and RISKY, plus a note on whether the RISKY subject can be tied to a quote `payTo` (Q-003). Stop with `HUMAN_REQUIRED` on a 07 §22 kill condition or on 429/quota.
 ## Commit boundary
 `feat(intercepta): add live address-screen adapter and record Spike A evidence` (recorded fixtures committed; no headers, no key).
 ## Evidence (filled in when VERIFIED)

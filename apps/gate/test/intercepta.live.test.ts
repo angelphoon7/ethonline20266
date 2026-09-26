@@ -1,7 +1,7 @@
 /**
  * T-060 (live, L4): screens SELLER_PAY_TO_SAFE and SELLER_PAY_TO_RISKY once each through the production adapter and mapper,
  * and stores the raw responses under fixtures/intercepta/recorded/. Run only through `LIVE=1 pnpm test:live`.
- * Spends 2 of the 40 live Intercepta calls per run (OPERATIONAL_GUARDRAILS section 5). Prints no secrets.
+ * Spends 2 of the 100 live Intercepta calls per run (OPERATIONAL_GUARDRAILS section 5). Prints no secrets.
  */
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';

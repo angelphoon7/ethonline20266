@@ -25,17 +25,17 @@ describe('demo preflight limits and balance', () => {
   it('a full run fits when the session is fresh', () => {
     expect(limitsCheck({ settlements: 0, totalAtomic: 0n }, 0).status).toBe('PASS');
   });
-  it('fails when a full run would exceed 20 settlements, 1.00 USDC or 40 Intercepta calls, and never suggests lifting a limit silently', () => {
+  it('fails when a full run would exceed 20 settlements, 1.00 USDC or 100 Intercepta calls, and never suggests lifting a limit silently', () => {
     expect(limitsCheck({ settlements: 18, totalAtomic: 0n }, 0).detail).toMatch(/settlements 18\+3 > 20/);
     expect(limitsCheck({ settlements: 0, totalAtomic: 900_000n }, 0).detail).toMatch(/spend/);
-    const calls = limitsCheck({ settlements: 0, totalAtomic: 0n }, 36);
+    const calls = limitsCheck({ settlements: 0, totalAtomic: 0n }, 96);
     expect(calls.status).toBe('FAIL');
     expect(calls.detail).toMatch(/new agent session is a human decision/);
     expect(FULL_RUN).toEqual({ settlements: 3, spendAtomic: 150_000n, screens: 5 });
   });
   it('counts the smoke check own live screen', () => {
-    expect(limitsCheck({ settlements: 0, totalAtomic: 0n }, 34, 1).status).toBe('PASS');
-    expect(limitsCheck({ settlements: 0, totalAtomic: 0n }, 35, 1).status).toBe('FAIL');
+    expect(limitsCheck({ settlements: 0, totalAtomic: 0n }, 94, 1).status).toBe('PASS');
+    expect(limitsCheck({ settlements: 0, totalAtomic: 0n }, 95, 1).status).toBe('FAIL');
   });
   it('balance: needs gas, enough USDC for a full run, and stays under the 100 test USDC ceiling', () => {
     expect(balanceCheck(19_840_000n, 1n).status).toBe('PASS');

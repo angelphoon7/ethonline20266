@@ -39,7 +39,7 @@ Before a live payment run, print the network, the public payer address, the `pay
 
 ## 5. Intercepta API usage
 
-- Make at most **40 live calls per agent session**. Unit and integration tests use recorded fixtures only.
+- Make at most **100 live calls per agent session** (raised from 40 by the human on 2026-09-26, ADR-027). Unit and integration tests use recorded fixtures only.
 - Store every live response under `fixtures/intercepta/recorded/` as JSON: timestamp, endpoint, address, HTTP status and body. Never store headers.
 - Never hand-write a response and store it as recorded. Hand-made fixtures go under `fixtures/intercepta/synthetic/` and carry `"provenance": "synthetic"`.
 - On 429 or quota errors, stop live calls for the rest of the session, record it in `HANDOFF.md` and continue offline work.
