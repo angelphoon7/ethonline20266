@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-09-26T21:57:53.304Z",
+  "endpoint": "https://api.web3antivirus.io/api/public/v2/extension/account/0x39308ae43e5dda98db5fb17d005c5c764e5a2fed/quick-scan",
+  "address": "0x39308ae43e5dda98db5fb17d005c5c764e5a2fed",
+  "httpStatus": 200,
+  "latencyMs": 2792,
+  "error": null,
+  "provenance": "real_live",
+  "body": {
+    "toxicScore": 100,
+    "traits": [
+      {
+        "risk": 100,
+        "name": "known_scammer",
+        "description": "The address has a confirmed history of malicious activity, including scams, phishing, or other harmful behavior."
+      },
+      {
+        "risk": 85,
+        "name": "attack_money_target",
+        "description": "The address has received funds tied to exploits, wallet drainers, or other forms of attack‑related activity."
+      }
+    ]
+  }
+}
