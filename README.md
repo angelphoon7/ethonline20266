@@ -92,7 +92,7 @@ Environment variable names (values are yours and are never printed by any script
 
 ```bash
 pnpm verify                       # offline: typecheck, lint, all unit and integration tests (no network)
-LIVE=1 pnpm test:live             # live Intercepta screens; spends calls of the 100-call session budget
+LIVE=1 pnpm test:live             # live Intercepta screens; spends calls of the 1000-call session budget
 LIVE=1 pnpm demo:smoke            # preflight: seller 402, facilitator, balance, limits, one live screen
 ```
 
@@ -109,7 +109,7 @@ pnpm owner-api:live               # owner API with the live gate (127.0.0.1:4100
 pnpm dev:console                  # owner console (127.0.0.1:5173) with Run scene buttons
 ```
 
-The live runs are limited to 0.10 USDC per payment, 1.00 USDC and 20 settlements per session and 100 live Intercepta calls (`OPERATIONAL_GUARDRAILS.md`). The full demo procedure is [`DEMO_RUNBOOK.md`](DEMO_RUNBOOK.md).
+The live runs are limited to 0.10 USDC per payment, 100 USDC and 1000 settlements per session and 1000 live Intercepta calls (`OPERATIONAL_GUARDRAILS.md`). The full demo procedure is [`DEMO_RUNBOOK.md`](DEMO_RUNBOOK.md).
 
 ## What was demonstrated (recorded evidence)
 

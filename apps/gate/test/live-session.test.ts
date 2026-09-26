@@ -17,8 +17,15 @@ const file = () => {
   return join(d, 'session.json');
 };
 
+/** Small limits so the mechanics are tested cheaply; the configured values are asserted separately below. */
+const SMALL = { maxPerPaymentAtomic: 100_000n, maxSessionTotalAtomic: 1_000_000n, maxSessionSettlements: 20 } as const;
+
 // T-053: the live-run guard aborts before signing when a guardrail limit would be exceeded.
 describe('live session limits (OPERATIONAL_GUARDRAILS section 4)', () => {
+  it('the configured limits are the ones in OPERATIONAL_GUARDRAILS section 4 (ADR-029)', () => {
+    expect(LIVE_LIMITS).toEqual({ maxPerPaymentAtomic: 100_000n, maxSessionTotalAtomic: 100_000_000n, maxSessionSettlements: 1000 });
+  });
+
   it('allows a payment within all limits', () => {
     expect(new LiveSession(file()).check(50_000n)).toBeNull();
   });
@@ -27,16 +34,16 @@ describe('live session limits (OPERATIONAL_GUARDRAILS section 4)', () => {
     expect(new LiveSession(file()).check(LIVE_LIMITS.maxPerPaymentAtomic + 1n)).toMatch(/per-payment limit/);
   });
 
-  it('refuses when the session total would exceed 1.00 USDC', () => {
-    const s = new LiveSession(file());
+  it('refuses when the session total would exceed the limit', () => {
+    const s = new LiveSession(file(), SMALL);
     for (let i = 0; i < 9; i++) s.recordSigned(100_000n); // 0.90 USDC
     expect(s.check(100_000n)).toBeNull(); // exactly 1.00
     s.recordSigned(100_000n);
     expect(s.check(1n)).toMatch(/session total/);
   });
 
-  it('refuses the 21st settlement', () => {
-    const s = new LiveSession(file());
+  it('refuses the settlement after the last allowed one', () => {
+    const s = new LiveSession(file(), SMALL);
     for (let i = 0; i < 20; i++) s.recordSigned(1n);
     expect(s.check(1n)).toMatch(/20 settlements/);
   });
@@ -58,11 +65,11 @@ describe('live session limits (OPERATIONAL_GUARDRAILS section 4)', () => {
       count: 1,
       session: { settlements: 0, totalAtomic: 0n },
     });
-    for (const needle of ['eip155:84532', '0x4a599d03', `0x${'11'.repeat(20)}`, '0.05 USDC', 'count:', 'max total:', '1 USDC']) expect(banner).toContain(needle);
+    for (const needle of ['eip155:84532', '0x4a599d03', `0x${'11'.repeat(20)}`, '0.05 USDC', 'count:', 'max total:', '100 USDC']) expect(banner).toContain(needle);
   });
 
   it('the protected signer refuses when the session guard says no, with zero signer calls', async () => {
-    const session = new LiveSession(file());
+    const session = new LiveSession(file(), SMALL);
     for (let i = 0; i < 10; i++) session.recordSigned(100_000n); // session exhausted
     const w = makeWorld({ extraCheck: ({ amountAtomic }) => session.check(amountAtomic) });
     await expect(w.attemptSigner.signTypedData(w.typedData())).rejects.toBeInstanceOf(SignerRefusedError);

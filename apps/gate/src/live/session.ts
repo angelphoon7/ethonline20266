@@ -7,6 +7,12 @@ import { LIVE_LIMITS, atomicToUsdcString } from '@risksir/core';
  * session and 20 settlements per session. Signed payments count (an ambiguous one may still settle). The counter is a
  * local file, reset by deleting it at the start of a new agent session.
  */
+export interface LiveLimits {
+  maxPerPaymentAtomic: bigint;
+  maxSessionTotalAtomic: bigint;
+  maxSessionSettlements: number;
+}
+
 export interface LiveSessionState {
   settlements: number;
   totalAtomic: bigint;
@@ -15,7 +21,7 @@ export interface LiveSessionState {
 export class LiveSession {
   constructor(
     private readonly path: string,
-    private readonly limits = LIVE_LIMITS,
+    private readonly limits: LiveLimits = LIVE_LIMITS,
   ) {}
 
   state(): LiveSessionState {
@@ -61,7 +67,7 @@ export interface LiveBanner {
   amountAtomic: bigint;
   count: number;
   session: LiveSessionState;
-  limits?: typeof LIVE_LIMITS;
+  limits?: LiveLimits;
 }
 
 /** The pre-run banner required by guardrails section 4: network, public payer, payTo, amount, count, maximum total. */

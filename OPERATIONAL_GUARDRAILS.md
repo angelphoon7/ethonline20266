@@ -32,14 +32,14 @@ The chain and asset allowlist must be **enforced in code**: the signer rejects a
 | Limit | Value |
 | --- | --- |
 | Maximum per live payment | 0.10 test USDC |
-| Maximum total per agent session | 1.00 test USDC |
-| Maximum live settlements per agent session | 20 |
+| Maximum total per agent session | 100 test USDC (raised from 1.00 by the human on 2026-09-26, ADR-029) |
+| Maximum live settlements per agent session | 1000 (raised from 20, ADR-029) |
 
 Before a live payment run, print the network, the public payer address, the `payTo`, the amount, the count and the maximum total. Abort if any limit would be exceeded. Unit and integration tests never hit a live facilitator. Scale the demo policy thresholds to these amounts.
 
 ## 5. Intercepta API usage
 
-- Make at most **100 live calls per agent session** (raised from 40 by the human on 2026-09-26, ADR-027). Unit and integration tests use recorded fixtures only.
+- Make at most **1000 live calls per agent session** (raised from 40 to 100, ADR-027, and to 1000, ADR-029, by the human on 2026-09-26). Unit and integration tests use recorded fixtures only.
 - Store every live response under `fixtures/intercepta/recorded/` as JSON: timestamp, endpoint, address, HTTP status and body. Never store headers.
 - Never hand-write a response and store it as recorded. Hand-made fixtures go under `fixtures/intercepta/synthetic/` and carry `"provenance": "synthetic"`.
 - On 429 or quota errors, stop live calls for the rest of the session, record it in `HANDOFF.md` and continue offline work.

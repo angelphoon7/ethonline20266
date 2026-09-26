@@ -253,3 +253,12 @@ The owner console's login page is built into the same static site at `/console/`
 - **Alternatives:** keep the SPEC header. **Why not chosen:** the human approved the new layout.
 - **Consequences:** SPEC section 20 amended; design tokens live in `apps/console/src/tokens.css`; the site shares them; console tests updated.
 - **Reversibility:** presentation only. **Source:** human instruction.
+
+## ADR-029 — Session limits raised: 100 USDC, 1000 settlements, 1000 Intercepta calls (human instruction 2026-09-26)
+- **Status:** Accepted (explicit human instruction). **Date:** 2026-09-26.
+- **Context:** Rehearsals and demo takes exhausted the per-session limits (20 settlements, 1.00 USDC, 100 Intercepta calls) and blocked further runs. The human asked to remove them or raise them a lot.
+- **Decision:** Not removed, raised: 100 test USDC and 1000 settlements per agent session (`LIVE_LIMITS` in `packages/core/src/constants.ts`) and 1000 live Intercepta calls per session (`INTERCEPTA_CALL_LIMIT`). The per-payment limit stays 0.10 USDC, the balance ceiling stays 100 test USDC (ADR-026), and only Base Sepolia is ever signed on. The session limits are still enforced by the signer and checked by the preflight, so a runaway loop still stops.
+- **Rationale:** *Evidence:* testnet USDC has no monetary value; the per-payment cap and the network allowlist remain the hard bounds. *Preference:* the human's explicit choice.
+- **Alternatives:** remove the limits entirely. **Why not chosen:** a very high limit keeps a backstop against a loop at no practical cost.
+- **Consequences:** guardrail text, SPEC section 10 budget row, README, runbook and the preflight test updated. The persisted counters are not reset (20 settlements, 1.00 USDC, 51 calls used); they are now far below the limits.
+- **Reversibility:** edit the constants and the guardrail text. **Source:** human instruction.

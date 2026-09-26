@@ -48,4 +48,4 @@ for (const [label, address] of subjects) {
     }),
   );
 }
-console.log('INTERCEPTA calls used: see data/intercepta-calls.json (limit 100)');
+console.log('INTERCEPTA calls used: see data/intercepta-calls.json (limit 1000)');

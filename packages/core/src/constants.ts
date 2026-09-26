@@ -16,6 +16,6 @@ export const PAYER_BALANCE_CEILING_ATOMIC = 100_000_000n;
 /** Live testnet spend limits, OPERATIONAL_GUARDRAILS section 4, in USDC atomic units. */
 export const LIVE_LIMITS = {
   maxPerPaymentAtomic: 100_000n,
-  maxSessionTotalAtomic: 1_000_000n,
-  maxSessionSettlements: 20,
+  maxSessionTotalAtomic: 100_000_000n, // 100 test USDC (was 1.00 until 2026-09-26, ADR-029)
+  maxSessionSettlements: 1000, // was 20 until 2026-09-26, ADR-029
 } as const;
