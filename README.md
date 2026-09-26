@@ -4,7 +4,6 @@ Risksir is a closed-loop risk-policy engine for x402 agents: Intercepta supplies
 
 Target: ETHGlobal Tokyo 2026, Intercepta prize *Safe Agent-to-Agent Payments with x402*.
 
-**Live site:** https://ethtokyo2026-kappa.vercel.app/ (static showcase of recorded evidence from Base Sepolia test runs; it never signs, pays or calls Intercepta).
 
 ## The problem
 
