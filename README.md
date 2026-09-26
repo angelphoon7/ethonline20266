@@ -7,7 +7,6 @@ Risksir is a closed-loop risk-policy engine for x402 agents: Intercepta supplies
 > Intercepta tells the agent what is risky. Risksir makes sure the organisation's payment policy learns from what happened.
 
 Built for ETHGlobal Tokyo 2026, Intercepta prize *Safe Agent-to-Agent Payments with x402*.
-**Live site:** https://ethtokyo2026-kappa.vercel.app/ (a static showcase of recorded evidence from Base Sepolia test runs; it never signs, pays or calls Intercepta).
 
 ## The problem: knowing the risk does not prove the response is right
 
@@ -135,13 +134,6 @@ Raw Intercepta responses (no request headers) are stored under [fixtures/interce
 - The signer is the only code path that reads the payer key. That is code-path isolation inside one backend process, enforced by static tests. It is not a process or security boundary, and the backend is trusted for correctness in this MVP.
 - Not claimed: that Intercepta lacks custom rules or cannot learn, that we invented backtesting, or that this is the first safe x402 layer.
 
-## Known limitations
-
-- Testnet only (Base Sepolia), one facilitator, one seller, hackathon-scale spend limits, single-organisation demo profile ("ExampleCo").
-- The regression dataset has 19 cases: 4 `real_live` (stored Intercepta responses), 11 `controlled_variant`, 4 `synthetic`. Every case carries its provenance label in the store, API and UI; labels are never changed.
-- Owner authentication is one bearer token on localhost. There is no user management.
-- Intercepta score bands other than 0 and 100, rate limits and non-200 error bodies were not observed and are unverified; those code paths are covered by stubbed tests labelled synthetic.
-- Trigger B (alerts on risk-state change) is not built; the loop starts from an owner-labelled incident.
 
 ## Intercepta API feedback
 
